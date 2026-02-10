@@ -61,23 +61,23 @@ git push -u origin main
 |--------|--------|------|
 | `PORT` | `3000` | Railway 会自动设置，可不填 |
 | `BASE_URL` | `https://snaptoshine-production.up.railway.app` | 部署后 Railway 分配的域名 |
+| `DATA_DIR` | `/app/persistent` | 持久化数据根目录（必填） |
 | `SMTP_HOST` | `smtp.qq.com` | SMTP 服务器地址 |
 | `SMTP_PORT` | `465` | SMTP 端口 |
 | `SMTP_SECURE` | `true` | 是否启用 SSL |
 | `SMTP_USER` | `xxx@qq.com` | 发件邮箱 |
 | `SMTP_PASS` | `abcdefg` | 邮箱授权码 |
 | `SMTP_FROM_NAME` | `Snaptoshine` | 发件人名称 |
-| `ADMIN_EMAIL` | `admin@xxx.com` | 目标机通知邮箱 |
+| `ADMIN_EMAIL` | `admin@xxx.com` | 目标机通知邮箱（支持多个，逗号分隔）|
 | `ADMIN_SECRET` | `my-secret-123` | 管理后台密钥 |
 
 ### 第4步：配置持久化存储
 
-Railway 默认每次部署会重置文件系统。需要挂载持久卷：
+Railway 免费/基础计划只支持一个 Volume，我们将所有数据存在其中：
 
 1. 在项目中点击 **+ New → Volume**
-2. Mount Path 设为 `/app/data`（数据库文件）
-3. 再挂载一个卷到 `/app/uploads`（用户上传图片）
-4. 再挂载一个卷到 `/app/deliveries`（交付图片）
+2. Mount Path 设为 `/app/persistent`
+3. 这个 Volume 会自动包含数据库、上传图片、交付图片三个子目录
 
 ### 第5步：绑定自定义域名（可选）
 

@@ -1,12 +1,14 @@
 // database.js —— 数据库初始化与表结构定义
 const Database = require('better-sqlite3');
 const path = require('path');
-
-const DB_PATH = path.join(__dirname, 'data', 'snaptoshine.db');
-
-// 确保 data 目录存在
 const fs = require('fs');
-fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
+
+// 使用环境变量配置的持久化根目录，默认为 ./data
+const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, 'data');
+const DB_PATH = path.join(PERSISTENT_ROOT, 'snaptoshine.db');
+
+// 确保目录存在
+fs.mkdirSync(PERSISTENT_ROOT, { recursive: true });
 
 const db = new Database(DB_PATH);
 

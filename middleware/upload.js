@@ -3,12 +3,17 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
+// 持久化数据根目录
+const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
+const UPLOADS_DIR = path.join(PERSISTENT_ROOT, 'uploads');
+const DELIVERIES_DIR = path.join(PERSISTENT_ROOT, 'deliveries');
+
 // ==========================================
 // 用户端图片上传配置
 // ==========================================
 const clientStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '..', 'uploads'));
+    cb(null, UPLOADS_DIR);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -36,7 +41,7 @@ const clientUpload = multer({
 // ==========================================
 const adminStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '..', 'deliveries'));
+    cb(null, DELIVERIES_DIR);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);

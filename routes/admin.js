@@ -9,6 +9,10 @@ const { 发送交付通知到用户邮箱 } = require('../services/email');
 const { 发送交付通知短信 } = require('../services/sms');
 const { 文字渲染为图片 } = require('../services/textToImage');
 
+// 持久化目录
+const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
+const DELIVERIES_DIR = path.join(PERSISTENT_ROOT, 'deliveries');
+
 // ==========================================
 // 管理端鉴权中间件
 // 【验证请求头中的 x-admin-secret 是否匹配 .env 中的 ADMIN_SECRET】
@@ -70,7 +74,7 @@ router.post('/deliver/:id',
       let textImageFilename = null;
       if (deliveryText.trim()) {
         textImageFilename = `text_${uuidv4()}.png`;
-        const textImagePath = path.join(__dirname, '..', 'deliveries', textImageFilename);
+        const textImagePath = path.join(DELIVERIES_DIR, textImageFilename);
         await 文字渲染为图片(deliveryText, textImagePath);
         deliveryImages.push(textImageFilename);
       }

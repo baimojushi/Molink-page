@@ -15,12 +15,18 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // 静态文件服务
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/deliveries', express.static(path.join(__dirname, 'deliveries')));
+
+// 持久化数据根目录（Railway 上挂载 Volume 到此路径）
+const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, 'data');
+const UPLOADS_DIR = path.join(PERSISTENT_ROOT, 'uploads');
+const DELIVERIES_DIR = path.join(PERSISTENT_ROOT, 'deliveries');
+
+app.use('/uploads', express.static(UPLOADS_DIR));
+app.use('/deliveries', express.static(DELIVERIES_DIR));
 
 // 确保上传和交付目录存在
-fs.mkdirSync(path.join(__dirname, 'uploads'), { recursive: true });
-fs.mkdirSync(path.join(__dirname, 'deliveries'), { recursive: true });
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(DELIVERIES_DIR, { recursive: true });
 
 // ==========================================
 // 路由挂载
