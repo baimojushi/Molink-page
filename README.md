@@ -33,10 +33,10 @@ snaptoshine/
 ### 第1步：准备代码仓库
 
 ```bash
-cd D:\项目\交互艺术\中华珍宝馆\AI Agent\网站\files\mo_link-project\mo_link
+cd snaptoshine
 git init
 git add .
-git commit -m "初始化 墨林 项目"
+git commit -m "初始化 Snaptoshine 项目"
 ```
 
 在 GitHub 上创建一个仓库（如 `snaptoshine`），然后：

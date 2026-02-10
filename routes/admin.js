@@ -71,7 +71,7 @@ router.post('/deliver/:id',
       if (deliveryText.trim()) {
         textImageFilename = `text_${uuidv4()}.png`;
         const textImagePath = path.join(__dirname, '..', 'deliveries', textImageFilename);
-        文字渲染为图片(deliveryText, textImagePath);
+        await 文字渲染为图片(deliveryText, textImagePath);
         deliveryImages.push(textImageFilename);
       }
 
