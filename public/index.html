@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Snaptoshine · 艺术空间匹配</title>
+  <style>
+    /* ==========================================
+       调色板函数 —— 修改此处即可全局换色
+       ========================================== */
+    :root {
+      /* 主色系（暖棕调） */
+      --色-主色: #6b4c3b;
+      --色-主色浅: #8b6f5e;
+      --色-主色极浅: #f5efe9;
+      --色-主色深: #4a3228;
+
+      /* 强调色（抹茶绿） */
+      --色-强调: #7a9e7e;
+      --色-强调浅: #a8c5ab;
+      --色-强调深: #5a7e5e;
+
+      /* 中性色 */
+      --色-背景: #faf7f4;
+      --色-卡片: #ffffff;
+      --色-边框: #e8e0d8;
+      --色-文字主: #3a2a1a;
+      --色-文字次: #8a7a6a;
+      --色-文字弱: #b8a898;
+      --色-禁用背景: #f0ebe5;
+      --色-禁用文字: #c8b8a8;
+      --色-危险: #c45c4a;
+
+      /* 圆角 */
+      --圆角-小: 8px;
+      --圆角-中: 12px;
+      --圆角-大: 16px;
+
+      /* 阴影 */
+      --阴影-卡片: 0 2px 12px rgba(106, 76, 59, 0.08);
+      --阴影-浮起: 0 8px 32px rgba(106, 76, 59, 0.15);
+
+      /* 过渡 */
+      --过渡: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ==========================================
+       全局重置与基础样式
+       ========================================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--色-背景);
+      color: var(--色-文字主);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================
+       页面头部
+       ========================================== */
+    .header {
+      background: var(--色-主色);
+      color: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .header-logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .header-sub {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-left: auto;
+    }
+
+    /* ==========================================
+       主容器
+       ========================================== */
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    /* ==========================================
+       分区卡片
+       ========================================== */
+    .section {
+      background: var(--色-卡片);
+      border-radius: var(--圆角-大);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--阴影-卡片);
+      border: 1px solid var(--色-边框);
+    }
+    .section-title {
+      font-size: 14px;
+      color: var(--色-文字次);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--色-主色);
+      border-radius: 2px;
+    }
+
+    /* ==========================================
+       服务类型选择按钮组
+       ========================================== */
+    .service-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .service-btn {
+      padding: 14px 16px;
+      border: 2px solid var(--色-边框);
+      border-radius: var(--圆角-中);
+      background: var(--色-卡片);
+      font-size: 15px;
+      color: var(--色-文字主);
+      cursor: pointer;
+      transition: var(--过渡);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .service-btn:active { transform: scale(0.98); }
+    .service-btn.active {
+      border-color: var(--色-强调);
+      background: linear-gradient(135deg, rgba(122,158,126,0.08), rgba(122,158,126,0.03));
+      color: var(--色-强调深);
+    }
+    .service-btn .icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .service-btn.active .icon {
+      background: var(--色-强调);
+      color: #fff;
+    }
+    .service-btn:not(.active) .icon {
+      background: var(--色-禁用背景);
+      color: var(--色-文字弱);
+    }
+
+    /* ==========================================
+       图片上传区域
+       ========================================== */
+    .upload-row {
+      display: flex;
+      gap: 12px;
+    }
+    .upload-box {
+      flex: 1;
+      aspect-ratio: 1;
+      border: 2px dashed var(--色-边框);
+      border-radius: var(--圆角-中);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--过渡);
+      position: relative;
+      overflow: hidden;
+      background: var(--色-主色极浅);
+    }
+    .upload-box:active { transform: scale(0.97); }
+    .upload-box.has-image {
+      border-style: solid;
+      border-color: var(--色-强调);
+    }
+    .upload-box.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+      background: var(--色-禁用背景);
+    }
+    .upload-box .label {
+      font-size: 13px;
+      color: var(--色-文字次);
+      margin-top: 8px;
+    }
+    .upload-box .plus {
+      font-size: 32px;
+      color: var(--色-文字弱);
+      line-height: 1;
+    }
+    .upload-box img.preview {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .upload-box .remove-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      cursor: pointer;
+    }
+    .upload-box input[type="file"] {
+      display: none;
+    }
+
+    /* ==========================================
+       接收方式
+       ========================================== */
+    .receive-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .receive-btn {
+      padding: 12px 18px;
+      border: 2px solid var(--色-边框);
+      border-radius: var(--圆角-中);
+      background: var(--色-卡片);
+      font-size: 14px;
+      color: var(--色-文字主);
+      cursor: pointer;
+      transition: var(--过渡);
+      white-space: nowrap;
+    }
+    .receive-btn.active {
+      border-color: var(--色-强调);
+      background: var(--色-强调);
+      color: #fff;
+    }
+    .receive-input-wrap {
+      flex: 1;
+      overflow: hidden;
+      max-width: 0;
+      opacity: 0;
+      transition: max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, margin 0.3s ease;
+      margin-left: 0;
+    }
+    .receive-input-wrap.show {
+      max-width: 300px;
+      opacity: 1;
+      margin-left: 10px;
+    }
+    .receive-input-wrap input {
+      width: 100%;
+      height: 100%;
+      min-height: 44px;
+      padding: 0 14px;
+      border: 2px solid var(--色-边框);
+      border-radius: var(--圆角-中);
+      font-size: 14px;
+      color: var(--色-文字主);
+      background: var(--色-卡片);
+      outline: none;
+      transition: var(--过渡);
+    }
+    .receive-input-wrap input:focus {
+      border-color: var(--色-强调);
+    }
+    .receive-input-wrap input::placeholder {
+      color: var(--色-文字弱);
+    }
+
+    /* ==========================================
+       附加服务开关
+       ========================================== */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+    .toggle-label {
+      font-size: 14px;
+      color: var(--色-文字主);
+      flex: 1;
+      line-height: 1.4;
+    }
+    .toggle-label small {
+      display: block;
+      color: var(--色-文字次);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    .toggle-switch {
+      width: 48px;
+      height: 28px;
+      background: var(--色-禁用背景);
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      transition: var(--过渡);
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    .toggle-switch.active {
+      background: var(--色-强调);
+    }
+    .toggle-switch::after {
+      content: '';
+      width: 22px;
+      height: 22px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: var(--过渡);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .toggle-switch.active::after {
+      left: 23px;
+    }
+
+    /* ==========================================
+       提交按钮
+       ========================================== */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: var(--圆角-中);
+      background: var(--色-主色);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--过渡);
+      letter-spacing: 2px;
+    }
+    .submit-btn:active:not(:disabled) {
+      transform: scale(0.98);
+      background: var(--色-主色深);
+    }
+    .submit-btn:disabled {
+      background: var(--色-禁用背景);
+      color: var(--色-禁用文字);
+      cursor: not-allowed;
+    }
+
+    /* ==========================================
+       成功提示遮罩
+       ========================================== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .success-card {
+      background: var(--色-卡片);
+      border-radius: var(--圆角-大);
+      padding: 32px 28px;
+      text-align: center;
+      max-width: 320px;
+      width: 90%;
+      box-shadow: var(--阴影-浮起);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+    .overlay.show .success-card {
+      transform: scale(1);
+    }
+    .success-card .icon-big {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .success-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--色-文字主);
+    }
+    .success-card p {
+      font-size: 14px;
+      color: var(--色-文字次);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .success-card button {
+      padding: 12px 32px;
+      border: none;
+      border-radius: var(--圆角-中);
+      background: var(--色-主色);
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      transition: var(--过渡);
+    }
+
+    /* ==========================================
+       加载状态
+       ========================================== */
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- 页面头部 -->
+  <div class="header">
+    <div class="header-logo">Snaptoshine</div>
+    <div class="header-sub">艺术空间匹配服务</div>
+  </div>
+
+  <div class="container">
+
+    <!-- ① 服务类型选择 -->
+    <div class="section">
+      <div class="section-title">服务类型选择</div>
+      <div class="service-btns">
+        <div class="service-btn" data-type="hang_in_home" onclick="选择服务(this)">
+          <div class="icon">🖼</div>
+          <div>作品挂进家</div>
+        </div>
+        <div class="service-btn" data-type="recommend_work" onclick="选择服务(this)">
+          <div class="icon">🏠</div>
+          <div>根据空间推荐作品</div>
+        </div>
+        <div class="service-btn" data-type="recommend_space" onclick="选择服务(this)">
+          <div class="icon">🎨</div>
+          <div>根据作品推荐空间</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 图片上传 -->
+    <div class="section">
+      <div class="section-title">图片上传</div>
+      <div class="upload-row">
+        <!-- 作品图上传 -->
+        <div class="upload-box disabled" id="upload-artwork" onclick="触发上传('artwork')">
+          <input type="file" id="file-artwork" accept="image/*" onchange="处理上传(this, 'artwork')">
+          <span class="plus">+</span>
+          <span class="label">作品图片</span>
+        </div>
+        <!-- 空间图上传 -->
+        <div class="upload-box disabled" id="upload-space" onclick="触发上传('space')">
+          <input type="file" id="file-space" accept="image/*" onchange="处理上传(this, 'space')">
+          <span class="plus">+</span>
+          <span class="label">空间图片</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 接收方式 -->
+    <div class="section">
+      <div class="section-title">接收方式</div>
+      <div class="receive-row">
+        <div class="receive-btn" data-method="email" onclick="选择接收方式(this)">📧 邮箱</div>
+        <div class="receive-btn" data-method="sms" onclick="选择接收方式(this)">📱 短信</div>
+        <div class="receive-input-wrap" id="receive-input-wrap">
+          <input type="text" id="receive-target" placeholder="">
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ 附加服务 -->
+    <div class="section">
+      <div class="toggle-row">
+        <div class="toggle-label">
+          挂画后软装适配性微调
+          <small>可选附加服务</small>
+        </div>
+        <div class="toggle-switch" id="extra-toggle" onclick="切换附加服务()"></div>
+      </div>
+    </div>
+
+    <!-- ⑤ 提交按钮 -->
+    <button class="submit-btn" id="submit-btn" disabled onclick="提交表单()">提交</button>
+
+  </div>
+
+  <!-- 成功提示遮罩 -->
+  <div class="overlay" id="success-overlay">
+    <div class="success-card">
+      <div class="icon-big">✅</div>
+      <h3>提交成功</h3>
+      <p id="success-msg">处理完成后将通过邮箱通知您，请留意查收。</p>
+      <button onclick="重置表单()">继续提交新服务</button>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 状态管理
+    // ==========================================
+    const 状态 = {
+      服务类型: null,        // hang_in_home / recommend_work / recommend_space
+      接收方式: null,        // email / sms
+      接收地址: '',
+      附加服务: false,
+      作品图文件: null,
+      空间图文件: null,
+      提交中: false
+    };
+
+    // ==========================================
+    // 服务类型选择
+    // ==========================================
+    function 选择服务(btn) {
+      document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      状态.服务类型 = btn.dataset.type;
+
+      // 清除已有上传
+      清除上传('artwork');
+      清除上传('space');
+
+      // 根据服务类型启用/禁用上传区域
+      const artworkBox = document.getElementById('upload-artwork');
+      const spaceBox = document.getElementById('upload-space');
+
+      if (状态.服务类型 === 'hang_in_home') {
+        artworkBox.classList.remove('disabled');
+        spaceBox.classList.remove('disabled');
+      } else if (状态.服务类型 === 'recommend_work') {
+        artworkBox.classList.add('disabled');
+        spaceBox.classList.remove('disabled');
+      } else if (状态.服务类型 === 'recommend_space') {
+        artworkBox.classList.remove('disabled');
+        spaceBox.classList.add('disabled');
+      }
+
+      检查提交条件();
+    }
+
+    // ==========================================
+    // 图片上传处理
+    // ==========================================
+    function 触发上传(type) {
+      const box = document.getElementById(`upload-${type}`);
+      if (box.classList.contains('disabled') || box.classList.contains('has-image')) return;
+      document.getElementById(`file-${type}`).click();
+    }
+
+    function 处理上传(input, type) {
+      const file = input.files[0];
+      if (!file) return;
+
+      if (type === 'artwork') 状态.作品图文件 = file;
+      else 状态.空间图文件 = file;
+
+      const box = document.getElementById(`upload-${type}`);
+      box.classList.add('has-image');
+
+      // 清除原有内容
+      const oldPreview = box.querySelector('img.preview');
+      const oldRemove = box.querySelector('.remove-btn');
+      if (oldPreview) oldPreview.remove();
+      if (oldRemove) oldRemove.remove();
+
+      // 显示预览
+      const img = document.createElement('img');
+      img.className = 'preview';
+      img.src = URL.createObjectURL(file);
+      box.appendChild(img);
+
+      // 删除按钮
+      const removeBtn = document.createElement('div');
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = '✕';
+      removeBtn.onclick = (e) => {
+        e.stopPropagation();
+        清除上传(type);
+      };
+      box.appendChild(removeBtn);
+
+      检查提交条件();
+    }
+
+    function 清除上传(type) {
+      if (type === 'artwork') 状态.作品图文件 = null;
+      else 状态.空间图文件 = null;
+
+      const box = document.getElementById(`upload-${type}`);
+      box.classList.remove('has-image');
+      const preview = box.querySelector('img.preview');
+      const removeBtn = box.querySelector('.remove-btn');
+      if (preview) preview.remove();
+      if (removeBtn) removeBtn.remove();
+
+      document.getElementById(`file-${type}`).value = '';
+      检查提交条件();
+    }
+
+    // ==========================================
+    // 接收方式选择（含输入框滑出）
+    // ==========================================
+    function 选择接收方式(btn) {
+      const method = btn.dataset.method;
+      const inputWrap = document.getElementById('receive-input-wrap');
+      const input = document.getElementById('receive-target');
+
+      // 切换选中态
+      document.querySelectorAll('.receive-btn').forEach(b => b.classList.remove('active'));
+
+      if (状态.接收方式 === method) {
+        // 再次点击同一个：取消选择
+        状态.接收方式 = null;
+        inputWrap.classList.remove('show');
+        input.value = '';
+        状态.接收地址 = '';
+      } else {
+        btn.classList.add('active');
+        状态.接收方式 = method;
+        inputWrap.classList.add('show');
+
+        if (method === 'email') {
+          input.type = 'email';
+          input.placeholder = '请输入邮箱地址';
+        } else {
+          input.type = 'tel';
+          input.placeholder = '请输入手机号';
+        }
+
+        input.value = '';
+        状态.接收地址 = '';
+        setTimeout(() => input.focus(), 400);
+      }
+
+      检查提交条件();
+    }
+
+    // 监听输入
+    document.getElementById('receive-target').addEventListener('input', (e) => {
+      状态.接收地址 = e.target.value.trim();
+      检查提交条件();
+    });
+
+    // ==========================================
+    // 附加服务开关
+    // ==========================================
+    function 切换附加服务() {
+      状态.附加服务 = !状态.附加服务;
+      document.getElementById('extra-toggle').classList.toggle('active', 状态.附加服务);
+    }
+
+    // ==========================================
+    // 提交条件检查（控制提交按钮启用）
+    // ==========================================
+    function 检查提交条件() {
+      let 可提交 = true;
+
+      // 必须选择服务类型
+      if (!状态.服务类型) 可提交 = false;
+
+      // 必须选择接收方式并填写地址
+      if (!状态.接收方式 || !状态.接收地址) 可提交 = false;
+
+      // 根据服务类型检查图片
+      if (状态.服务类型 === 'hang_in_home') {
+        if (!状态.作品图文件 || !状态.空间图文件) 可提交 = false;
+      } else if (状态.服务类型 === 'recommend_work') {
+        if (!状态.空间图文件) 可提交 = false;
+      } else if (状态.服务类型 === 'recommend_space') {
+        if (!状态.作品图文件) 可提交 = false;
+      }
+
+      document.getElementById('submit-btn').disabled = !可提交;
+    }
+
+    // ==========================================
+    // 提交表单
+    // ==========================================
+    async function 提交表单() {
+      if (状态.提交中) return;
+      状态.提交中 = true;
+
+      const btn = document.getElementById('submit-btn');
+      btn.innerHTML = '<span class="loading-spinner"></span>提交中...';
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append('service_type', 状态.服务类型);
+      formData.append('receive_method', 状态.接收方式);
+      formData.append('receive_target', 状态.接收地址);
+      formData.append('extra_service', 状态.附加服务 ? '1' : '0');
+
+      if (状态.作品图文件) formData.append('artwork', 状态.作品图文件);
+      if (状态.空间图文件) formData.append('space', 状态.空间图文件);
+
+      try {
+        const resp = await fetch('/api/client/submit', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+          const methodText = 状态.接收方式 === 'email' ? '邮箱' : '短信';
+          document.getElementById('success-msg').textContent =
+            `处理完成后将通过${methodText}通知您，请留意查收。`;
+          document.getElementById('success-overlay').classList.add('show');
+        } else {
+          alert(data.error || '提交失败，请重试');
+        }
+      } catch (err) {
+        alert('网络异常，请检查连接后重试');
+        console.error(err);
+      } finally {
+        状态.提交中 = false;
+        btn.textContent = '提交';
+        检查提交条件();
+      }
+    }
+
+    // ==========================================
+    // 重置表单（成功后继续提交新服务）
+    // ==========================================
+    function 重置表单() {
+      document.getElementById('success-overlay').classList.remove('show');
+
+      // 重置状态
+      状态.服务类型 = null;
+      状态.接收方式 = null;
+      状态.接收地址 = '';
+      状态.附加服务 = false;
+      状态.作品图文件 = null;
+      状态.空间图文件 = null;
+
+      // 重置UI
+      document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('active'));
+      清除上传('artwork');
+      清除上传('space');
+      document.getElementById('upload-artwork').classList.add('disabled');
+      document.getElementById('upload-space').classList.add('disabled');
+      document.querySelectorAll('.receive-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('receive-input-wrap').classList.remove('show');
+      document.getElementById('receive-target').value = '';
+      document.getElementById('extra-toggle').classList.remove('active');
+      document.getElementById('submit-btn').disabled = true;
+    }
+  </script>
+</body>
+</html>
