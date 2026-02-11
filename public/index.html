@@ -6,8 +6,7 @@
   <title>Mo:link Design</title>
   <style>
     /* ==========================================
-       Framer友好的调色板系统
-       所有颜色和动画参数集中在此处，便于导入Framer后调整
+       Glassmorphism + 视差滚动 + 微交互
        ========================================== */
     :root {
       /* 品牌色系 */
@@ -21,97 +20,155 @@
       --color-accent-light: #a8c5ab;
       --color-accent-dark: #5a7e5e;
 
+      /* 玻璃态效果 */
+      --glass-bg: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+      --glass-blur: 12px;
+
       /* 中性色 */
-      --color-bg: #faf7f4;
-      --color-card: #ffffff;
-      --color-border: #e8e0d8;
-      --color-text-primary: #3a2a1a;
-      --color-text-secondary: #8a7a6a;
-      --color-text-tertiary: #b8a898;
-      --color-disabled-bg: #f0ebe5;
+      --color-text-primary: #2a2a2a;
+      --color-text-secondary: #5a5a5a;
+      --color-text-tertiary: #8a8a8a;
+      --color-disabled-bg: rgba(240, 235, 229, 0.5);
       --color-disabled-text: #c8b8a8;
 
       /* 圆角 */
       --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 16px;
+      --radius-xl: 24px;
 
-      /* 阴影 */
-      --shadow-card: 0 2px 12px rgba(106, 76, 59, 0.08);
-      --shadow-elevated: 0 8px 32px rgba(106, 76, 59, 0.15);
-
-      /* 动画参数（Framer Motion 风格） */
+      /* 动画参数 */
       --duration-fast: 0.2s;
       --duration-normal: 0.3s;
       --duration-slow: 0.5s;
-      --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+      --easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
       --easing-enter: cubic-bezier(0, 0, 0.2, 1);
-      --easing-exit: cubic-bezier(0.4, 0, 1, 1);
 
       /* 滑出动画距离 */
       --slide-distance: 40px;
     }
 
-    /* ==========================================
-       全局重置
-       ========================================== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* ==========================================
+       视差背景层
+       ========================================== */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: var(--color-bg);
-      color: var(--color-text-primary);
       min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      color: var(--color-text-primary);
       -webkit-font-smoothing: antialiased;
     }
 
+    /* 背景图层 - 抽象家装空间 SVG */
+    .parallax-bg {
+      position: fixed;
+      top: -10%;
+      left: 0;
+      width: 100%;
+      height: 120%;
+      z-index: 0;
+      opacity: 0.4;
+      transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      background: linear-gradient(135deg, #f5efe9 0%, #e8dfd5 100%);
+    }
+
+    .parallax-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        /* 简约的挂画框架 */
+        linear-gradient(90deg, transparent 48%, rgba(107, 76, 59, 0.15) 49%, rgba(107, 76, 59, 0.15) 51%, transparent 52%),
+        linear-gradient(0deg, transparent 48%, rgba(107, 76, 59, 0.15) 49%, rgba(107, 76, 59, 0.15) 51%, transparent 52%),
+        /* 墙面纹理 */
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px);
+      background-size: 300px 200px, 300px 200px, 4px 4px;
+      background-position: 50% 30%, 50% 30%, 0 0;
+    }
+
+    /* 白色噪点纹理 */
+    .parallax-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='3.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+      opacity: 0.6;
+      mix-blend-mode: overlay;
+    }
+
     /* ==========================================
-       页面头部
+       页面头部 - 玻璃态
        ========================================== */
     .header {
-      background: var(--color-primary);
-      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
       padding: 16px 20px;
       display: flex;
       align-items: center;
       gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      background: var(--glass-bg);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
     }
+
     .header-logo {
       font-size: 20px;
       font-weight: 700;
       letter-spacing: 0.5px;
+      color: var(--color-primary-dark);
+      transition: transform var(--duration-fast) var(--easing-bounce);
+      cursor: default;
     }
+    .header-logo:hover { transform: scale(1.05); }
+
     .header-sub {
       font-size: 12px;
       opacity: 0.7;
       margin-left: auto;
+      color: var(--color-text-secondary);
     }
 
     /* ==========================================
-       主容器
+       主容器 - 视差前景层
        ========================================== */
     .container {
+      position: relative;
+      z-index: 1;
       max-width: 480px;
       margin: 0 auto;
       padding: 20px 16px 40px;
     }
 
     /* ==========================================
-       分区卡片 + 滑出动画
+       分区卡片 - Glassmorphism
        ========================================== */
     .section {
-      background: var(--color-card);
-      border-radius: var(--radius-lg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      background: var(--glass-bg);
+      border-radius: var(--radius-xl);
       padding: 20px;
       margin-bottom: 16px;
-      box-shadow: var(--shadow-card);
-      border: 1px solid var(--color-border);
+      box-shadow: var(--glass-shadow);
+      border: 1px solid var(--glass-border);
+      position: relative;
       
-      /* 初始状态：隐藏在上方 */
+      /* 玻璃边缘反光效果 */
+      background-image: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0.1) 100%
+      );
+      
+      /* 初始状态：隐藏 */
       opacity: 0;
       transform: translateY(calc(-1 * var(--slide-distance)));
       max-height: 0;
@@ -139,13 +196,24 @@
       margin-bottom: 16px;
     }
     
-    /* 第一个区域（服务类型）始终可见 */
+    /* 第一个区域始终可见 */
     .section:first-of-type {
       opacity: 1;
       transform: translateY(0);
       max-height: none;
       padding: 20px;
       margin-bottom: 16px;
+    }
+
+    /* 白色噪点纹理叠加到卡片 */
+    .section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-xl);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+      pointer-events: none;
+      mix-blend-mode: overlay;
     }
 
     .section-title {
@@ -155,6 +223,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      font-weight: 600;
     }
     .section-title::before {
       content: '';
@@ -165,7 +234,7 @@
     }
 
     /* ==========================================
-       服务类型选择按钮组
+       服务类型选择按钮 - 微交互
        ========================================== */
     .service-btns {
       display: flex;
@@ -174,24 +243,47 @@
     }
     .service-btn {
       padding: 14px 16px;
-      border: 2px solid var(--color-border);
+      border: 2px solid var(--glass-border);
       border-radius: var(--radius-md);
-      background: var(--color-card);
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
       font-size: 15px;
       color: var(--color-text-primary);
       cursor: pointer;
-      transition: all var(--duration-normal) var(--easing-standard);
+      transition: all var(--duration-normal) var(--easing-smooth);
       text-align: left;
       display: flex;
       align-items: center;
       gap: 10px;
+      position: relative;
+      overflow: hidden;
     }
-    .service-btn:active { transform: scale(0.98); }
+    
+    /* Micro-interaction: 按压弹性 */
+    .service-btn:active { 
+      transform: scale(0.98);
+      transition-duration: var(--duration-fast);
+    }
+    
+    /* Micro-interaction: 悬停光晕 */
+    .service-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(122,158,126,0.15), transparent 50%);
+      opacity: 0;
+      transition: opacity var(--duration-normal) var(--easing-smooth);
+    }
+    .service-btn:hover::after { opacity: 1; }
+    
     .service-btn.active {
       border-color: var(--color-accent);
-      background: linear-gradient(135deg, rgba(122,158,126,0.08), rgba(122,158,126,0.03));
+      background: rgba(122,158,126,0.2);
       color: var(--color-accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(122,158,126,0.2);
     }
+    
     .service-btn .icon {
       width: 32px;
       height: 32px;
@@ -202,7 +294,9 @@
       font-size: 16px;
       flex-shrink: 0;
       font-weight: 600;
+      transition: all var(--duration-normal) var(--easing-bounce);
     }
+    .service-btn:hover .icon { transform: rotate(5deg) scale(1.1); }
     .service-btn.active .icon {
       background: var(--color-accent);
       color: #fff;
@@ -213,7 +307,7 @@
     }
 
     /* ==========================================
-       图片上传区域
+       图片上传区域 - 微交互
        ========================================== */
     .upload-row {
       display: flex;
@@ -222,24 +316,31 @@
     .upload-box {
       flex: 1;
       aspect-ratio: 1;
-      border: 2px dashed var(--color-border);
+      border: 2px dashed var(--glass-border);
       border-radius: var(--radius-md);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all var(--duration-normal) var(--easing-standard);
+      transition: all var(--duration-normal) var(--easing-smooth);
       position: relative;
       overflow: hidden;
-      background: var(--color-primary-pale);
-      
-      /* 底图预留：取消注释并设置背景图 */
-      /* background-image: url('/path/to/placeholder-artwork.png'); */
-      background-size: cover;
-      background-position: center;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
     }
-    .upload-box:active { transform: scale(0.97); }
+    
+    /* Micro-interaction: 悬停提示 */
+    .upload-box:hover:not(.disabled) {
+      border-color: var(--color-accent);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(122,158,126,0.15);
+    }
+    
+    .upload-box:active:not(.disabled) { 
+      transform: translateY(-1px) scale(0.98); 
+    }
+    
     .upload-box.has-image {
       border-style: solid;
       border-color: var(--color-accent);
@@ -247,35 +348,52 @@
     .upload-box.disabled {
       opacity: 0.35;
       pointer-events: none;
-      background: var(--color-disabled-bg);
     }
     .upload-box .label {
       font-size: 13px;
       color: var(--color-text-secondary);
       margin-top: 8px;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(4px);
       padding: 4px 10px;
       border-radius: 12px;
+      transition: transform var(--duration-fast) var(--easing-bounce);
     }
+    .upload-box:hover .label { transform: scale(1.05); }
+    
     .upload-box .plus {
       font-size: 32px;
       color: var(--color-text-tertiary);
       line-height: 1;
       background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(4px);
       width: 48px;
       height: 48px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: all var(--duration-normal) var(--easing-bounce);
     }
+    .upload-box:hover .plus { 
+      transform: rotate(90deg) scale(1.1);
+      background: rgba(122,158,126,0.3);
+      color: var(--color-accent);
+    }
+    
     .upload-box img.preview {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
+      animation: fadeIn 0.3s ease;
     }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
     .upload-box .remove-btn {
       position: absolute;
       top: 6px;
@@ -283,7 +401,8 @@
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
       color: #fff;
       font-size: 14px;
       display: flex;
@@ -291,21 +410,19 @@
       justify-content: center;
       z-index: 5;
       cursor: pointer;
+      transition: all var(--duration-fast) var(--easing-bounce);
+      opacity: 0;
     }
-    .upload-box input[type="file"] {
-      display: none;
+    .upload-box:hover .remove-btn { opacity: 1; }
+    .remove-btn:hover { 
+      transform: scale(1.15) rotate(90deg);
+      background: rgba(196,92,74,0.9);
     }
-
-    /* 底图样式（当需要显示占位图时） */
-    .upload-box[data-placeholder="artwork"]::before {
-      /* 可在此设置作品图占位背景 */
-    }
-    .upload-box[data-placeholder="space"]::before {
-      /* 可在此设置空间图占位背景 */
-    }
+    
+    .upload-box input[type="file"] { display: none; }
 
     /* ==========================================
-       接收方式
+       接收方式 - 微交互
        ========================================== */
     .receive-row {
       display: flex;
@@ -314,27 +431,54 @@
     }
     .receive-btn {
       padding: 12px 18px;
-      border: 2px solid var(--color-border);
+      border: 2px solid var(--glass-border);
       border-radius: var(--radius-md);
-      background: var(--color-card);
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
       font-size: 14px;
       color: var(--color-text-primary);
       cursor: pointer;
-      transition: all var(--duration-normal) var(--easing-standard);
+      transition: all var(--duration-normal) var(--easing-smooth);
       white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Micro-interaction: 波纹效果 */
+    .receive-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(122,158,126,0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+    .receive-btn:active::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .receive-btn:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     .receive-btn.active {
       border-color: var(--color-accent);
       background: var(--color-accent);
       color: #fff;
     }
+    
     .receive-input-wrap {
       flex: 1;
       overflow: hidden;
       max-width: 0;
       opacity: 0;
       transition: 
-        max-width 0.4s var(--easing-standard), 
+        max-width 0.4s var(--easing-smooth), 
         opacity var(--duration-normal) ease, 
         margin var(--duration-normal) ease;
       margin-left: 0;
@@ -349,23 +493,25 @@
       height: 100%;
       min-height: 44px;
       padding: 0 14px;
-      border: 2px solid var(--color-border);
+      border: 2px solid var(--glass-border);
       border-radius: var(--radius-md);
       font-size: 14px;
       color: var(--color-text-primary);
-      background: var(--color-card);
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(8px);
       outline: none;
-      transition: border-color var(--duration-normal) var(--easing-standard);
+      transition: all var(--duration-normal) var(--easing-smooth);
     }
     .receive-input-wrap input:focus {
       border-color: var(--color-accent);
+      transform: scale(1.02);
     }
     .receive-input-wrap input::placeholder {
       color: var(--color-text-tertiary);
     }
 
     /* ==========================================
-       附加服务开关
+       附加服务开关 - 微交互
        ========================================== */
     .toggle-row {
       display: flex;
@@ -388,14 +534,16 @@
     .toggle-switch {
       width: 48px;
       height: 28px;
-      background: var(--color-disabled-bg);
+      background: rgba(200,184,168,0.3);
+      backdrop-filter: blur(4px);
       border-radius: 14px;
       position: relative;
       cursor: pointer;
-      transition: background var(--duration-normal) var(--easing-standard);
+      transition: all var(--duration-normal) var(--easing-smooth);
       flex-shrink: 0;
       margin-left: 12px;
     }
+    .toggle-switch:hover { transform: scale(1.05); }
     .toggle-switch.active {
       background: var(--color-accent);
     }
@@ -408,15 +556,15 @@
       position: absolute;
       top: 3px;
       left: 3px;
-      transition: left var(--duration-normal) var(--easing-standard);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      transition: left var(--duration-normal) var(--easing-bounce);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
     .toggle-switch.active::after {
       left: 23px;
     }
 
     /* ==========================================
-       提交按钮
+       提交按钮 - 强烈微交互
        ========================================== */
     .submit-btn {
       width: 100%;
@@ -428,8 +576,10 @@
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      transition: all var(--duration-normal) var(--easing-standard);
+      transition: all var(--duration-normal) var(--easing-smooth);
       letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
       
       /* 初始隐藏 */
       opacity: 0;
@@ -441,8 +591,26 @@
       transform: translateY(0);
       pointer-events: auto;
     }
+    
+    /* Micro-interaction: 光晕扫过 */
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    .submit-btn:hover::before { left: 100%; }
+    
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(107,76,59,0.3);
+    }
     .submit-btn:active:not(:disabled) {
-      transform: scale(0.98);
+      transform: translateY(-1px) scale(0.98);
       background: var(--color-primary-dark);
     }
     .submit-btn:disabled {
@@ -452,62 +620,58 @@
     }
 
     /* ==========================================
-       成功提示遮罩
+       Toast 通知（Vercel 风格）
        ========================================== */
-    .overlay {
+    .toast-container {
       position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #000;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1);
       display: flex;
       align-items: center;
-      justify-content: center;
-      z-index: 999;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity var(--duration-normal) ease;
-    }
-    .overlay.show {
-      opacity: 1;
+      gap: 10px;
       pointer-events: auto;
+      
+      /* 入场动画 */
+      animation: toastSlideIn 0.3s var(--easing-bounce);
+      
+      /* 淡出动画 */
+      opacity: 1;
+      transition: opacity 0.3s ease;
     }
-    .success-card {
-      background: var(--color-card);
-      border-radius: var(--radius-lg);
-      padding: 32px 28px;
-      text-align: center;
-      max-width: 320px;
-      width: 90%;
-      box-shadow: var(--shadow-elevated);
-      transform: scale(0.9);
-      transition: transform var(--duration-normal) ease;
+
+    .toast.fade-out {
+      opacity: 0;
     }
-    .overlay.show .success-card {
-      transform: scale(1);
+
+    @keyframes toastSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
-    .success-card .icon-big {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
-    .success-card h3 {
-      font-size: 18px;
-      margin-bottom: 8px;
-      color: var(--color-text-primary);
-    }
-    .success-card p {
-      font-size: 14px;
-      color: var(--color-text-secondary);
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-    .success-card button {
-      padding: 12px 32px;
-      border: none;
-      border-radius: var(--radius-md);
-      background: var(--color-primary);
-      color: #fff;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background var(--duration-normal) var(--easing-standard);
+
+    .toast .icon {
+      font-size: 16px;
+      flex-shrink: 0;
     }
 
     /* ==========================================
@@ -528,6 +692,12 @@
   </style>
 </head>
 <body>
+
+  <!-- 视差背景层 -->
+  <div class="parallax-bg"></div>
+
+  <!-- Toast 通知容器 -->
+  <div class="toast-container" id="toast-container"></div>
 
   <div class="header">
     <div class="header-logo">Mo:link Design</div>
@@ -559,12 +729,12 @@
     <div class="section" id="section-upload">
       <div class="section-title">图片上传</div>
       <div class="upload-row">
-        <div class="upload-box disabled" id="upload-artwork" data-placeholder="artwork" onclick="触发上传('artwork')">
+        <div class="upload-box disabled" id="upload-artwork" onclick="触发上传('artwork')">
           <input type="file" id="file-artwork" accept="image/*" onchange="处理上传(this, 'artwork')">
           <span class="plus">+</span>
           <span class="label">作品图片</span>
         </div>
-        <div class="upload-box disabled" id="upload-space" data-placeholder="space" onclick="触发上传('space')">
+        <div class="upload-box disabled" id="upload-space" onclick="触发上传('space')">
           <input type="file" id="file-space" accept="image/*" onchange="处理上传(this, 'space')">
           <span class="plus">+</span>
           <span class="label">空间图片</span>
@@ -584,7 +754,7 @@
       </div>
     </div>
 
-    <!-- 区域4+5: 附加服务和提交按钮（同时出现） -->
+    <!-- 区域4: 附加服务 -->
     <div class="section" id="section-extra">
       <div class="toggle-row">
         <div class="toggle-label">
@@ -599,19 +769,54 @@
 
   </div>
 
-  <div class="overlay" id="success-overlay">
-    <div class="success-card">
-      <div class="icon-big">✓</div>
-      <h3>提交成功</h3>
-      <p id="success-msg">处理完成后将通过邮箱通知您，请留意查收。</p>
-      <button onclick="重置表单()">继续提交新服务</button>
-    </div>
-  </div>
-
   <script>
     /* ==========================================
-       Framer友好的状态管理
-       导入Framer后可直接绑定到组件状态
+       视差滚动效果
+       ========================================== */
+    let lastScrollY = window.scrollY;
+    const parallaxBg = document.querySelector('.parallax-bg');
+    
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      // 背景移动速度为滚动速度的 50%
+      parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
+    }, { passive: true });
+
+    /* ==========================================
+       Toast 通知系统
+       ========================================== */
+    function 显示Toast(message, icon = '✓') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `
+        <span class="icon">${icon}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      
+      // 3秒后淡出并移除
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    /* ==========================================
+       鼠标跟踪悬停光晕（服务按钮）
+       ========================================== */
+    document.querySelectorAll('.service-btn').forEach(btn => {
+      btn.addEventListener('mousemove', (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        btn.style.setProperty('--mouse-x', `${x}%`);
+        btn.style.setProperty('--mouse-y', `${y}%`);
+      });
+    });
+
+    /* ==========================================
+       状态管理
        ========================================== */
     const 状态 = {
       服务类型: null,
@@ -621,7 +826,7 @@
       作品图文件: null,
       空间图文件: null,
       提交中: false,
-      当前步骤: 1  // 1=选服务, 2=上传图, 3=选接收, 4=附加+提交
+      当前步骤: 1
     };
 
     /* ==========================================
@@ -636,12 +841,10 @@
       
       section.classList.add('visible');
       
-      // 等待动画开始后检查是否需要滚动
       setTimeout(() => {
         const rect = section.getBoundingClientRect();
         const windowHeight = window.innerHeight;
         
-        // 如果元素底部超出视口，自动滚动到该元素
         if (rect.bottom > windowHeight - 20) {
           section.scrollIntoView({ 
             behavior: 'smooth', 
@@ -805,7 +1008,6 @@
       if (状态.接收方式 && 状态.接收地址 && 状态.当前步骤 === 3) {
         状态.当前步骤 = 4;
         显示区域('section-extra', () => {
-          // 附加服务区显示后，同时显示提交按钮
           document.getElementById('submit-btn').classList.add('visible');
         });
       }
@@ -869,14 +1071,17 @@
 
         if (data.success) {
           const methodText = 状态.接收方式 === 'email' ? '邮箱' : '短信';
-          document.getElementById('success-msg').textContent =
-            `处理完成后将通过${methodText}通知您，请留意查收。`;
-          document.getElementById('success-overlay').classList.add('show');
+          显示Toast(`提交成功！处理完成后将通过${methodText}通知您`, '✓');
+          
+          // 2秒后重置表单
+          setTimeout(() => {
+            重置表单();
+          }, 2000);
         } else {
-          alert(data.error || '提交失败，请重试');
+          显示Toast(data.error || '提交失败，请重试', '✗');
         }
       } catch (err) {
-        alert('网络异常，请检查连接后重试');
+        显示Toast('网络异常，请检查连接后重试', '✗');
         console.error(err);
       } finally {
         状态.提交中 = false;
@@ -889,8 +1094,6 @@
        重置表单
        ========================================== */
     function 重置表单() {
-      document.getElementById('success-overlay').classList.remove('show');
-
       状态.服务类型 = null;
       状态.接收方式 = null;
       状态.接收地址 = '';
@@ -909,14 +1112,12 @@
       document.getElementById('receive-target').value = '';
       document.getElementById('extra-toggle').classList.remove('active');
       
-      // 隐藏所有后续区域
       document.querySelectorAll('.section').forEach((s, i) => {
         if (i > 0) s.classList.remove('visible');
       });
       document.getElementById('submit-btn').classList.remove('visible');
       document.getElementById('submit-btn').disabled = true;
       
-      // 滚动回顶部
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   </script>

@@ -8,37 +8,98 @@
     :root {
       --color-primary: #6b4c3b;
       --color-primary-light: #8b6f5e;
-      --color-primary-pale: #f5efe9;
       --color-primary-dark: #4a3228;
       --color-accent: #7a9e7e;
-      --color-bg: #faf7f4;
-      --color-card: #ffffff;
-      --color-border: #e8e0d8;
-      --color-text-primary: #3a2a1a;
-      --color-text-secondary: #8a7a6a;
-      --color-text-tertiary: #b8a898;
-      --radius: 12px;
+      --color-text-primary: #2a2a2a;
+      --color-text-secondary: #5a5a5a;
+      --color-text-tertiary: #8a8a8a;
+      
+      /* 玻璃态效果 */
+      --glass-bg: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+      --glass-blur: 12px;
+      
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      
+      --duration-fast: 0.2s;
+      --duration-normal: 0.3s;
+      --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+      --easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--color-bg);
-      color: var(--color-text-primary);
       min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      color: var(--color-text-primary);
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* ==========================================
+       视差背景层
+       ========================================== */
+    .parallax-bg {
+      position: fixed;
+      top: -10%;
+      left: 0;
+      width: 100%;
+      height: 120%;
+      z-index: 0;
+      opacity: 0.4;
+      transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      background: linear-gradient(135deg, #f5efe9 0%, #e8dfd5 100%);
+    }
+
+    .parallax-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(90deg, transparent 48%, rgba(107, 76, 59, 0.15) 49%, rgba(107, 76, 59, 0.15) 51%, transparent 52%),
+        linear-gradient(0deg, transparent 48%, rgba(107, 76, 59, 0.15) 49%, rgba(107, 76, 59, 0.15) 51%, transparent 52%),
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px);
+      background-size: 300px 200px, 300px 200px, 4px 4px;
+      background-position: 50% 30%, 50% 30%, 0 0;
+    }
+
+    .parallax-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='3.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+      opacity: 0.6;
+      mix-blend-mode: overlay;
+    }
+
+    /* ==========================================
+       页面头部 - 玻璃态
+       ========================================== */
     .header {
-      background: var(--color-primary);
-      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
       padding: 14px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      background: var(--glass-bg);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      background-image: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0.1) 100%
+      );
     }
+    
     .back-btn {
       width: 36px;
       height: 36px;
@@ -48,51 +109,166 @@
       font-size: 20px;
       cursor: pointer;
       border-radius: 8px;
-      transition: background 0.2s;
+      transition: all var(--duration-normal) var(--easing-bounce);
       text-decoration: none;
-      color: #fff;
+      color: var(--color-primary-dark);
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(4px);
     }
-    .back-btn:hover { background: rgba(255,255,255,0.15); }
-    .header-title { font-size: 16px; font-weight: 600; }
+    .back-btn:hover { 
+      background: rgba(255, 255, 255, 0.5);
+      transform: translateX(-3px) scale(1.05);
+    }
+    .back-btn:active { transform: translateX(-1px) scale(0.98); }
+    
+    .header-title { 
+      font-size: 16px; 
+      font-weight: 600;
+      color: var(--color-primary-dark);
+    }
 
+    /* ==========================================
+       主容器 - 视差前景层
+       ========================================== */
     .container {
+      position: relative;
+      z-index: 1;
       max-width: 480px;
       margin: 0 auto;
       padding: 20px 16px 60px;
     }
 
+    /* ==========================================
+       状态卡片 - Glassmorphism
+       ========================================== */
     .status-card {
-      background: var(--color-card);
-      border-radius: var(--radius);
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      background: var(--glass-bg);
+      border-radius: var(--radius-xl);
       padding: 32px 24px;
       text-align: center;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--glass-border);
       margin-bottom: 20px;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      
+      background-image: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0.1) 100%
+      );
+      
+      animation: slideUp 0.5s var(--easing-smooth);
     }
-    .status-card .icon { font-size: 40px; margin-bottom: 12px; }
-    .status-card h2 { font-size: 18px; margin-bottom: 8px; }
-    .status-card p { font-size: 14px; color: var(--color-text-secondary); line-height: 1.5; }
 
-    .image-list { display: flex; flex-direction: column; gap: 16px; }
-    .image-item {
-      background: var(--color-card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      border: 1px solid var(--color-border);
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
+
+    /* 白色噪点纹理 */
+    .status-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-xl);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+      pointer-events: none;
+      mix-blend-mode: overlay;
+    }
+    
+    .status-card .icon { 
+      font-size: 40px; 
+      margin-bottom: 12px;
+      display: inline-block;
+      animation: iconBounce 0.6s var(--easing-bounce);
+    }
+
+    @keyframes iconBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    
+    .status-card h2 { 
+      font-size: 18px; 
+      margin-bottom: 8px;
+      color: var(--color-text-primary);
+    }
+    .status-card p { 
+      font-size: 14px; 
+      color: var(--color-text-secondary); 
+      line-height: 1.5; 
+    }
+
+    /* ==========================================
+       图片列表
+       ========================================== */
+    .image-list { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 16px; 
+    }
+    
+    .image-item {
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      background: var(--glass-bg);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      transition: all var(--duration-normal) var(--easing-smooth);
+      position: relative;
+      
+      background-image: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.25) 0%,
+        rgba(255, 255, 255, 0.05) 100%
+      );
+      
+      animation: slideUp 0.5s var(--easing-smooth);
+      animation-fill-mode: both;
+    }
+
+    .image-item:nth-child(1) { animation-delay: 0.1s; }
+    .image-item:nth-child(2) { animation-delay: 0.2s; }
+    .image-item:nth-child(3) { animation-delay: 0.3s; }
+    .image-item:nth-child(4) { animation-delay: 0.4s; }
+
+    /* Micro-interaction: 悬停放大 */
+    .image-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
+    }
+    
     .image-item img {
       width: 100%;
       display: block;
       -webkit-touch-callout: default;
+      transition: transform var(--duration-normal) var(--easing-smooth);
     }
+    .image-item:hover img {
+      transform: scale(1.02);
+    }
+    
     .image-item .hint {
       padding: 8px 12px;
       font-size: 11px;
       color: var(--color-text-tertiary);
       text-align: center;
-      border-top: 1px solid var(--color-border);
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(4px);
     }
 
+    /* ==========================================
+       等待状态动画
+       ========================================== */
     .waiting-dots span {
       animation: blink 1.4s infinite both;
     }
@@ -112,6 +288,9 @@
 </head>
 <body>
 
+  <!-- 视差背景层 -->
+  <div class="parallax-bg"></div>
+
   <div class="header">
     <a class="back-btn" href="/" title="返回首页">‹</a>
     <div class="header-title" id="page-title">加载中...</div>
@@ -122,6 +301,16 @@
   </div>
 
   <script>
+    /* ==========================================
+       视差滚动效果
+       ========================================== */
+    const parallaxBg = document.querySelector('.parallax-bg');
+    
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
+    }, { passive: true });
+
     const token = window.location.pathname.split('/d/')[1];
 
     async function 加载交付数据() {
