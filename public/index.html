@@ -54,6 +54,32 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     /* ==========================================
+       移动端全局优化
+       ========================================== */
+    html {
+      /* 禁用iOS双击缩放 */
+      touch-action: manipulation;
+      /* 禁用iOS长按选择 */
+      -webkit-user-select: none;
+      user-select: none;
+      /* 平滑滚动 */
+      scroll-behavior: smooth;
+    }
+
+    /* 允许文本选择和输入框操作 */
+    input, textarea, [contenteditable] {
+      -webkit-user-select: text;
+      user-select: text;
+      touch-action: auto;
+    }
+
+    /* 禁用移动端点击蓝色高亮 */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+
+    /* ==========================================
        视差背景层
        ========================================== */
     body {
@@ -79,12 +105,19 @@
       /* 默认渐变背景 */
       background: linear-gradient(135deg, #f5efe9 0%, #e8dfd5 100%);
       
-      /* 本地图片背景（已启用） */
-      background-image: url('/images/background.jpg');
-      background-size: cover;          /* 缩放图片覆盖整个容器 */
-      background-position: center top; /* 从顶部开始居中 */
-      background-repeat: no-repeat;    /* 不重复 */
-      background-attachment: scroll;   /* 跟随滚动 */
+      /* 移动端图片背景（优先加载小尺寸） */
+      background-image: url('/images/background-mobile.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-attachment: scroll;
+    }
+
+    /* PC端使用高清图片 */
+    @media (min-width: 768px) {
+      .parallax-bg {
+        background-image: url('/images/background.jpg');
+      }
     }
 
     /* 格网背景已移除，使用纯图片背景 */
@@ -144,6 +177,13 @@
       padding: 20px 16px 40px;
     }
 
+    /* 移动端优化：增加间距避免元素紧凑 */
+    @media (max-width: 767px) {
+      .container {
+        padding: 24px 20px 60px;
+      }
+    }
+
     /* ==========================================
        分区卡片 - Glassmorphism
        ========================================== */
@@ -183,6 +223,21 @@
         margin var(--duration-slow) var(--easing-enter);
     }
     
+    /* 移动端：增加padding和margin，加宽玻璃边缘 */
+    @media (max-width: 767px) {
+      .section {
+        padding: 24px;
+        margin-bottom: 20px;
+        border-width: 1.5px; /* 加宽边缘便于触摸设备识别 */
+      }
+      
+      .section.visible {
+        padding-top: 24px;
+        padding-bottom: 24px;
+        margin-bottom: 20px;
+      }
+    }
+    
     /* 滑出显示状态 */
     .section.visible {
       opacity: 1;
@@ -200,6 +255,13 @@
       max-height: none;
       padding: 20px;
       margin-bottom: 16px;
+    }
+
+    @media (max-width: 767px) {
+      .section:first-of-type {
+        padding: 24px;
+        margin-bottom: 20px;
+      }
     }
 
     /* 白色噪点纹理叠加到卡片 */
@@ -238,6 +300,14 @@
       flex-direction: column;
       gap: 10px;
     }
+
+    /* 移动端增加间距 */
+    @media (max-width: 767px) {
+      .service-btns {
+        gap: 14px;
+      }
+    }
+
     .service-btn {
       padding: 14px 16px;
       border: 2px solid var(--glass-border);
@@ -255,6 +325,14 @@
       position: relative;
       overflow: hidden;
     }
+
+    /* 移动端增大可点击区域 */
+    @media (max-width: 767px) {
+      .service-btn {
+        padding: 16px 18px;
+        min-height: 56px; /* 符合移动端最小触控区域标准 */
+      }
+    }
     
     /* Micro-interaction: 按压弹性 */
     .service-btn:active { 
@@ -262,7 +340,7 @@
       transition-duration: var(--duration-fast);
     }
     
-    /* Micro-interaction: 悬停光晕 */
+    /* PC端悬停光晕（触摸设备禁用） */
     .service-btn::after {
       content: '';
       position: absolute;
@@ -271,7 +349,10 @@
       opacity: 0;
       transition: opacity var(--duration-normal) var(--easing-smooth);
     }
-    .service-btn:hover::after { opacity: 1; }
+    
+    @media (hover: hover) {
+      .service-btn:hover::after { opacity: 1; }
+    }
     
     .service-btn.active {
       border-color: var(--color-accent);
@@ -279,6 +360,13 @@
       color: var(--color-accent-dark);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(122,158,126,0.2);
+    }
+
+    /* 移动端active状态不上移 */
+    @media (max-width: 767px) {
+      .service-btn.active {
+        transform: translateY(0);
+      }
     }
     
     .service-btn .icon {
@@ -293,7 +381,12 @@
       font-weight: 600;
       transition: all var(--duration-normal) var(--easing-bounce);
     }
-    .service-btn:hover .icon { transform: rotate(5deg) scale(1.1); }
+
+    /* PC端悬停图标动效（触摸设备禁用） */
+    @media (hover: hover) {
+      .service-btn:hover .icon { transform: rotate(5deg) scale(1.1); }
+    }
+
     .service-btn.active .icon {
       background: var(--color-accent);
       color: #fff;
@@ -310,6 +403,14 @@
       display: flex;
       gap: 12px;
     }
+
+    /* 移动端增加间距 */
+    @media (max-width: 767px) {
+      .upload-row {
+        gap: 16px;
+      }
+    }
+
     .upload-box {
       flex: 1;
       aspect-ratio: 1;
@@ -326,16 +427,33 @@
       background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(8px);
     }
+
+    /* 移动端加宽边框便于识别 */
+    @media (max-width: 767px) {
+      .upload-box {
+        border-width: 2.5px;
+      }
+    }
     
-    /* Micro-interaction: 悬停提示 */
-    .upload-box:hover:not(.disabled) {
-      border-color: var(--color-accent);
-      transform: translateY(-3px);
-      box-shadow: 0 6px 16px rgba(122,158,126,0.15);
+    /* PC端悬停提示（触摸设备禁用） */
+    @media (hover: hover) {
+      .upload-box:hover:not(.disabled) {
+        border-color: var(--color-accent);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(122,158,126,0.15);
+      }
     }
     
     .upload-box:active:not(.disabled) { 
       transform: translateY(-1px) scale(0.98); 
+    }
+
+    /* 移动端点击反馈 */
+    @media (max-width: 767px) {
+      .upload-box:active:not(.disabled) {
+        transform: scale(0.98);
+        border-color: var(--color-accent);
+      }
     }
     
     .upload-box.has-image {
@@ -356,7 +474,11 @@
       border-radius: 12px;
       transition: transform var(--duration-fast) var(--easing-bounce);
     }
-    .upload-box:hover .label { transform: scale(1.05); }
+
+    /* PC端悬停标签动效（触摸设备禁用） */
+    @media (hover: hover) {
+      .upload-box:hover .label { transform: scale(1.05); }
+    }
     
     .upload-box .plus {
       font-size: 32px;
@@ -372,10 +494,23 @@
       justify-content: center;
       transition: all var(--duration-normal) var(--easing-bounce);
     }
-    .upload-box:hover .plus { 
-      transform: rotate(90deg) scale(1.1);
-      background: rgba(122,158,126,0.3);
-      color: var(--color-accent);
+
+    /* 移动端增大plus符号 */
+    @media (max-width: 767px) {
+      .upload-box .plus {
+        width: 56px;
+        height: 56px;
+        font-size: 36px;
+      }
+    }
+
+    /* PC端悬停plus动效（触摸设备禁用） */
+    @media (hover: hover) {
+      .upload-box:hover .plus { 
+        transform: rotate(90deg) scale(1.1);
+        background: rgba(122,158,126,0.3);
+        color: var(--color-accent);
+      }
     }
     
     .upload-box img.preview {
@@ -410,10 +545,35 @@
       transition: all var(--duration-fast) var(--easing-bounce);
       opacity: 0;
     }
-    .upload-box:hover .remove-btn { opacity: 1; }
+
+    /* 移动端始终显示删除按钮，增大尺寸 */
+    @media (max-width: 767px) {
+      .upload-box .remove-btn {
+        opacity: 1;
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+        top: 8px;
+        right: 8px;
+      }
+    }
+
+    /* PC端悬停显示 */
+    @media (hover: hover) {
+      .upload-box:hover .remove-btn { opacity: 1; }
+    }
+
     .remove-btn:hover { 
       transform: scale(1.15) rotate(90deg);
       background: rgba(196,92,74,0.9);
+    }
+
+    /* 移动端点击反馈 */
+    @media (max-width: 767px) {
+      .remove-btn:active {
+        transform: scale(0.9);
+        background: rgba(196,92,74,0.9);
+      }
     }
     
     .upload-box input[type="file"] { display: none; }
@@ -427,6 +587,14 @@
       align-items: stretch;
       flex-wrap: nowrap;
     }
+
+    /* 移动端增加间距 */
+    @media (max-width: 767px) {
+      .receive-row {
+        gap: 10px;
+      }
+    }
+
     .receive-btn {
       padding: 12px 16px;
       border: 2px solid var(--glass-border);
@@ -442,8 +610,17 @@
       overflow: hidden;
       flex-shrink: 0;
     }
+
+    /* 移动端增大可点击区域 */
+    @media (max-width: 767px) {
+      .receive-btn {
+        padding: 14px 18px;
+        min-height: 48px;
+        font-size: 15px;
+      }
+    }
     
-    /* Micro-interaction: 波纹效果 */
+    /* PC端波纹效果（触摸设备禁用） */
     .receive-btn::before {
       content: '';
       position: absolute;
@@ -456,15 +633,29 @@
       transform: translate(-50%, -50%);
       transition: width 0.6s ease, height 0.6s ease;
     }
-    .receive-btn:active::before {
-      width: 300px;
-      height: 300px;
+
+    @media (hover: hover) {
+      .receive-btn:active::before {
+        width: 300px;
+        height: 300px;
+      }
     }
     
-    .receive-btn:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    /* PC端悬停效果（触摸设备禁用） */
+    @media (hover: hover) {
+      .receive-btn:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
     }
+
+    /* 移动端点击反馈 */
+    @media (max-width: 767px) {
+      .receive-btn:active {
+        transform: scale(0.98);
+      }
+    }
+
     .receive-btn.active {
       border-color: var(--color-accent);
       background: var(--color-accent);
@@ -499,10 +690,28 @@
       outline: none;
       transition: all var(--duration-normal) var(--easing-smooth);
     }
+
+    /* 移动端增大输入框 */
+    @media (max-width: 767px) {
+      .receive-input-wrap input {
+        min-height: 48px;
+        font-size: 15px;
+        padding: 0 16px;
+      }
+    }
+
     .receive-input-wrap input:focus {
       border-color: var(--color-accent);
       transform: scale(1.01);
     }
+
+    /* 移动端focus不缩放 */
+    @media (max-width: 767px) {
+      .receive-input-wrap input:focus {
+        transform: scale(1);
+      }
+    }
+
     .receive-input-wrap input::placeholder {
       color: var(--color-text-tertiary);
     }
@@ -516,18 +725,41 @@
       justify-content: space-between;
       padding: 4px 0;
     }
+
+    /* 移动端增加padding */
+    @media (max-width: 767px) {
+      .toggle-row {
+        padding: 8px 0;
+      }
+    }
+
     .toggle-label {
       font-size: 14px;
       color: var(--color-text-primary);
       flex: 1;
       line-height: 1.4;
     }
+
+    /* 移动端增大字号 */
+    @media (max-width: 767px) {
+      .toggle-label {
+        font-size: 15px;
+      }
+    }
+
     .toggle-label small {
       display: block;
       color: var(--color-text-secondary);
       font-size: 12px;
       margin-top: 2px;
     }
+
+    @media (max-width: 767px) {
+      .toggle-label small {
+        font-size: 13px;
+      }
+    }
+
     .toggle-switch {
       width: 48px;
       height: 28px;
@@ -540,7 +772,27 @@
       flex-shrink: 0;
       margin-left: 12px;
     }
-    .toggle-switch:hover { transform: scale(1.05); }
+
+    /* 移动端增大开关尺寸 */
+    @media (max-width: 767px) {
+      .toggle-switch {
+        width: 56px;
+        height: 32px;
+        border-radius: 16px;
+        margin-left: 16px;
+      }
+    }
+
+    /* PC端悬停效果（触摸设备禁用） */
+    @media (hover: hover) {
+      .toggle-switch:hover { transform: scale(1.05); }
+    }
+
+    /* 移动端点击反馈 */
+    @media (max-width: 767px) {
+      .toggle-switch:active { transform: scale(0.95); }
+    }
+
     .toggle-switch.active {
       background: var(--color-accent);
     }
@@ -556,8 +808,23 @@
       transition: left var(--duration-normal) var(--easing-bounce);
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
+
+    /* 移动端调整滑块尺寸 */
+    @media (max-width: 767px) {
+      .toggle-switch::after {
+        width: 26px;
+        height: 26px;
+      }
+    }
+
     .toggle-switch.active::after {
       left: 23px;
+    }
+
+    @media (max-width: 767px) {
+      .toggle-switch.active::after {
+        left: 27px;
+      }
     }
 
     /* ==========================================
@@ -583,13 +850,23 @@
       transform: translateY(calc(-1 * var(--slide-distance)));
       pointer-events: none;
     }
+
+    /* 移动端增大按钮高度 */
+    @media (max-width: 767px) {
+      .submit-btn {
+        padding: 18px;
+        font-size: 17px;
+        min-height: 56px;
+      }
+    }
+
     .submit-btn.visible {
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
     }
     
-    /* Micro-interaction: 光晕扫过 */
+    /* PC端光晕扫过（触摸设备禁用） */
     .submit-btn::before {
       content: '';
       position: absolute;
@@ -600,16 +877,28 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
       transition: left 0.5s ease;
     }
-    .submit-btn:hover::before { left: 100%; }
-    
-    .submit-btn:hover:not(:disabled) {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(107,76,59,0.3);
+
+    @media (hover: hover) {
+      .submit-btn:hover::before { left: 100%; }
+      
+      .submit-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(107,76,59,0.3);
+      }
     }
+    
     .submit-btn:active:not(:disabled) {
       transform: translateY(-1px) scale(0.98);
       background: var(--color-primary-dark);
     }
+
+    /* 移动端点击反馈 */
+    @media (max-width: 767px) {
+      .submit-btn:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+    }
+
     .submit-btn:disabled {
       background: var(--color-disabled-bg);
       color: var(--color-disabled-text);
@@ -769,19 +1058,32 @@
   <script>
     /* ==========================================
        视差滚动效果 - 背景速度为内容的50%
+       移动端优化：避免地址栏隐藏导致的背景抖动
        ========================================== */
     const parallaxBg = document.querySelector('.parallax-bg');
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // 动态设置背景高度，确保滚动时不露底
-    function 更新背景高度() {
-      const docHeight = document.documentElement.scrollHeight;
-      // 背景高度为页面总高度的150%，确保滚动时始终有内容
-      parallaxBg.style.height = `${docHeight * 1.5}px`;
+    // 移动端使用固定高度，避免地址栏隐藏/显示导致的抖动
+    if (isMobile) {
+      // 移动端：使用视口高度的200%确保滚动时不露底
+      const viewportHeight = window.innerHeight;
+      parallaxBg.style.height = `${viewportHeight * 2}px`;
+    } else {
+      // PC端：动态计算背景高度
+      function 更新背景高度() {
+        const docHeight = document.documentElement.scrollHeight;
+        parallaxBg.style.height = `${docHeight * 1.5}px`;
+      }
+      
+      更新背景高度();
+      
+      // PC端防抖resize，避免频繁触发
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(更新背景高度, 150);
+      });
     }
-    
-    // 初始化和窗口调整时更新背景高度
-    更新背景高度();
-    window.addEventListener('resize', 更新背景高度);
     
     // 视差滚动：背景移动速度为滚动的50%
     let ticking = false;

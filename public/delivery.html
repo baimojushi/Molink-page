@@ -32,6 +32,22 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
+    /* ==========================================
+       移动端全局优化
+       ========================================== */
+    html {
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      scroll-behavior: smooth;
+    }
+
+    /* 禁用移动端点击蓝色高亮 */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
       min-height: 100vh;
@@ -57,12 +73,19 @@
       /* 默认渐变背景 */
       background: linear-gradient(135deg, #f5efe9 0%, #e8dfd5 100%);
       
-      /* 本地图片背景（已启用） */
-      background-image: url('/images/background.jpg');
-      background-size: cover;          /* 缩放图片覆盖整个容器 */
-      background-position: center top; /* 从顶部开始居中 */
-      background-repeat: no-repeat;    /* 不重复 */
-      background-attachment: scroll;   /* 跟随滚动 */
+      /* 移动端图片背景（优先加载小尺寸） */
+      background-image: url('/images/background-mobile.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-attachment: scroll;
+    }
+
+    /* PC端使用高清图片 */
+    @media (min-width: 768px) {
+      .parallax-bg {
+        background-image: url('/images/background.jpg');
+      }
     }
 
     /* 格网背景已移除，使用纯图片背景 */
@@ -114,11 +137,33 @@
       background: rgba(255, 255, 255, 0.3);
       backdrop-filter: blur(4px);
     }
-    .back-btn:hover { 
-      background: rgba(255, 255, 255, 0.5);
-      transform: translateX(-3px) scale(1.05);
+
+    /* 移动端增大可点击区域 */
+    @media (max-width: 767px) {
+      .back-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+      }
     }
+
+    /* PC端悬停效果（触摸设备禁用） */
+    @media (hover: hover) {
+      .back-btn:hover { 
+        background: rgba(255, 255, 255, 0.5);
+        transform: translateX(-3px) scale(1.05);
+      }
+    }
+
     .back-btn:active { transform: translateX(-1px) scale(0.98); }
+
+    /* 移动端点击反馈 */
+    @media (max-width: 767px) {
+      .back-btn:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.5);
+      }
+    }
     
     .header-title { 
       font-size: 16px; 
@@ -135,6 +180,13 @@
       max-width: 480px;
       margin: 0 auto;
       padding: 20px 16px 60px;
+    }
+
+    /* 移动端增加间距 */
+    @media (max-width: 767px) {
+      .container {
+        padding: 24px 20px 80px;
+      }
     }
 
     /* ==========================================
@@ -159,6 +211,15 @@
       );
       
       animation: slideUp 0.5s var(--easing-smooth);
+    }
+
+    /* 移动端增加padding和加宽边缘 */
+    @media (max-width: 767px) {
+      .status-card {
+        padding: 36px 28px;
+        margin-bottom: 24px;
+        border-width: 1.5px;
+      }
     }
 
     @keyframes slideUp {
@@ -190,6 +251,14 @@
       animation: iconBounce 0.6s var(--easing-bounce);
     }
 
+    /* 移动端增大图标 */
+    @media (max-width: 767px) {
+      .status-card .icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+    }
+
     @keyframes iconBounce {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.2); }
@@ -200,10 +269,25 @@
       margin-bottom: 8px;
       color: var(--color-text-primary);
     }
+
+    @media (max-width: 767px) {
+      .status-card h2 {
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+    }
+
     .status-card p { 
       font-size: 14px; 
       color: var(--color-text-secondary); 
       line-height: 1.5; 
+    }
+
+    @media (max-width: 767px) {
+      .status-card p {
+        font-size: 15px;
+        line-height: 1.6;
+      }
     }
 
     /* ==========================================
@@ -213,6 +297,13 @@
       display: flex; 
       flex-direction: column; 
       gap: 16px; 
+    }
+
+    /* 移动端增加间距 */
+    @media (max-width: 767px) {
+      .image-list {
+        gap: 20px;
+      }
     }
     
     .image-item {
@@ -235,15 +326,28 @@
       animation-fill-mode: both;
     }
 
+    /* 移动端加宽边缘 */
+    @media (max-width: 767px) {
+      .image-item {
+        border-width: 1.5px;
+      }
+    }
+
     .image-item:nth-child(1) { animation-delay: 0.1s; }
     .image-item:nth-child(2) { animation-delay: 0.2s; }
     .image-item:nth-child(3) { animation-delay: 0.3s; }
     .image-item:nth-child(4) { animation-delay: 0.4s; }
 
-    /* Micro-interaction: 悬停放大 */
-    .image-item:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
+    /* PC端悬停放大（触摸设备禁用） */
+    @media (hover: hover) {
+      .image-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
+      }
+      
+      .image-item:hover img {
+        transform: scale(1.02);
+      }
     }
     
     .image-item img {
@@ -251,9 +355,6 @@
       display: block;
       -webkit-touch-callout: default;
       transition: transform var(--duration-normal) var(--easing-smooth);
-    }
-    .image-item:hover img {
-      transform: scale(1.02);
     }
     
     .image-item .hint {
@@ -263,6 +364,14 @@
       text-align: center;
       background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(4px);
+    }
+
+    /* 移动端增大提示文字 */
+    @media (max-width: 767px) {
+      .image-item .hint {
+        padding: 10px 14px;
+        font-size: 12px;
+      }
     }
 
     /* ==========================================
@@ -302,19 +411,30 @@
   <script>
     /* ==========================================
        视差滚动效果 - 背景速度为内容的50%
+       移动端优化：避免地址栏隐藏导致的背景抖动
        ========================================== */
     const parallaxBg = document.querySelector('.parallax-bg');
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // 动态设置背景高度，确保滚动时不露底
-    function 更新背景高度() {
-      const docHeight = document.documentElement.scrollHeight;
-      // 背景高度为页面总高度的150%，确保滚动时始终有内容
-      parallaxBg.style.height = `${docHeight * 1.5}px`;
+    // 移动端使用固定高度，避免地址栏隐藏/显示导致的抖动
+    if (isMobile) {
+      const viewportHeight = window.innerHeight;
+      parallaxBg.style.height = `${viewportHeight * 2}px`;
+    } else {
+      // PC端：动态计算背景高度
+      function 更新背景高度() {
+        const docHeight = document.documentElement.scrollHeight;
+        parallaxBg.style.height = `${docHeight * 1.5}px`;
+      }
+      
+      更新背景高度();
+      
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(更新背景高度, 150);
+      });
     }
-    
-    // 初始化和窗口调整时更新背景高度
-    更新背景高度();
-    window.addEventListener('resize', 更新背景高度);
     
     // 视差滚动：背景移动速度为滚动的50%
     let ticking = false;
@@ -322,7 +442,6 @@
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const scrollY = window.scrollY;
-          // 背景向下移动速度为滚动的50%（同向，但慢50%）
           parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
           ticking = false;
         });
