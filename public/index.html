@@ -60,37 +60,34 @@
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       min-height: 100vh;
       overflow-x: hidden;
-      position: relative;
+      position: relative; /* 为absolute定位的背景提供定位上下文 */
       color: var(--color-text-primary);
       -webkit-font-smoothing: antialiased;
     }
 
-    /* 背景图层 - 抽象家装空间 SVG */
+    /* 背景图层 - 支持本地图片替换，跟随滚动但速度减半 */
     .parallax-bg {
-      position: fixed;
-      top: -10%;
+      position: absolute;
+      top: 0;
       left: 0;
       width: 100%;
-      height: 120%;
+      min-height: 100vh; /* 最小高度为视口高度 */
       z-index: 0;
       opacity: 0.4;
-      transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      will-change: transform;
+      
+      /* 默认渐变背景 */
       background: linear-gradient(135deg, #f5efe9 0%, #e8dfd5 100%);
+      
+      /* 本地图片背景（已启用） */
+      background-image: url('/images/background.jpg');
+      background-size: cover;          /* 缩放图片覆盖整个容器 */
+      background-position: center top; /* 从顶部开始居中 */
+      background-repeat: no-repeat;    /* 不重复 */
+      background-attachment: scroll;   /* 跟随滚动 */
     }
 
-    .parallax-bg::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: 
-        /* 简约的挂画框架 */
-        linear-gradient(90deg, transparent 48%, rgba(107, 76, 59, 0.15) 49%, rgba(107, 76, 59, 0.15) 51%, transparent 52%),
-        linear-gradient(0deg, transparent 48%, rgba(107, 76, 59, 0.15) 49%, rgba(107, 76, 59, 0.15) 51%, transparent 52%),
-        /* 墙面纹理 */
-        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px);
-      background-size: 300px 200px, 300px 200px, 4px 4px;
-      background-position: 50% 30%, 50% 30%, 0 0;
-    }
+    /* 格网背景已移除，使用纯图片背景 */
 
     /* 白色噪点纹理 */
     .parallax-bg::after {
@@ -426,11 +423,12 @@
        ========================================== */
     .receive-row {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: stretch;
+      flex-wrap: nowrap;
     }
     .receive-btn {
-      padding: 12px 18px;
+      padding: 12px 16px;
       border: 2px solid var(--glass-border);
       border-radius: var(--radius-md);
       background: rgba(255, 255, 255, 0.2);
@@ -442,6 +440,7 @@
       white-space: nowrap;
       position: relative;
       overflow: hidden;
+      flex-shrink: 0;
     }
     
     /* Micro-interaction: 波纹效果 */
@@ -474,19 +473,17 @@
     
     .receive-input-wrap {
       flex: 1;
+      min-width: 0; /* 关键：允许flex子元素缩小到内容以下 */
       overflow: hidden;
       max-width: 0;
       opacity: 0;
       transition: 
         max-width 0.4s var(--easing-smooth), 
-        opacity var(--duration-normal) ease, 
-        margin var(--duration-normal) ease;
-      margin-left: 0;
+        opacity var(--duration-normal) ease;
     }
     .receive-input-wrap.show {
-      max-width: 300px;
+      max-width: 100%; /* 使用百分比而非固定值 */
       opacity: 1;
-      margin-left: 10px;
     }
     .receive-input-wrap input {
       width: 100%;
@@ -504,7 +501,7 @@
     }
     .receive-input-wrap input:focus {
       border-color: var(--color-accent);
-      transform: scale(1.02);
+      transform: scale(1.01);
     }
     .receive-input-wrap input::placeholder {
       color: var(--color-text-tertiary);
@@ -771,15 +768,33 @@
 
   <script>
     /* ==========================================
-       视差滚动效果
+       视差滚动效果 - 背景速度为内容的50%
        ========================================== */
-    let lastScrollY = window.scrollY;
     const parallaxBg = document.querySelector('.parallax-bg');
     
+    // 动态设置背景高度，确保滚动时不露底
+    function 更新背景高度() {
+      const docHeight = document.documentElement.scrollHeight;
+      // 背景高度为页面总高度的150%，确保滚动时始终有内容
+      parallaxBg.style.height = `${docHeight * 1.5}px`;
+    }
+    
+    // 初始化和窗口调整时更新背景高度
+    更新背景高度();
+    window.addEventListener('resize', 更新背景高度);
+    
+    // 视差滚动：背景移动速度为滚动的50%
+    let ticking = false;
     window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      // 背景移动速度为滚动速度的 50%
-      parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          // 背景向下移动速度为滚动的50%（同向，但慢50%）
+          parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
+          ticking = false;
+        });
+        ticking = true;
+      }
     }, { passive: true });
 
     /* ==========================================

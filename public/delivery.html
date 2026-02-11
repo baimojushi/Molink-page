@@ -42,31 +42,30 @@
     }
 
     /* ==========================================
-       视差背景层
+       视差背景层 - 支持本地图片替换，跟随滚动但速度减半
        ========================================== */
     .parallax-bg {
-      position: fixed;
-      top: -10%;
+      position: absolute;
+      top: 0;
       left: 0;
       width: 100%;
-      height: 120%;
+      min-height: 100vh; /* 最小高度为视口高度 */
       z-index: 0;
       opacity: 0.4;
-      transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      will-change: transform;
+      
+      /* 默认渐变背景 */
       background: linear-gradient(135deg, #f5efe9 0%, #e8dfd5 100%);
+      
+      /* 本地图片背景（已启用） */
+      background-image: url('/images/background.jpg');
+      background-size: cover;          /* 缩放图片覆盖整个容器 */
+      background-position: center top; /* 从顶部开始居中 */
+      background-repeat: no-repeat;    /* 不重复 */
+      background-attachment: scroll;   /* 跟随滚动 */
     }
 
-    .parallax-bg::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: 
-        linear-gradient(90deg, transparent 48%, rgba(107, 76, 59, 0.15) 49%, rgba(107, 76, 59, 0.15) 51%, transparent 52%),
-        linear-gradient(0deg, transparent 48%, rgba(107, 76, 59, 0.15) 49%, rgba(107, 76, 59, 0.15) 51%, transparent 52%),
-        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px);
-      background-size: 300px 200px, 300px 200px, 4px 4px;
-      background-position: 50% 30%, 50% 30%, 0 0;
-    }
+    /* 格网背景已移除，使用纯图片背景 */
 
     .parallax-bg::after {
       content: '';
@@ -302,13 +301,33 @@
 
   <script>
     /* ==========================================
-       视差滚动效果
+       视差滚动效果 - 背景速度为内容的50%
        ========================================== */
     const parallaxBg = document.querySelector('.parallax-bg');
     
+    // 动态设置背景高度，确保滚动时不露底
+    function 更新背景高度() {
+      const docHeight = document.documentElement.scrollHeight;
+      // 背景高度为页面总高度的150%，确保滚动时始终有内容
+      parallaxBg.style.height = `${docHeight * 1.5}px`;
+    }
+    
+    // 初始化和窗口调整时更新背景高度
+    更新背景高度();
+    window.addEventListener('resize', 更新背景高度);
+    
+    // 视差滚动：背景移动速度为滚动的50%
+    let ticking = false;
     window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          // 背景向下移动速度为滚动的50%（同向，但慢50%）
+          parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
+          ticking = false;
+        });
+        ticking = true;
+      }
     }, { passive: true });
 
     const token = window.location.pathname.split('/d/')[1];
