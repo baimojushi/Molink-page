@@ -3,37 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
-  <title>Snaptoshine · 查看交付结果</title>
+  <title>Mo:link Design · 查看交付结果</title>
   <style>
-    /* ==========================================
-       调色板
-       ========================================== */
     :root {
-      --色-主色: #6b4c3b;
-      --色-主色浅: #8b6f5e;
-      --色-主色极浅: #f5efe9;
-      --色-主色深: #4a3228;
-      --色-强调: #7a9e7e;
-      --色-背景: #faf7f4;
-      --色-卡片: #ffffff;
-      --色-边框: #e8e0d8;
-      --色-文字主: #3a2a1a;
-      --色-文字次: #8a7a6a;
-      --色-文字弱: #b8a898;
-      --圆角: 12px;
+      --color-primary: #6b4c3b;
+      --color-primary-light: #8b6f5e;
+      --color-primary-pale: #f5efe9;
+      --color-primary-dark: #4a3228;
+      --color-accent: #7a9e7e;
+      --color-bg: #faf7f4;
+      --color-card: #ffffff;
+      --color-border: #e8e0d8;
+      --color-text-primary: #3a2a1a;
+      --color-text-secondary: #8a7a6a;
+      --color-text-tertiary: #b8a898;
+      --radius: 12px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--色-背景);
-      color: var(--色-文字主);
+      background: var(--color-bg);
+      color: var(--color-text-primary);
       min-height: 100vh;
     }
 
-    /* 头部 */
     .header {
-      background: var(--色-主色);
+      background: var(--color-primary);
       color: #fff;
       padding: 14px 16px;
       display: flex;
@@ -59,49 +55,44 @@
     .back-btn:hover { background: rgba(255,255,255,0.15); }
     .header-title { font-size: 16px; font-weight: 600; }
 
-    /* 主容器 */
     .container {
       max-width: 480px;
       margin: 0 auto;
       padding: 20px 16px 60px;
     }
 
-    /* 状态卡片 */
     .status-card {
-      background: var(--色-卡片);
-      border-radius: var(--圆角);
+      background: var(--color-card);
+      border-radius: var(--radius);
       padding: 32px 24px;
       text-align: center;
-      border: 1px solid var(--色-边框);
+      border: 1px solid var(--color-border);
       margin-bottom: 20px;
     }
     .status-card .icon { font-size: 40px; margin-bottom: 12px; }
     .status-card h2 { font-size: 18px; margin-bottom: 8px; }
-    .status-card p { font-size: 14px; color: var(--色-文字次); line-height: 1.5; }
+    .status-card p { font-size: 14px; color: var(--color-text-secondary); line-height: 1.5; }
 
-    /* 图片列表 */
     .image-list { display: flex; flex-direction: column; gap: 16px; }
     .image-item {
-      background: var(--色-卡片);
-      border-radius: var(--圆角);
+      background: var(--color-card);
+      border-radius: var(--radius);
       overflow: hidden;
-      border: 1px solid var(--色-边框);
+      border: 1px solid var(--color-border);
     }
     .image-item img {
       width: 100%;
       display: block;
-      /* 允许用户长按保存 */
       -webkit-touch-callout: default;
     }
     .image-item .hint {
       padding: 8px 12px;
       font-size: 11px;
-      color: var(--色-文字弱);
+      color: var(--color-text-tertiary);
       text-align: center;
-      border-top: 1px solid var(--色-边框);
+      border-top: 1px solid var(--color-border);
     }
 
-    /* 等待中动画 */
     .waiting-dots span {
       animation: blink 1.4s infinite both;
     }
@@ -112,18 +103,17 @@
       40% { opacity: 1; }
     }
 
-    /* 加载 */
     .loading {
       text-align: center;
       padding: 60px 20px;
-      color: var(--色-文字弱);
+      color: var(--color-text-tertiary);
     }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <a class="back-btn" href="/" title="返回首页">〈</a>
+    <a class="back-btn" href="/" title="返回首页">‹</a>
     <div class="header-title" id="page-title">加载中...</div>
   </div>
 
@@ -132,7 +122,6 @@
   </div>
 
   <script>
-    // 从URL中提取 token
     const token = window.location.pathname.split('/d/')[1];
 
     async function 加载交付数据() {
@@ -159,7 +148,7 @@
       document.getElementById('page-title').textContent = data.service_type_label;
       document.getElementById('content').innerHTML = `
         <div class="status-card">
-          <div class="icon">⏳</div>
+          <div class="icon">○</div>
           <h2>正在处理中</h2>
           <p>您的「${data.service_type_label}」服务正在处理中<br>
           <span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span><br>
@@ -185,7 +174,7 @@
 
       document.getElementById('content').innerHTML = `
         <div class="status-card">
-          <div class="icon">🎨</div>
+          <div class="icon">✓</div>
           <h2>已完成</h2>
           <p>您的「${data.service_type_label}」服务已处理完毕<br>交付时间：${data.delivered_at}</p>
         </div>
@@ -197,7 +186,7 @@
       document.getElementById('page-title').textContent = '出错了';
       document.getElementById('content').innerHTML = `
         <div class="status-card">
-          <div class="icon">😥</div>
+          <div class="icon">×</div>
           <h2>无法加载</h2>
           <p>${msg}</p>
         </div>

@@ -3,42 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snaptoshine · 管理后台</title>
+  <title>Mo:link Design · 管理后台</title>
   <style>
-    /* ==========================================
-       调色板（与用户端共享变量体系）
-       ========================================== */
     :root {
-      --色-主色: #6b4c3b;
-      --色-主色浅: #8b6f5e;
-      --色-主色极浅: #f5efe9;
-      --色-主色深: #4a3228;
-      --色-强调: #7a9e7e;
-      --色-强调浅: #a8c5ab;
-      --色-背景: #f8f5f2;
-      --色-卡片: #ffffff;
-      --色-边框: #e8e0d8;
-      --色-文字主: #3a2a1a;
-      --色-文字次: #8a7a6a;
-      --色-文字弱: #b8a898;
-      --色-危险: #c45c4a;
-      --色-等待: #d4a843;
-      --色-完成: #7a9e7e;
-      --圆角: 10px;
-      --过渡: 0.3s ease;
+      --color-primary: #6b4c3b;
+      --color-primary-light: #8b6f5e;
+      --color-primary-pale: #f5efe9;
+      --color-primary-dark: #4a3228;
+      --color-accent: #7a9e7e;
+      --color-accent-light: #a8c5ab;
+      --color-bg: #f8f5f2;
+      --color-card: #ffffff;
+      --color-border: #e8e0d8;
+      --color-text-primary: #3a2a1a;
+      --color-text-secondary: #8a7a6a;
+      --color-text-tertiary: #b8a898;
+      --color-danger: #c45c4a;
+      --color-pending: #d4a843;
+      --color-delivered: #7a9e7e;
+      --radius: 10px;
+      --transition: 0.3s ease;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--色-背景);
-      color: var(--色-文字主);
+      background: var(--color-bg);
+      color: var(--color-text-primary);
       min-height: 100vh;
     }
 
-    /* 头部 */
     .header {
-      background: var(--色-主色深);
+      background: var(--color-primary-dark);
       color: #fff;
       padding: 16px 24px;
       display: flex;
@@ -47,11 +43,10 @@
     }
     .header h1 { font-size: 18px; font-weight: 600; }
 
-    /* 鉴权输入 */
     .auth-bar {
-      background: var(--色-卡片);
+      background: var(--color-card);
       padding: 16px 24px;
-      border-bottom: 1px solid var(--色-边框);
+      border-bottom: 1px solid var(--color-border);
       display: flex;
       gap: 12px;
       align-items: center;
@@ -60,23 +55,22 @@
       flex: 1;
       max-width: 300px;
       padding: 10px 14px;
-      border: 1px solid var(--色-边框);
-      border-radius: var(--圆角);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
       font-size: 14px;
       outline: none;
     }
-    .auth-bar input:focus { border-color: var(--色-主色); }
+    .auth-bar input:focus { border-color: var(--color-primary); }
     .auth-bar button {
       padding: 10px 20px;
-      background: var(--色-主色);
+      background: var(--color-primary);
       color: #fff;
       border: none;
-      border-radius: var(--圆角);
+      border-radius: var(--radius);
       cursor: pointer;
       font-size: 14px;
     }
 
-    /* 筛选栏 */
     .filter-bar {
       padding: 16px 24px;
       display: flex;
@@ -84,28 +78,27 @@
     }
     .filter-btn {
       padding: 8px 16px;
-      border: 1px solid var(--色-边框);
+      border: 1px solid var(--color-border);
       border-radius: 20px;
-      background: var(--色-卡片);
+      background: var(--color-card);
       font-size: 13px;
       cursor: pointer;
-      transition: var(--过渡);
-      color: var(--色-文字次);
+      transition: var(--transition);
+      color: var(--color-text-secondary);
     }
     .filter-btn.active {
-      background: var(--色-主色);
+      background: var(--color-primary);
       color: #fff;
-      border-color: var(--色-主色);
+      border-color: var(--color-primary);
     }
 
-    /* 订单列表 */
     .orders-container { padding: 0 24px 40px; }
 
     .order-card {
-      background: var(--色-卡片);
-      border-radius: var(--圆角);
+      background: var(--color-card);
+      border-radius: var(--radius);
       margin-bottom: 16px;
-      border: 1px solid var(--色-边框);
+      border: 1px solid var(--color-border);
       overflow: hidden;
     }
     .order-header {
@@ -113,13 +106,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--色-边框);
+      border-bottom: 1px solid var(--color-border);
       cursor: pointer;
     }
-    .order-header:hover { background: var(--色-主色极浅); }
+    .order-header:hover { background: var(--color-primary-pale); }
     .order-info { display: flex; flex-direction: column; gap: 4px; }
     .order-service { font-size: 15px; font-weight: 600; }
-    .order-meta { font-size: 12px; color: var(--色-文字次); }
+    .order-meta { font-size: 12px; color: var(--color-text-secondary); }
     .order-status {
       padding: 4px 12px;
       border-radius: 12px;
@@ -129,7 +122,6 @@
     .status-pending { background: #fef3cd; color: #856404; }
     .status-delivered { background: #d4edda; color: #155724; }
 
-    /* 订单详情展开区 */
     .order-body {
       padding: 0 20px;
       max-height: 0;
@@ -141,7 +133,6 @@
       padding: 20px;
     }
 
-    /* 用户上传的原图预览 */
     .original-images {
       display: flex;
       gap: 12px;
@@ -155,35 +146,34 @@
       max-width: 100%;
       max-height: 200px;
       border-radius: 8px;
-      border: 1px solid var(--色-边框);
+      border: 1px solid var(--color-border);
     }
     .original-images .img-label {
       font-size: 12px;
-      color: var(--色-文字次);
+      color: var(--color-text-secondary);
       margin-top: 4px;
     }
 
-    /* 交付操作区 */
     .deliver-section { margin-top: 16px; }
     .deliver-section h4 {
       font-size: 14px;
-      color: var(--色-文字次);
+      color: var(--color-text-secondary);
       margin-bottom: 10px;
     }
     .drop-zone {
-      border: 2px dashed var(--色-边框);
-      border-radius: var(--圆角);
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius);
       padding: 24px;
       text-align: center;
-      color: var(--色-文字弱);
+      color: var(--color-text-tertiary);
       font-size: 14px;
       cursor: pointer;
-      transition: var(--过渡);
+      transition: var(--transition);
       margin-bottom: 12px;
       position: relative;
     }
     .drop-zone.dragover {
-      border-color: var(--色-强调);
+      border-color: var(--color-accent);
       background: rgba(122,158,126,0.05);
     }
     .drop-zone input[type="file"] {
@@ -203,45 +193,43 @@
       height: 80px;
       object-fit: cover;
       border-radius: 6px;
-      border: 1px solid var(--色-边框);
+      border: 1px solid var(--color-border);
     }
     .deliver-text {
       width: 100%;
       min-height: 80px;
       padding: 12px;
-      border: 1px solid var(--色-边框);
-      border-radius: var(--圆角);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
       font-size: 14px;
       resize: vertical;
       outline: none;
       font-family: inherit;
       margin-bottom: 12px;
     }
-    .deliver-text:focus { border-color: var(--色-主色); }
+    .deliver-text:focus { border-color: var(--color-primary); }
 
     .deliver-btn {
       padding: 12px 28px;
-      background: var(--色-强调);
+      background: var(--color-accent);
       color: #fff;
       border: none;
-      border-radius: var(--圆角);
+      border-radius: var(--radius);
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: var(--过渡);
+      transition: var(--transition);
     }
-    .deliver-btn:hover { background: var(--色-强调深, #5a7e5e); }
+    .deliver-btn:hover { background: #5a7e5e; }
     .deliver-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* 空状态 */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
-      color: var(--色-文字弱);
+      color: var(--color-text-tertiary);
     }
     .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
 
-    /* 详情标签 */
     .detail-row {
       display: flex;
       padding: 6px 0;
@@ -249,7 +237,7 @@
     }
     .detail-row .label {
       width: 80px;
-      color: var(--色-文字次);
+      color: var(--color-text-secondary);
       flex-shrink: 0;
     }
   </style>
@@ -257,26 +245,23 @@
 <body>
 
   <div class="header">
-    <h1>📋 Snaptoshine 管理后台</h1>
+    <h1>Mo:link Design 管理后台</h1>
   </div>
 
-  <!-- 鉴权栏 -->
   <div class="auth-bar">
     <input type="password" id="admin-secret" placeholder="请输入管理密钥">
     <button onclick="加载订单()">进入</button>
   </div>
 
-  <!-- 筛选栏 -->
   <div class="filter-bar">
     <div class="filter-btn active" data-status="" onclick="筛选订单(this, '')">全部</div>
     <div class="filter-btn" data-status="pending" onclick="筛选订单(this, 'pending')">待处理</div>
     <div class="filter-btn" data-status="delivered" onclick="筛选订单(this, 'delivered')">已交付</div>
   </div>
 
-  <!-- 订单列表 -->
   <div class="orders-container" id="orders-container">
     <div class="empty-state">
-      <div class="icon">🔐</div>
+      <div class="icon">⊙</div>
       <p>请输入管理密钥后进入</p>
     </div>
   </div>
@@ -285,16 +270,12 @@
     let 管理密钥 = '';
     let 全部订单 = [];
     let 当前筛选 = '';
-    // 每个订单对应的待交付文件
     const 交付文件缓存 = {};
 
     function 获取密钥() {
       return document.getElementById('admin-secret').value.trim();
     }
 
-    // ==========================================
-    // 加载订单列表
-    // ==========================================
     async function 加载订单() {
       管理密钥 = 获取密钥();
       if (!管理密钥) return alert('请输入管理密钥');
@@ -319,9 +300,6 @@
       渲染订单列表();
     }
 
-    // ==========================================
-    // 渲染订单列表
-    // ==========================================
     function 渲染订单列表() {
       const container = document.getElementById('orders-container');
       let orders = 全部订单;
@@ -330,7 +308,7 @@
       }
 
       if (orders.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>暂无订单</p></div>`;
+        container.innerHTML = `<div class="empty-state"><div class="icon">○</div><p>暂无订单</p></div>`;
         return;
       }
 
@@ -340,9 +318,9 @@
             <div class="order-info">
               <div class="order-service">${order.service_type_label}</div>
               <div class="order-meta">
-                ${order.receive_method === 'email' ? '📧' : '📱'} ${order.receive_target}
+                ${order.receive_method === 'email' ? '邮箱' : '短信'} ${order.receive_target}
                 &nbsp;·&nbsp; ${order.created_at}
-                ${order.extra_service ? '&nbsp;·&nbsp;🔧 附加服务' : ''}
+                ${order.extra_service ? '&nbsp;·&nbsp;附加服务' : ''}
               </div>
             </div>
             <span class="order-status ${order.status === 'delivered' ? 'status-delivered' : 'status-pending'}">
@@ -361,7 +339,7 @@
 
             ${order.status === 'pending' ? `
               <div class="deliver-section">
-                <h4>📤 交付操作</h4>
+                <h4>交付操作</h4>
                 <div class="drop-zone" id="drop-${order.id}"
                   ondragover="event.preventDefault(); this.classList.add('dragover')"
                   ondragleave="this.classList.remove('dragover')"
@@ -371,11 +349,11 @@
                 </div>
                 <div class="drop-previews" id="previews-${order.id}"></div>
                 <textarea class="deliver-text" id="text-${order.id}" placeholder="输入回传文字（可选，将渲染为图片供用户下载）"></textarea>
-                <button class="deliver-btn" onclick="执行交付('${order.id}')">✅ 交付</button>
+                <button class="deliver-btn" onclick="执行交付('${order.id}')">交付</button>
               </div>
             ` : `
-              <div style="padding: 12px 0; color: var(--色-完成); font-size: 14px;">
-                ✅ 已于 ${order.delivered_at} 交付
+              <div style="padding: 12px 0; color: var(--color-delivered); font-size: 14px;">
+                已于 ${order.delivered_at} 交付
               </div>
             `}
           </div>
@@ -383,17 +361,11 @@
       `).join('');
     }
 
-    // ==========================================
-    // 展开/折叠订单
-    // ==========================================
     function 展开订单(id) {
       const body = document.getElementById(`body-${id}`);
       body.classList.toggle('open');
     }
 
-    // ==========================================
-    // 处理拖放和文件选择
-    // ==========================================
     function 处理拖放(e, orderId) {
       e.preventDefault();
       e.currentTarget.classList.remove('dragover');
@@ -419,9 +391,6 @@
       });
     }
 
-    // ==========================================
-    // 执行交付
-    // ==========================================
     async function 执行交付(orderId) {
       const files = 交付文件缓存[orderId] || [];
       const text = document.getElementById(`text-${orderId}`).value;
@@ -454,7 +423,6 @@
       }
     }
 
-    // 支持回车加载
     document.getElementById('admin-secret').addEventListener('keydown', e => {
       if (e.key === 'Enter') 加载订单();
     });

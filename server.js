@@ -1,8 +1,9 @@
-// server.js —— Snaptoshine 主服务器
+// server.js —— Mo:link Design 主服务器
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { 启动定时清理 } = require('./services/cleanup');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,6 +54,9 @@ app.get('/admin', (req, res) => {
 // 启动服务器
 // ==========================================
 app.listen(PORT, () => {
-  console.log(`✅ Snaptoshine 服务器已启动: http://localhost:${PORT}`);
+  console.log(`✅ Mo:link Design 服务器已启动: http://localhost:${PORT}`);
   console.log(`📋 管理后台: http://localhost:${PORT}/admin`);
+  
+  // 启动图片清理任务（2天有效期）
+  启动定时清理();
 });

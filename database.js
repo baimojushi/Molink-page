@@ -5,7 +5,7 @@ const fs = require('fs');
 
 // 使用环境变量配置的持久化根目录，默认为 ./data
 const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, 'data');
-const DB_PATH = path.join(PERSISTENT_ROOT, 'snaptoshine.db');
+const DB_PATH = path.join(PERSISTENT_ROOT, 'molink.db');
 
 // 确保目录存在
 fs.mkdirSync(PERSISTENT_ROOT, { recursive: true });

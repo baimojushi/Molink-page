@@ -17,7 +17,7 @@ async function 发送交付通知短信(phoneNumber, deliveryUrl, serviceLabel) 
   // 方案一：阿里云短信（推荐国内使用）
   // 【需要安装依赖：npm install @alicloud/dysmsapi20170525 @alicloud/openapi-client】
   // 【需要在阿里云控制台配置短信签名和模板】
-  // 短信模板示例：您的「${service}」已完成，查看链接：${url}
+  // 短信模板示例：您的「${service}」已完成，请在48小时内查看并保存：${url}
   // ==========================================
   
   try {
@@ -49,18 +49,19 @@ async function 发送交付通知短信(phoneNumber, deliveryUrl, serviceLabel) 
       console.log(`📱 短信已发送到: ${phoneNumber}`);
       return true;
     } else {
-      console.error('❌ 短信发送失败:', response.body.message);
+      console.error('短信发送失败:', response.body.message);
       return false;
     }
     */
 
     // ---- 当前占位实现（开发阶段）----
-    console.log(`📱 [模拟] 短信将发送到 ${phoneNumber}，内容：您的「${serviceLabel}」已完成，查看链接：${deliveryUrl}`);
+    console.log(`📱 [模拟] 短信将发送到 ${phoneNumber}`);
+    console.log(`内容：您的「${serviceLabel}」已完成，请在48小时内查看并保存：${deliveryUrl}`);
     // 【正式部署时请取消上方阿里云短信代码的注释，并删除此占位段】
     return true;
 
   } catch (error) {
-    console.error('❌ 短信发送异常:', error.message);
+    console.error('短信发送异常:', error.message);
     return false;
   }
 }

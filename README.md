@@ -1,9 +1,9 @@
-# Snaptoshine 部署指南
+# Mo:link Design 部署指南
 
 ## 项目结构
 
 ```
-snaptoshine/
+molink/
 ├── server.js                 # 主服务器入口
 ├── database.js               # SQLite 数据库定义
 ├── package.json              # 依赖配置
@@ -33,16 +33,16 @@ snaptoshine/
 ### 第1步：准备代码仓库
 
 ```bash
-cd snaptoshine
+cd molink
 git init
 git add .
-git commit -m "初始化 Snaptoshine 项目"
+git commit -m "初始化 Mo:link Design 项目"
 ```
 
-在 GitHub 上创建一个仓库（如 `snaptoshine`），然后：
+在 GitHub 上创建一个仓库（如 `molink`），然后：
 
 ```bash
-git remote add origin https://github.com/你的用户名/snaptoshine.git
+git remote add origin https://github.com/你的用户名/molink.git
 git push -u origin main
 ```
 
@@ -50,7 +50,7 @@ git push -u origin main
 
 1. 访问 https://railway.app，使用 GitHub 账号登录
 2. 点击 **New Project → Deploy from GitHub repo**
-3. 选择 `snaptoshine` 仓库
+3. 选择 `molink` 仓库
 4. Railway 自动检测到 Node.js 项目并开始构建
 
 ### 第3步：配置环境变量
@@ -60,14 +60,14 @@ git push -u origin main
 | 变量名 | 示例值 | 说明 |
 |--------|--------|------|
 | `PORT` | `3000` | Railway 会自动设置，可不填 |
-| `BASE_URL` | `https://snaptoshine-production.up.railway.app` | 部署后 Railway 分配的域名 |
+| `BASE_URL` | `https://molink-production.up.railway.app` | 部署后 Railway 分配的域名 |
 | `DATA_DIR` | `/app/persistent` | 持久化数据根目录（必填） |
 | `SMTP_HOST` | `smtp.qq.com` | SMTP 服务器地址 |
 | `SMTP_PORT` | `465` | SMTP 端口 |
 | `SMTP_SECURE` | `true` | 是否启用 SSL |
 | `SMTP_USER` | `xxx@qq.com` | 发件邮箱 |
 | `SMTP_PASS` | `abcdefg` | 邮箱授权码 |
-| `SMTP_FROM_NAME` | `Snaptoshine` | 发件人名称 |
+| `SMTP_FROM_NAME` | `Mo:link Design` | 发件人名称 |
 | `ADMIN_EMAIL` | `admin@xxx.com` | 目标机通知邮箱（支持多个，逗号分隔）|
 | `ADMIN_SECRET` | `my-secret-123` | 管理后台密钥 |
 
@@ -108,7 +108,7 @@ sudo apt install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev li
 ### 第2步：上传代码并安装依赖
 
 ```bash
-cd /www/snaptoshine       # 或你选择的目录
+cd /www/molink       # 或你选择的目录
 npm install
 ```
 
@@ -123,7 +123,7 @@ nano .env                 # 编辑并填写所有配置项
 
 ```bash
 npm install -g pm2
-pm2 start server.js --name snaptoshine
+pm2 start server.js --name molink
 pm2 save
 pm2 startup              # 开机自启
 ```
@@ -186,4 +186,4 @@ server {
 ## 迭代更新
 
 Railway 部署：`git push` 即自动重新部署。
-自有服务器：`git pull && pm2 restart snaptoshine`。
+自有服务器：`git pull && pm2 restart molink`。
