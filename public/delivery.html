@@ -2,21 +2,25 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
   <title>Mo:link Design · 查看交付结果</title>
   <style>
     :root {
-      --color-primary: #6b4c3b;
-      --color-primary-light: #8b6f5e;
-      --color-primary-dark: #4a3228;
+      /* 🎨 玻璃青色调节（0-20 推荐，数值越大青色越明显） */
+      --glass-cyan-percent: 8;
+      
+      /* 品牌色系 - 清透轻盈 */
+      --color-primary: #9B8370;
+      --color-primary-light: #B5A091;
+      --color-primary-dark: #806A54;
       --color-accent: #7a9e7e;
       --color-text-primary: #2a2a2a;
       --color-text-secondary: #5a5a5a;
       --color-text-tertiary: #8a8a8a;
       
-      /* 玻璃态效果 */
-      --glass-bg: rgba(255, 255, 255, 0.15);
-      --glass-border: rgba(255, 255, 255, 0.3);
+      /* 玻璃态效果 - 带青色调（根据 --glass-cyan-percent 自动计算） */
+      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 95%, 0.15);
+      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 90%, 0.3);
       --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
       --glass-blur: 12px;
       
@@ -33,13 +37,16 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     /* ==========================================
-       移动端全局优化
+       移动端全局优化 + Chrome移动端修复
        ========================================== */
     html {
       touch-action: manipulation;
       -webkit-user-select: none;
       user-select: none;
       scroll-behavior: smooth;
+      /* Chrome移动端：防止自动调整字体大小 */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     /* 禁用移动端点击蓝色高亮 */
@@ -67,7 +74,7 @@
       width: 100%;
       min-height: 100vh; /* 最小高度为视口高度 */
       z-index: 0;
-      opacity: 0.4;
+      opacity: 1; /* 使用原图，不降低透明度 */
       will-change: transform;
       
       /* 默认渐变背景 */
@@ -190,7 +197,7 @@
     }
 
     /* ==========================================
-       状态卡片 - Glassmorphism
+       状态卡片 - Glassmorphism 青色玻璃质感
        ========================================== */
     .status-card {
       backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -203,11 +210,12 @@
       box-shadow: var(--glass-shadow);
       position: relative;
       
+      /* 青色调玻璃边缘反光 */
       background-image: linear-gradient(
         135deg,
-        rgba(255, 255, 255, 0.3) 0%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0.1) 100%
+        hsla(180, calc(var(--glass-cyan-tint) * 2), 98%, 0.3) 0%,
+        hsla(180, var(--glass-cyan-tint), 95%, 0.05) 50%,
+        hsla(180, calc(var(--glass-cyan-tint) / 2), 96%, 0.1) 100%
       );
       
       animation: slideUp 0.5s var(--easing-smooth);
@@ -316,10 +324,11 @@
       transition: all var(--duration-normal) var(--easing-smooth);
       position: relative;
       
+      /* 青色调玻璃背景 */
       background-image: linear-gradient(
         135deg,
-        rgba(255, 255, 255, 0.25) 0%,
-        rgba(255, 255, 255, 0.05) 100%
+        hsla(180, calc(var(--glass-cyan-tint) * 1.5), 97%, 0.25) 0%,
+        hsla(180, calc(var(--glass-cyan-tint) / 2), 95%, 0.05) 100%
       );
       
       animation: slideUp 0.5s var(--easing-smooth);
@@ -411,7 +420,7 @@
   <script>
     /* ==========================================
        视差滚动效果 - 背景速度为内容的50%
-       移动端优化：避免地址栏隐藏导致的背景抖动
+       移动端和PC端都加防抖优化
        ========================================== */
     const parallaxBg = document.querySelector('.parallax-bg');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -436,13 +445,16 @@
       });
     }
     
-    // 视差滚动：背景移动速度为滚动的50%
+    // 视差滚动：背景移动速度为滚动的50%，使用RAF优化性能
     let ticking = false;
+    let lastScrollY = 0;
+    
     window.addEventListener('scroll', () => {
+      lastScrollY = window.scrollY;
+      
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
+          parallaxBg.style.transform = `translateY(${lastScrollY * 0.5}px)`;
           ticking = false;
         });
         ticking = true;

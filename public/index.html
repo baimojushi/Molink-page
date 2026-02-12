@@ -2,27 +2,30 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
   <title>Mo:link Design</title>
   <style>
     /* ==========================================
        Glassmorphism + 视差滚动 + 微交互
        ========================================== */
     :root {
-      /* 品牌色系 */
-      --color-primary: #6b4c3b;
-      --color-primary-light: #8b6f5e;
-      --color-primary-pale: #f5efe9;
-      --color-primary-dark: #4a3228;
+      /* 🎨 玻璃青色调节（0-20 推荐，数值越大青色越明显） */
+      --glass-cyan-percent: 8;
+      
+      /* 品牌色系 - 清透轻盈 */
+      --color-primary: #9B8370;        /* 提高明度，降低红调 */
+      --color-primary-light: #B5A091;
+      --color-primary-pale: #F5F0EB;
+      --color-primary-dark: #806A54;
 
       /* 强调色 */
       --color-accent: #7a9e7e;
       --color-accent-light: #a8c5ab;
       --color-accent-dark: #5a7e5e;
 
-      /* 玻璃态效果 */
-      --glass-bg: rgba(255, 255, 255, 0.15);
-      --glass-border: rgba(255, 255, 255, 0.3);
+      /* 玻璃态效果 - 带青色调（根据 --glass-cyan-percent 自动计算） */
+      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 95%, 0.15);
+      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 90%, 0.3);
       --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
       --glass-blur: 12px;
 
@@ -54,7 +57,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     /* ==========================================
-       移动端全局优化
+       移动端全局优化 + Chrome移动端修复
        ========================================== */
     html {
       /* 禁用iOS双击缩放 */
@@ -64,6 +67,9 @@
       user-select: none;
       /* 平滑滚动 */
       scroll-behavior: smooth;
+      /* Chrome移动端：防止自动调整字体大小 */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     /* 允许文本选择和输入框操作 */
@@ -71,6 +77,8 @@
       -webkit-user-select: text;
       user-select: text;
       touch-action: auto;
+      /* Chrome移动端：确保输入框不缩放 */
+      font-size: max(16px, 1em); /* Chrome要求16px以上才不缩放 */
     }
 
     /* 禁用移动端点击蓝色高亮 */
@@ -99,7 +107,7 @@
       width: 100%;
       min-height: 100vh; /* 最小高度为视口高度 */
       z-index: 0;
-      opacity: 0.4;
+      opacity: 1; /* 使用原图，不降低透明度 */
       will-change: transform;
       
       /* 默认渐变背景 */
@@ -185,11 +193,11 @@
     }
 
     /* ==========================================
-       分区卡片 - Glassmorphism
+       分区卡片 - Glassmorphism 青色玻璃质感
        ========================================== */
     .section {
       backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-      background: var(--glass-bg);
+      background: var(--glass-bg);  /* 青色调玻璃背景 */
       border-radius: var(--radius-xl);
       padding: 20px;
       margin-bottom: 16px;
@@ -197,12 +205,12 @@
       border: 1px solid var(--glass-border);
       position: relative;
       
-      /* 玻璃边缘反光效果 */
+      /* 玻璃边缘反光效果 - 青色调 */
       background-image: linear-gradient(
         135deg,
-        rgba(255, 255, 255, 0.3) 0%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0.1) 100%
+        hsla(180, calc(var(--glass-cyan-tint) * 2), 98%, 0.3) 0%,
+        hsla(180, var(--glass-cyan-tint), 95%, 0.05) 50%,
+        hsla(180, calc(var(--glass-cyan-tint) / 2), 96%, 0.1) 100%
       );
       
       /* 初始状态：隐藏 */
@@ -579,24 +587,24 @@
     .upload-box input[type="file"] { display: none; }
 
     /* ==========================================
-       接收方式 - 微交互
+       接收方式 - 优化布局
        ========================================== */
     .receive-row {
       display: flex;
-      gap: 8px;
+      gap: 12px;
       align-items: stretch;
-      flex-wrap: nowrap;
+      flex-wrap: wrap; /* 允许换行 */
     }
 
-    /* 移动端增加间距 */
+    /* 移动端增加间距，使设计更疏朗平衡 */
     @media (max-width: 767px) {
       .receive-row {
-        gap: 10px;
+        gap: 12px; /* 从14px改为12px，在换行布局下更平衡 */
       }
     }
 
     .receive-btn {
-      padding: 12px 16px;
+      padding: 12px 20px;
       border: 2px solid var(--glass-border);
       border-radius: var(--radius-md);
       background: rgba(255, 255, 255, 0.2);
@@ -611,10 +619,10 @@
       flex-shrink: 0;
     }
 
-    /* 移动端增大可点击区域 */
+    /* 移动端增大按钮，调整间距使更平衡 */
     @media (max-width: 767px) {
       .receive-btn {
-        padding: 14px 18px;
+        padding: 14px 28px; /* 增大左右padding使按钮更疏朗 */
         min-height: 48px;
         font-size: 15px;
       }
@@ -663,19 +671,38 @@
     }
     
     .receive-input-wrap {
-      flex: 1;
-      min-width: 0; /* 关键：允许flex子元素缩小到内容以下 */
+      flex: 1 1 100%; /* 移动端占满整行 */
+      min-width: 0;
       overflow: hidden;
-      max-width: 0;
+      max-height: 0;
       opacity: 0;
       transition: 
-        max-width 0.4s var(--easing-smooth), 
-        opacity var(--duration-normal) ease;
+        max-height 0.4s var(--easing-smooth), 
+        opacity var(--duration-normal) ease,
+        margin-top var(--duration-normal) ease;
+      margin-top: 0;
     }
+
+    /* PC端：输入框在同一行 */
+    @media (min-width: 768px) {
+      .receive-input-wrap {
+        flex: 1 1 auto;
+        max-width: 400px; /* 限制最大宽度 */
+      }
+    }
+
     .receive-input-wrap.show {
-      max-width: 100%; /* 使用百分比而非固定值 */
+      max-height: 100px;
       opacity: 1;
+      margin-top: 0; /* 移动端有间距 */
     }
+
+    @media (max-width: 767px) {
+      .receive-input-wrap.show {
+        margin-top: 0; /* 依赖flex gap */
+      }
+    }
+
     .receive-input-wrap input {
       width: 100%;
       height: 100%;
@@ -691,10 +718,10 @@
       transition: all var(--duration-normal) var(--easing-smooth);
     }
 
-    /* 移动端增大输入框 */
+    /* 移动端输入框加高，确保能容纳邮箱域名长度 */
     @media (max-width: 767px) {
       .receive-input-wrap input {
-        min-height: 48px;
+        min-height: 50px; /* 从48px增至50px */
         font-size: 15px;
         padding: 0 16px;
       }
@@ -828,14 +855,26 @@
     }
 
     /* ==========================================
-       提交按钮 - 强烈微交互
+       提交按钮 - 磨砂玻璃质感
+       ========================================== */
+    /* ==========================================
+       提交按钮 - 磨砂玻璃质感
        ========================================== */
     .submit-btn {
       width: 100%;
       padding: 16px;
-      border: none;
+      border: 2px solid rgba(159, 131, 112, 0.3); /* 使用主色的半透明边框 */
       border-radius: var(--radius-md);
-      background: var(--color-primary);
+      
+      /* 磨砂玻璃效果 - 基于主色 */
+      background: var(--color-primary); /* 基础色 #9B8370 */
+      backdrop-filter: blur(10px) saturate(150%);
+      background-image: linear-gradient(
+        135deg,
+        rgba(175, 160, 145, 0.9) 0%,  /* 更高明度，降低红调 */
+        rgba(155, 131, 112, 0.85) 100%
+      );
+      
       color: #fff;
       font-size: 16px;
       font-weight: 600;
@@ -844,6 +883,7 @@
       letter-spacing: 2px;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 4px 16px rgba(155, 131, 112, 0.25); /* 主色阴影 */
       
       /* 初始隐藏 */
       opacity: 0;
@@ -883,13 +923,18 @@
       
       .submit-btn:hover:not(:disabled) {
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(107,76,59,0.3);
+        box-shadow: 0 8px 24px rgba(155, 131, 112, 0.35);
+        border-color: rgba(175, 160, 145, 0.5);
       }
     }
     
     .submit-btn:active:not(:disabled) {
       transform: translateY(-1px) scale(0.98);
-      background: var(--color-primary-dark);
+      background-image: linear-gradient(
+        135deg,
+        rgba(165, 150, 135, 0.9) 0%,
+        rgba(145, 121, 102, 0.85) 100%
+      );
     }
 
     /* 移动端点击反馈 */
@@ -901,8 +946,13 @@
 
     .submit-btn:disabled {
       background: var(--color-disabled-bg);
+      background-image: none;
       color: var(--color-disabled-text);
       cursor: not-allowed;
+      border-color: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
     }
 
     /* ==========================================
@@ -1058,14 +1108,13 @@
   <script>
     /* ==========================================
        视差滚动效果 - 背景速度为内容的50%
-       移动端优化：避免地址栏隐藏导致的背景抖动
+       移动端和PC端都加防抖优化
        ========================================== */
     const parallaxBg = document.querySelector('.parallax-bg');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     // 移动端使用固定高度，避免地址栏隐藏/显示导致的抖动
     if (isMobile) {
-      // 移动端：使用视口高度的200%确保滚动时不露底
       const viewportHeight = window.innerHeight;
       parallaxBg.style.height = `${viewportHeight * 2}px`;
     } else {
@@ -1085,14 +1134,17 @@
       });
     }
     
-    // 视差滚动：背景移动速度为滚动的50%
+    // 视差滚动：背景移动速度为滚动的50%，使用RAF优化性能
     let ticking = false;
+    let lastScrollY = 0;
+    
     window.addEventListener('scroll', () => {
+      lastScrollY = window.scrollY;
+      
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          // 背景向下移动速度为滚动的50%（同向，但慢50%）
-          parallaxBg.style.transform = `translateY(${scrollY * 0.5}px)`;
+          // 使用上次保存的scrollY值，避免强制同步布局
+          parallaxBg.style.transform = `translateY(${lastScrollY * 0.5}px)`;
           ticking = false;
         });
         ticking = true;
