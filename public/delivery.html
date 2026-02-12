@@ -18,11 +18,11 @@
       --color-text-secondary: #5a5a5a;
       --color-text-tertiary: #8a8a8a;
       
-      /* 玻璃态效果 - 带青色调（根据 --glass-cyan-percent 自动计算） */
-      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 95%, 0.15);
-      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 90%, 0.3);
-      --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-      --glass-blur: 12px;
+      /* 玻璃态效果 - 提高透明度，iOS风格 */
+      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 98%, 0.25); /* 从0.15提高到0.25 */
+      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 95%, 0.5); /* 从0.3提高到0.5 */
+      --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+      --glass-blur: 20px; /* 从12px增强到20px */
       
       --radius-md: 12px;
       --radius-lg: 16px;
@@ -72,7 +72,9 @@
       top: 0;
       left: 0;
       width: 100%;
-      min-height: 100vh; /* 最小高度为视口高度 */
+      /* 使用固定像素高度避免移动端地址栏导致的抖动 */
+      height: 100%; /* 继承body高度 */
+      min-height: 100%; /* 最小高度 */
       z-index: 0;
       opacity: 1; /* 使用原图，不降低透明度 */
       will-change: transform;
@@ -197,7 +199,7 @@
     }
 
     /* ==========================================
-       状态卡片 - Glassmorphism 青色玻璃质感
+       状态卡片 - Glassmorphism iOS风格边缘扭曲
        ========================================== */
     .status-card {
       backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -209,16 +211,35 @@
       margin-bottom: 20px;
       box-shadow: var(--glass-shadow);
       position: relative;
+      overflow: visible; /* 允许边缘效果溢出 */
       
       /* 青色调玻璃边缘反光 */
       background-image: linear-gradient(
         135deg,
-        hsla(180, calc(var(--glass-cyan-tint) * 2), 98%, 0.3) 0%,
-        hsla(180, var(--glass-cyan-tint), 95%, 0.05) 50%,
-        hsla(180, calc(var(--glass-cyan-tint) / 2), 96%, 0.1) 100%
+        hsla(180, calc(var(--glass-cyan-percent) * 2), 98%, 0.4) 0%,
+        hsla(180, var(--glass-cyan-percent), 95%, 0.05) 50%,
+        hsla(180, calc(var(--glass-cyan-percent) / 2), 96%, 0.15) 100%
       );
       
       animation: slideUp 0.5s var(--easing-smooth);
+    }
+
+    /* iOS风格边缘扭曲效果 - 顶部高光 */
+    .status-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.8) 50%,
+        transparent 100%
+      );
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      opacity: 0.6;
     }
 
     /* 移动端增加padding和加宽边缘 */

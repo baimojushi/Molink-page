@@ -23,11 +23,11 @@
       --color-accent-light: #a8c5ab;
       --color-accent-dark: #5a7e5e;
 
-      /* 玻璃态效果 - 带青色调（根据 --glass-cyan-percent 自动计算） */
-      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 95%, 0.15);
-      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 90%, 0.3);
-      --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-      --glass-blur: 12px;
+      /* 玻璃态效果 - 提高透明度，iOS风格 */
+      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 98%, 0.25); /* 从0.15提高到0.25 */
+      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 95%, 0.5); /* 从0.3提高到0.5 */
+      --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+      --glass-blur: 20px; /* 从12px增强到20px */
 
       /* 中性色 */
       --color-text-primary: #2a2a2a;
@@ -105,9 +105,11 @@
       top: 0;
       left: 0;
       width: 100%;
-      min-height: 100vh; /* 最小高度为视口高度 */
+      /* 使用固定像素高度避免移动端地址栏导致的抖动 */
+      height: 100%; /* 继承body高度 */
+      min-height: 100%; /* 最小高度 */
       z-index: 0;
-      opacity: 1; /* 使用原图，不降低透明度 */
+      opacity: 1; /* 直接使用原图，不做灰度调色 */
       will-change: transform;
       
       /* 默认渐变背景 */
@@ -193,7 +195,7 @@
     }
 
     /* ==========================================
-       分区卡片 - Glassmorphism 青色玻璃质感
+       分区卡片 - Glassmorphism iOS风格边缘扭曲
        ========================================== */
     .section {
       backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -204,20 +206,20 @@
       box-shadow: var(--glass-shadow);
       border: 1px solid var(--glass-border);
       position: relative;
+      overflow: visible; /* 允许边缘效果溢出 */
       
       /* 玻璃边缘反光效果 - 青色调 */
       background-image: linear-gradient(
         135deg,
-        hsla(180, calc(var(--glass-cyan-tint) * 2), 98%, 0.3) 0%,
-        hsla(180, var(--glass-cyan-tint), 95%, 0.05) 50%,
-        hsla(180, calc(var(--glass-cyan-tint) / 2), 96%, 0.1) 100%
+        hsla(180, calc(var(--glass-cyan-percent) * 2), 98%, 0.4) 0%,
+        hsla(180, var(--glass-cyan-percent), 95%, 0.05) 50%,
+        hsla(180, calc(var(--glass-cyan-percent) / 2), 96%, 0.15) 100%
       );
       
       /* 初始状态：隐藏 */
       opacity: 0;
       transform: translateY(calc(-1 * var(--slide-distance)));
       max-height: 0;
-      overflow: hidden;
       padding-top: 0;
       padding-bottom: 0;
       margin-bottom: 0;
@@ -229,6 +231,24 @@
         max-height var(--duration-slow) var(--easing-enter),
         padding var(--duration-slow) var(--easing-enter),
         margin var(--duration-slow) var(--easing-enter);
+    }
+
+    /* iOS风格边缘扭曲效果 - 顶部高光 */
+    .section::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.8) 50%,
+        transparent 100%
+      );
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      opacity: 0.6;
     }
     
     /* 移动端：增加padding和margin，加宽玻璃边缘 */
@@ -671,7 +691,7 @@
     }
     
     .receive-input-wrap {
-      flex: 1 1 100%; /* 移动端占满整行 */
+      flex: 1 1 100%; /* 所有设备都换行，避免叠边bug */
       min-width: 0;
       overflow: hidden;
       max-height: 0;
@@ -683,24 +703,10 @@
       margin-top: 0;
     }
 
-    /* PC端：输入框在同一行 */
-    @media (min-width: 768px) {
-      .receive-input-wrap {
-        flex: 1 1 auto;
-        max-width: 400px; /* 限制最大宽度 */
-      }
-    }
-
     .receive-input-wrap.show {
       max-height: 100px;
       opacity: 1;
-      margin-top: 0; /* 移动端有间距 */
-    }
-
-    @media (max-width: 767px) {
-      .receive-input-wrap.show {
-        margin-top: 0; /* 依赖flex gap */
-      }
+      margin-top: 12px; /* 输入框出现时增加上边距 */
     }
 
     .receive-input-wrap input {
@@ -858,24 +864,30 @@
        提交按钮 - 磨砂玻璃质感
        ========================================== */
     /* ==========================================
-       提交按钮 - 磨砂玻璃质感
+       提交按钮 - 褐色高硼硅玻璃质感
        ========================================== */
     .submit-btn {
       width: 100%;
       padding: 16px;
-      border: 2px solid rgba(159, 131, 112, 0.3); /* 使用主色的半透明边框 */
+      border: 1.5px solid rgba(159, 131, 112, 0.4);
       border-radius: var(--radius-md);
       
-      /* 磨砂玻璃效果 - 基于主色 */
-      background: var(--color-primary); /* 基础色 #9B8370 */
-      backdrop-filter: blur(10px) saturate(150%);
+      /* 褐色高硼硅玻璃效果 - 透明质感 */
+      background: transparent;
+      backdrop-filter: blur(20px) saturate(150%);
       background-image: linear-gradient(
         135deg,
-        rgba(175, 160, 145, 0.9) 0%,  /* 更高明度，降低红调 */
-        rgba(155, 131, 112, 0.85) 100%
+        rgba(155, 131, 112, 0.35) 0%,   /* 褐色玻璃 */
+        rgba(175, 160, 145, 0.25) 50%,
+        rgba(155, 131, 112, 0.3) 100%
       );
       
-      color: #fff;
+      /* iOS风格边缘高光 */
+      box-shadow: 
+        0 4px 16px rgba(155, 131, 112, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      
+      color: var(--color-primary-dark);
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
@@ -883,7 +895,6 @@
       letter-spacing: 2px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(155, 131, 112, 0.25); /* 主色阴影 */
       
       /* 初始隐藏 */
       opacity: 0;
@@ -914,7 +925,7 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
       transition: left 0.5s ease;
     }
 
@@ -923,8 +934,16 @@
       
       .submit-btn:hover:not(:disabled) {
         transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(155, 131, 112, 0.35);
-        border-color: rgba(175, 160, 145, 0.5);
+        box-shadow: 
+          0 8px 24px rgba(155, 131, 112, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        border-color: rgba(175, 160, 145, 0.6);
+        background-image: linear-gradient(
+          135deg,
+          rgba(155, 131, 112, 0.4) 0%,
+          rgba(175, 160, 145, 0.3) 50%,
+          rgba(155, 131, 112, 0.35) 100%
+        );
       }
     }
     
@@ -932,8 +951,9 @@
       transform: translateY(-1px) scale(0.98);
       background-image: linear-gradient(
         135deg,
-        rgba(165, 150, 135, 0.9) 0%,
-        rgba(145, 121, 102, 0.85) 100%
+        rgba(145, 121, 102, 0.4) 0%,
+        rgba(165, 150, 135, 0.3) 50%,
+        rgba(145, 121, 102, 0.35) 100%
       );
     }
 
