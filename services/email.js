@@ -1,52 +1,86 @@
-// services/email.js —— 邮件发送服务
-const nodemailer = require('nodemailer');
+// services/email.js —— 邮件发送服务（腾讯云 SES HTTP API）
+const { ses } = require('tencentcloud-sdk-nodejs-ses');
 
 // ==========================================
-// 创建 SMTP 邮件传输器
-// 【请在 .env 中配置 SMTP 参数】
+// 腾讯云 SES 客户端
+// 【请在 .env 中配置以下参数】
+//   TENCENTCLOUD_SECRET_ID   - 腾讯云 API 密钥 ID
+//   TENCENTCLOUD_SECRET_KEY  - 腾讯云 API 密钥 Key
+//   SES_REGION               - 地域，如 ap-guangzhou 或 ap-hongkong
+//   SES_FROM_EMAIL           - 发信地址，如 notice@mail.molink.art
+//   SES_FROM_NAME            - 发件人别名，如 Molink
+//   SES_ORDER_TEMPLATE_ID    - 订单通知邮件模板 ID（数字）
+//   SES_DELIVERY_TEMPLATE_ID - 交付通知邮件模板 ID（数字）
+//   ADMIN_EMAIL              - 目标机操作者邮箱
+//   BASE_URL                 - 站点地址
 // ==========================================
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT) || 465,
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
+
+const SesClient = ses.v20201002.Client;
+
+const client = new SesClient({
+  credential: {
+    secretId: process.env.TENCENTCLOUD_SECRET_ID,
+    secretKey: process.env.TENCENTCLOUD_SECRET_KEY,
+  },
+  region: process.env.SES_REGION || 'ap-guangzhou',
+  profile: {
+    httpProfile: { reqMethod: 'POST', reqTimeout: 10 },
+  },
 });
+
+// 构造发件人地址（带别名）
+function getFromAddress() {
+  const name = process.env.SES_FROM_NAME || 'Molink';
+  const email = process.env.SES_FROM_EMAIL || 'notice@mail.molink.art';
+  return `${name} <${email}>`;
+}
 
 /**
  * 发送新订单通知给目标机操作者
  * @param {Object} order - 订单信息
+ *
+ * 【对应模板变量（在腾讯云控制台创建模板时使用）】
+ *   {{orderId}}        - 订单编号
+ *   {{serviceType}}    - 服务类型
+ *   {{receiveMethod}}  - 接收方式（如 "邮箱: xxx" 或 "短信: xxx"）
+ *   {{extraService}}   - 附加服务（"是" 或 "否"）
+ *   {{createdAt}}      - 提交时间
+ *   {{adminUrl}}       - 管理后台链接
  */
 async function 发送订单通知到目标机(order) {
-  const mailOptions = {
-    from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_USER}>`,
-    // 【目标机操作者邮箱，在 .env 中配置 ADMIN_EMAIL，支持多个邮箱用逗号分隔】
-    to: process.env.ADMIN_EMAIL,
-    subject: `新服务请求：${order.service_type_label} - ${order.created_at}`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #5a3e2b;">新的服务请求</h2>
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #888;">订单编号</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${order.id}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #888;">服务类型</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${order.service_type_label}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #888;">接收方式</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${order.receive_method === 'email' ? '邮箱' : '短信'}: ${order.receive_target}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #888;">附加服务</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${order.extra_service ? '是' : '否'}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #eee; color: #888;">提交时间</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${order.created_at}</td></tr>
-        </table>
-        <p style="margin-top: 16px;">
-          <a href="${process.env.BASE_URL}/admin" style="display: inline-block; padding: 10px 24px; background: #5a3e2b; color: #fff; text-decoration: none; border-radius: 6px;">进入管理后台处理</a>
-        </p>
-      </div>
-    `
-  };
+  // 支持多个邮箱，逗号分隔
+  const adminEmails = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim()).filter(Boolean);
+  if (adminEmails.length === 0) {
+    console.error('未配置 ADMIN_EMAIL，跳过订单通知');
+    return;
+  }
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`📧 订单通知已发送到目标机邮箱: ${process.env.ADMIN_EMAIL}`);
-  } catch (error) {
-    console.error('发送订单通知邮件失败:', error.message);
+  const templateData = JSON.stringify({
+    orderId: String(order.id),
+    serviceType: order.service_type_label,
+    receiveMethod: `${order.receive_method === 'email' ? '邮箱' : '短信'}: ${order.receive_target}`,
+    extraService: order.extra_service ? '是' : '否',
+    createdAt: order.created_at,
+    adminUrl: `${process.env.BASE_URL}/admin`,
+  });
+
+  // 逐个发送（非群发，避免收件人互相可见）
+  for (const toEmail of adminEmails) {
+    try {
+      await client.SendEmail({
+        FromEmailAddress: getFromAddress(),
+        Destination: [toEmail],
+        Subject: `新服务请求：${order.service_type_label} - ${order.created_at}`,
+        Template: {
+          TemplateID: parseInt(process.env.SES_ORDER_TEMPLATE_ID),
+          TemplateData: templateData,
+        },
+        TriggerType: 1, // 触发类邮件，即时发送
+      });
+      console.log(`📧 订单通知已发送到目标机邮箱: ${toEmail}`);
+    } catch (error) {
+      console.error(`发送订单通知邮件失败 (${toEmail}):`, error.message);
+    }
   }
 }
 
@@ -54,26 +88,26 @@ async function 发送订单通知到目标机(order) {
  * 发送交付通知给用户（邮箱方式）
  * @param {Object} order - 订单信息
  * @param {string} deliveryUrl - 交付页面链接
+ *
+ * 【对应模板变量】
+ *   {{serviceType}}  - 服务类型
+ *   {{deliveryUrl}}  - 交付结果链接
  */
 async function 发送交付通知到用户邮箱(order, deliveryUrl) {
-  const mailOptions = {
-    from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_USER}>`,
-    to: order.receive_target,
-    subject: `${order.service_type_label} - ${order.created_at}`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #5a3e2b;">您的作品已完成</h2>
-        <p>您提交的「${order.service_type_label}」服务已处理完毕，请点击下方链接查看并下载：</p>
-        <p style="margin: 24px 0;">
-          <a href="${deliveryUrl}" style="display: inline-block; padding: 12px 32px; background: #5a3e2b; color: #fff; text-decoration: none; border-radius: 8px; font-size: 16px;">查看交付结果</a>
-        </p>
-        <p style="color: #888; font-size: 13px;">提示：图片将在48小时后自动删除，请及时保存到您的设备。</p>
-      </div>
-    `
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
+    await client.SendEmail({
+      FromEmailAddress: getFromAddress(),
+      Destination: [order.receive_target],
+      Subject: `${order.service_type_label} - ${order.created_at}`,
+      Template: {
+        TemplateID: parseInt(process.env.SES_DELIVERY_TEMPLATE_ID),
+        TemplateData: JSON.stringify({
+          serviceType: order.service_type_label,
+          deliveryUrl: deliveryUrl,
+        }),
+      },
+      TriggerType: 1,
+    });
     console.log(`📧 交付通知已发送到用户邮箱: ${order.receive_target}`);
     return true;
   } catch (error) {
