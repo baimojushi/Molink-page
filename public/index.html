@@ -13,7 +13,7 @@
       --glass-cyan-percent: 16;
       
       /* 品牌色系 - 清透轻盈 */
-      --color-primary: #917355;       /* 提高明度，降低红调 */
+      --color-primary: #917355;
       --color-primary-light: #B5A091;
       --color-primary-pale: #F5F0EB;
       --color-primary-dark: #806A54;
@@ -23,11 +23,11 @@
       --color-accent-light: #a8c5ab;
       --color-accent-dark: #5a7e5e;
 
-      /* 玻璃态效果 - 提高透明度，iOS风格 */
-      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 98%, 0.25); /* 从0.15提高到0.25 */
-      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 95%, 0.5); /* 从0.3提高到0.5 */
+      /* 玻璃态效果 */
+      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 98%, 0.25);
+      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 95%, 0.5);
       --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
-      --glass-blur: 20px; /* 从12px增强到20px */
+      --glass-blur: 20px;
 
       /* 中性色 */
       --color-text-primary: #2a2a2a;
@@ -52,6 +52,9 @@
 
       /* 滑出动画距离 */
       --slide-distance: 40px;
+
+      /* 面板宽度 */
+      --panel-width: 480px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -60,28 +63,21 @@
        移动端全局优化 + Chrome移动端修复
        ========================================== */
     html {
-      /* 禁用iOS双击缩放 */
       touch-action: manipulation;
-      /* 禁用iOS长按选择 */
       -webkit-user-select: none;
       user-select: none;
-      /* 平滑滚动 */
       scroll-behavior: smooth;
-      /* Chrome移动端：防止自动调整字体大小 */
       -webkit-text-size-adjust: 100%;
       text-size-adjust: 100%;
     }
 
-    /* 允许文本选择和输入框操作 */
     input, textarea, [contenteditable] {
       -webkit-user-select: text;
       user-select: text;
       touch-action: auto;
-      /* Chrome移动端：确保输入框不缩放 */
-      font-size: max(16px, 1em); /* Chrome要求16px以上才不缩放 */
+      font-size: max(16px, 1em);
     }
 
-    /* 禁用移动端点击蓝色高亮 */
     * {
       -webkit-tap-highlight-color: transparent;
       -webkit-touch-callout: none;
@@ -94,28 +90,22 @@
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       min-height: 100vh;
       overflow-x: hidden;
-      position: relative; /* 为absolute定位的背景提供定位上下文 */
+      position: relative;
       color: var(--color-text-primary);
       -webkit-font-smoothing: antialiased;
     }
 
-    /* 背景图层 - 支持本地图片替换，跟随滚动但速度减半 */
     .parallax-bg {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
-      /* 使用固定像素高度避免移动端地址栏导致的抖动 */
-      height: 100%; /* 继承body高度 */
-      min-height: 100%; /* 最小高度 */
+      height: 100%;
+      min-height: 100%;
       z-index: 0;
-      opacity: 1; /* 直接使用原图，不做灰度调色 */
+      opacity: 1;
       will-change: transform;
-      
-      /* 默认渐变背景 */
       background: linear-gradient(135deg, #f5efe9 0%, #e8dfd5 100%);
-      
-      /* 移动端图片背景（优先加载小尺寸） */
       background-image: url('/images/background-mobile.jpg');
       background-size: cover;
       background-position: center top;
@@ -123,16 +113,12 @@
       background-attachment: scroll;
     }
 
-    /* PC端使用高清图片 */
     @media (min-width: 768px) {
       .parallax-bg {
         background-image: url('/images/background.jpg');
       }
     }
 
-    /* 格网背景已移除，使用纯图片背景 */
-
-    /* 白色噪点纹理 */
     .parallax-bg::after {
       content: '';
       position: absolute;
@@ -177,54 +163,372 @@
     }
 
     /* ==========================================
-       主容器 - 视差前景层
+       双面板外层包装器（桌面端横向布局）
        ========================================== */
-    .container {
+    .panels-wrapper {
       position: relative;
       z-index: 1;
-      max-width: 480px;
-      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 20px;
       padding: 20px 16px 40px;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* 移动端优化：增加间距避免元素紧凑 */
     @media (max-width: 767px) {
-      .container {
+      .panels-wrapper {
+        flex-direction: column;
+        align-items: center;
         padding: 24px 20px 60px;
       }
     }
 
     /* ==========================================
-       分区卡片 - Glassmorphism iOS风格边缘扭曲
+       表单主面板
        ========================================== */
-    .section {
+    .form-panel {
+      width: 100%;
+      max-width: var(--panel-width);
+      flex-shrink: 0;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (max-width: 767px) {
+      .form-panel {
+        max-width: 100%;
+      }
+    }
+
+    /* ==========================================
+       交付结果面板
+       ========================================== */
+    .delivery-panel {
+      width: 100%;
+      max-width: var(--panel-width);
+      flex-shrink: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateX(60px);
+      max-width: 0;
+      padding: 0;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .delivery-panel.visible {
+      opacity: 1;
+      transform: translateX(0);
+      max-width: var(--panel-width);
+      pointer-events: auto;
+    }
+
+    @media (max-width: 767px) {
+      .delivery-panel {
+        transform: translateY(30px);
+        max-width: 100%;
+        max-height: 0;
+      }
+      .delivery-panel.visible {
+        transform: translateY(0);
+        max-width: 100%;
+        max-height: 5000px;
+      }
+    }
+
+    .delivery-card {
       backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-      background: var(--glass-bg);  /* 青色调玻璃背景 */
+      background: var(--glass-bg);
       border-radius: var(--radius-xl);
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: var(--glass-shadow);
+      padding: 24px;
       border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
       position: relative;
-      overflow: visible; /* 允许边缘效果溢出 */
-      
-      /* 玻璃边缘反光效果 - 青色调 */
+      overflow: visible;
       background-image: linear-gradient(
         135deg,
         hsla(180, calc(var(--glass-cyan-percent) * 2), 98%, 0.4) 0%,
         hsla(180, var(--glass-cyan-percent), 95%, 0.05) 50%,
         hsla(180, calc(var(--glass-cyan-percent) / 2), 96%, 0.15) 100%
       );
-      
-      /* 初始状态：隐藏 */
+    }
+
+    /* 玻璃顶部高光 */
+    .delivery-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      opacity: 0.6;
+    }
+
+    /* 白色噪点纹理 */
+    .delivery-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-xl);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+      pointer-events: none;
+      mix-blend-mode: overlay;
+    }
+
+    @media (max-width: 767px) {
+      .delivery-card {
+        padding: 28px 20px;
+      }
+    }
+
+    /* ==========================================
+       Apple 风格加载动效
+       ========================================== */
+    .apple-spinner-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0 20px;
+    }
+
+    .apple-spinner {
+      width: 40px;
+      height: 40px;
+      position: relative;
+    }
+
+    .apple-spinner .petal {
+      position: absolute;
+      width: 3px;
+      height: 10px;
+      left: 50%;
+      top: 50%;
+      margin-left: -1.5px;
+      margin-top: -20px;
+      border-radius: 2px;
+      background: var(--color-text-tertiary);
+      transform-origin: 50% 20px;
+      animation: apple-fade 1s linear infinite;
+    }
+
+    @keyframes apple-fade {
+      0% { opacity: 1; }
+      100% { opacity: 0.15; }
+    }
+
+    .apple-spinner-text {
+      margin-top: 20px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-align: center;
+    }
+
+    .delivery-hint {
+      margin-top: 16px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--color-text-tertiary);
+      text-align: center;
+      line-height: 1.6;
+      background: rgba(255,255,255,0.2);
+      border-radius: var(--radius-md);
+    }
+
+    @media (max-width: 767px) {
+      .delivery-hint {
+        font-size: 13px;
+        padding: 14px 18px;
+      }
+    }
+
+    /* ==========================================
+       交付图片展示
+       ========================================== */
+    .delivery-images {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .delivery-img-wrap {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.3);
+      transition: all var(--duration-normal) var(--easing-smooth);
+    }
+
+    @media (hover: hover) {
+      .delivery-img-wrap:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      }
+    }
+
+    .delivery-img-wrap img {
+      width: 100%;
+      display: block;
+      -webkit-touch-callout: default;
+      -webkit-user-select: auto;
+      user-select: auto;
+    }
+
+    .delivery-img-hint {
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--color-text-tertiary);
+      text-align: center;
+      background: rgba(255,255,255,0.5);
+    }
+
+    @media (max-width: 767px) {
+      .delivery-img-hint {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+    }
+
+    /* 交付完成标题 */
+    .delivery-done-title {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .delivery-done-title .icon {
+      font-size: 36px;
+      display: inline-block;
+      margin-bottom: 8px;
+      animation: iconBounce 0.6s var(--easing-bounce);
+    }
+
+    .delivery-done-title h3 {
+      font-size: 17px;
+      color: var(--color-text-primary);
+      font-weight: 600;
+    }
+
+    .delivery-done-title p {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+
+    @keyframes iconBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    /* 渲染的文字内容 */
+    .delivery-text-content {
+      margin-top: 14px;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--color-text-primary);
+      background: rgba(255,255,255,0.3);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      white-space: pre-wrap;
+    }
+
+    /* "提交新的业务"按钮 */
+    .new-order-btn {
+      width: 100%;
+      padding: 16px;
+      border: 1.5px solid rgba(159, 131, 112, 0.4);
+      border-radius: var(--radius-md);
+      background: transparent;
+      backdrop-filter: blur(20px) saturate(150%);
+      background-image: linear-gradient(
+        135deg,
+        rgba(155, 131, 112, 0.35) 0%,
+        rgba(175, 160, 145, 0.25) 50%,
+        rgba(155, 131, 112, 0.3) 100%
+      );
+      box-shadow:
+        0 4px 16px rgba(155, 131, 112, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      color: var(--color-primary-dark);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--duration-normal) var(--easing-smooth);
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUpFade 0.5s 0.3s var(--easing-enter) forwards;
+    }
+
+    @keyframes slideUpFade {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .new-order-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: left 0.5s ease;
+    }
+
+    @media (hover: hover) {
+      .new-order-btn:hover::before { left: 100%; }
+      .new-order-btn:hover {
+        transform: translateY(-3px);
+        box-shadow:
+          0 8px 24px rgba(155, 131, 112, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+    }
+
+    .new-order-btn:active {
+      transform: scale(0.98);
+    }
+
+    @media (max-width: 767px) {
+      .new-order-btn {
+        padding: 18px;
+        font-size: 17px;
+        min-height: 56px;
+      }
+    }
+
+    /* ==========================================
+       分区卡片 - Glassmorphism
+       ========================================== */
+    .section {
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      background: var(--glass-bg);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--glass-shadow);
+      border: 1px solid var(--glass-border);
+      position: relative;
+      overflow: visible;
+      background-image: linear-gradient(
+        135deg,
+        hsla(180, calc(var(--glass-cyan-percent) * 2), 98%, 0.4) 0%,
+        hsla(180, var(--glass-cyan-percent), 95%, 0.05) 50%,
+        hsla(180, calc(var(--glass-cyan-percent) / 2), 96%, 0.15) 100%
+      );
       opacity: 0;
       transform: translateY(calc(-1 * var(--slide-distance)));
       max-height: 0;
       padding-top: 0;
       padding-bottom: 0;
       margin-bottom: 0;
-      
-      /* 动画过渡 */
       transition: 
         opacity var(--duration-slow) var(--easing-enter),
         transform var(--duration-slow) var(--easing-enter),
@@ -233,32 +537,22 @@
         margin var(--duration-slow) var(--easing-enter);
     }
 
-    /* iOS风格边缘扭曲效果 - 顶部高光 */
     .section::after {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 1px;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.8) 50%,
-        transparent 100%
-      );
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
       border-radius: var(--radius-xl) var(--radius-xl) 0 0;
       opacity: 0.6;
     }
     
-    /* 移动端：增加padding和margin，加宽玻璃边缘 */
     @media (max-width: 767px) {
       .section {
         padding: 24px;
         margin-bottom: 20px;
-        border-width: 1.5px; /* 加宽边缘便于触摸设备识别 */
+        border-width: 1.5px;
       }
-      
       .section.visible {
         padding-top: 24px;
         padding-bottom: 24px;
@@ -266,7 +560,6 @@
       }
     }
     
-    /* 滑出显示状态 */
     .section.visible {
       opacity: 1;
       transform: translateY(0);
@@ -277,7 +570,6 @@
       overflow: visible;
     }
     
-    /* 第一个区域始终可见 */
     .section:first-of-type {
       opacity: 1;
       transform: translateY(0);
@@ -293,7 +585,6 @@
       }
     }
 
-    /* 白色噪点纹理叠加到卡片 */
     .section::before {
       content: '';
       position: absolute;
@@ -322,7 +613,7 @@
     }
 
     /* ==========================================
-       服务类型选择按钮 - 微交互
+       服务类型选择按钮
        ========================================== */
     .service-btns {
       display: flex;
@@ -330,11 +621,8 @@
       gap: 10px;
     }
 
-    /* 移动端增加间距 */
     @media (max-width: 767px) {
-      .service-btns {
-        gap: 14px;
-      }
+      .service-btns { gap: 14px; }
     }
 
     .service-btn {
@@ -355,21 +643,18 @@
       overflow: hidden;
     }
 
-    /* 移动端增大可点击区域 */
     @media (max-width: 767px) {
       .service-btn {
         padding: 16px 18px;
-        min-height: 56px; /* 符合移动端最小触控区域标准 */
+        min-height: 56px;
       }
     }
     
-    /* Micro-interaction: 按压弹性 */
     .service-btn:active { 
       transform: scale(0.98);
       transition-duration: var(--duration-fast);
     }
     
-    /* PC端悬停光晕（触摸设备禁用） */
     .service-btn::after {
       content: '';
       position: absolute;
@@ -391,11 +676,8 @@
       box-shadow: 0 4px 12px rgba(122,158,126,0.2);
     }
 
-    /* 移动端active状态不上移 */
     @media (max-width: 767px) {
-      .service-btn.active {
-        transform: translateY(0);
-      }
+      .service-btn.active { transform: translateY(0); }
     }
     
     .service-btn .icon {
@@ -411,7 +693,6 @@
       transition: all var(--duration-normal) var(--easing-bounce);
     }
 
-    /* PC端悬停图标动效（触摸设备禁用） */
     @media (hover: hover) {
       .service-btn:hover .icon { transform: rotate(5deg) scale(1.1); }
     }
@@ -426,18 +707,15 @@
     }
 
     /* ==========================================
-       图片上传区域 - 微交互
+       图片上传区域
        ========================================== */
     .upload-row {
       display: flex;
       gap: 12px;
     }
 
-    /* 移动端增加间距 */
     @media (max-width: 767px) {
-      .upload-row {
-        gap: 16px;
-      }
+      .upload-row { gap: 16px; }
     }
 
     .upload-box {
@@ -457,14 +735,10 @@
       backdrop-filter: blur(8px);
     }
 
-    /* 移动端加宽边框便于识别 */
     @media (max-width: 767px) {
-      .upload-box {
-        border-width: 2.5px;
-      }
+      .upload-box { border-width: 2.5px; }
     }
     
-    /* PC端悬停提示（触摸设备禁用） */
     @media (hover: hover) {
       .upload-box:hover:not(.disabled) {
         border-color: var(--color-accent);
@@ -477,7 +751,6 @@
       transform: translateY(-1px) scale(0.98); 
     }
 
-    /* 移动端点击反馈 */
     @media (max-width: 767px) {
       .upload-box:active:not(.disabled) {
         transform: scale(0.98);
@@ -504,7 +777,6 @@
       transition: transform var(--duration-fast) var(--easing-bounce);
     }
 
-    /* PC端悬停标签动效（触摸设备禁用） */
     @media (hover: hover) {
       .upload-box:hover .label { transform: scale(1.05); }
     }
@@ -524,16 +796,10 @@
       transition: all var(--duration-normal) var(--easing-bounce);
     }
 
-    /* 移动端增大plus符号 */
     @media (max-width: 767px) {
-      .upload-box .plus {
-        width: 56px;
-        height: 56px;
-        font-size: 36px;
-      }
+      .upload-box .plus { width: 56px; height: 56px; font-size: 36px; }
     }
 
-    /* PC端悬停plus动效（触摸设备禁用） */
     @media (hover: hover) {
       .upload-box:hover .plus { 
         transform: rotate(90deg) scale(1.1);
@@ -557,10 +823,8 @@
     
     .upload-box .remove-btn {
       position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 24px;
-      height: 24px;
+      top: 6px; right: 6px;
+      width: 24px; height: 24px;
       border-radius: 50%;
       background: rgba(0,0,0,0.6);
       backdrop-filter: blur(4px);
@@ -575,19 +839,15 @@
       opacity: 0;
     }
 
-    /* 移动端始终显示删除按钮，增大尺寸 */
     @media (max-width: 767px) {
       .upload-box .remove-btn {
         opacity: 1;
-        width: 32px;
-        height: 32px;
+        width: 32px; height: 32px;
         font-size: 18px;
-        top: 8px;
-        right: 8px;
+        top: 8px; right: 8px;
       }
     }
 
-    /* PC端悬停显示 */
     @media (hover: hover) {
       .upload-box:hover .remove-btn { opacity: 1; }
     }
@@ -597,7 +857,6 @@
       background: rgba(196,92,74,0.9);
     }
 
-    /* 移动端点击反馈 */
     @media (max-width: 767px) {
       .remove-btn:active {
         transform: scale(0.9);
@@ -608,111 +867,10 @@
     .upload-box input[type="file"] { display: none; }
 
     /* ==========================================
-       接收方式 - 优化布局
+       接收邮箱区域（简化为纯邮箱）
        ========================================== */
-    .receive-row {
-      display: flex;
-      gap: 12px;
-      align-items: stretch;
-      flex-wrap: wrap; /* 允许换行 */
-    }
-
-    /* 移动端增加间距，使设计更疏朗平衡 */
-    @media (max-width: 767px) {
-      .receive-row {
-        gap: 12px; /* 从14px改为12px，在换行布局下更平衡 */
-      }
-    }
-
-    .receive-btn {
-      padding: 12px 20px;
-      border: 2px solid var(--glass-border);
-      border-radius: var(--radius-md);
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(8px);
-      font-size: 14px;
-      color: var(--color-text-primary);
-      cursor: pointer;
-      transition: all var(--duration-normal) var(--easing-smooth);
-      white-space: nowrap;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    /* 移动端增大按钮，调整间距使更平衡 */
-    @media (max-width: 767px) {
-      .receive-btn {
-        padding: 14px 28px; /* 增大左右padding使按钮更疏朗 */
-        min-height: 48px;
-        font-size: 15px;
-      }
-    }
-    
-    /* PC端波纹效果（触摸设备禁用） */
-    .receive-btn::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: 50%;
-      background: rgba(122,158,126,0.3);
-      transform: translate(-50%, -50%);
-      transition: width 0.6s ease, height 0.6s ease;
-    }
-
-    @media (hover: hover) {
-      .receive-btn:active::before {
-        width: 300px;
-        height: 300px;
-      }
-    }
-    
-    /* PC端悬停效果（触摸设备禁用） */
-    @media (hover: hover) {
-      .receive-btn:hover { 
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      }
-    }
-
-    /* 移动端点击反馈 */
-    @media (max-width: 767px) {
-      .receive-btn:active {
-        transform: scale(0.98);
-      }
-    }
-
-    .receive-btn.active {
-      border-color: var(--color-accent);
-      background: var(--color-accent);
-      color: #fff;
-    }
-    
-    .receive-input-wrap {
-      flex: 1 1 100%; /* 所有设备都换行，避免叠边bug */
-      min-width: 0;
-      overflow: hidden;
-      max-height: 0;
-      opacity: 0;
-      transition: 
-        max-height 0.4s var(--easing-smooth), 
-        opacity var(--duration-normal) ease,
-        margin-top var(--duration-normal) ease;
-      margin-top: 0;
-    }
-
-    .receive-input-wrap.show {
-      max-height: 100px;
-      opacity: 1;
-      margin-top: 12px; /* 输入框出现时增加上边距 */
-    }
-
-    .receive-input-wrap input {
+    .email-input-area input {
       width: 100%;
-      height: 100%;
       min-height: 44px;
       padding: 0 14px;
       border: 2px solid var(--glass-border);
@@ -725,33 +883,40 @@
       transition: all var(--duration-normal) var(--easing-smooth);
     }
 
-    /* 移动端输入框加高，确保能容纳邮箱域名长度 */
     @media (max-width: 767px) {
-      .receive-input-wrap input {
-        min-height: 50px; /* 从48px增至50px */
+      .email-input-area input {
+        min-height: 50px;
         font-size: 15px;
         padding: 0 16px;
       }
     }
 
-    .receive-input-wrap input:focus {
+    .email-input-area input:focus {
       border-color: var(--color-accent);
       transform: scale(1.01);
     }
 
-    /* 移动端focus不缩放 */
     @media (max-width: 767px) {
-      .receive-input-wrap input:focus {
-        transform: scale(1);
-      }
+      .email-input-area input:focus { transform: scale(1); }
     }
 
-    .receive-input-wrap input::placeholder {
+    .email-input-area input::placeholder {
       color: var(--color-text-tertiary);
     }
 
+    .email-hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--color-text-tertiary);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 767px) {
+      .email-hint { font-size: 13px; }
+    }
+
     /* ==========================================
-       附加服务开关 - 微交互
+       附加服务开关
        ========================================== */
     .toggle-row {
       display: flex;
@@ -760,11 +925,8 @@
       padding: 4px 0;
     }
 
-    /* 移动端增加padding */
     @media (max-width: 767px) {
-      .toggle-row {
-        padding: 8px 0;
-      }
+      .toggle-row { padding: 8px 0; }
     }
 
     .toggle-label {
@@ -774,11 +936,8 @@
       line-height: 1.4;
     }
 
-    /* 移动端增大字号 */
     @media (max-width: 767px) {
-      .toggle-label {
-        font-size: 15px;
-      }
+      .toggle-label { font-size: 15px; }
     }
 
     .toggle-label small {
@@ -789,9 +948,7 @@
     }
 
     @media (max-width: 767px) {
-      .toggle-label small {
-        font-size: 13px;
-      }
+      .toggle-label small { font-size: 13px; }
     }
 
     .toggle-switch {
@@ -807,63 +964,44 @@
       margin-left: 12px;
     }
 
-    /* 移动端增大开关尺寸 */
     @media (max-width: 767px) {
       .toggle-switch {
-        width: 56px;
-        height: 32px;
+        width: 56px; height: 32px;
         border-radius: 16px;
         margin-left: 16px;
       }
     }
 
-    /* PC端悬停效果（触摸设备禁用） */
     @media (hover: hover) {
       .toggle-switch:hover { transform: scale(1.05); }
     }
 
-    /* 移动端点击反馈 */
     @media (max-width: 767px) {
       .toggle-switch:active { transform: scale(0.95); }
     }
 
-    .toggle-switch.active {
-      background: var(--color-accent);
-    }
+    .toggle-switch.active { background: var(--color-accent); }
     .toggle-switch::after {
       content: '';
-      width: 22px;
-      height: 22px;
+      width: 22px; height: 22px;
       background: #fff;
       border-radius: 50%;
       position: absolute;
-      top: 3px;
-      left: 3px;
+      top: 3px; left: 3px;
       transition: left var(--duration-normal) var(--easing-bounce);
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
-    /* 移动端调整滑块尺寸 */
     @media (max-width: 767px) {
-      .toggle-switch::after {
-        width: 26px;
-        height: 26px;
-      }
+      .toggle-switch::after { width: 26px; height: 26px; }
     }
 
-    .toggle-switch.active::after {
-      left: 23px;
-    }
+    .toggle-switch.active::after { left: 23px; }
 
     @media (max-width: 767px) {
-      .toggle-switch.active::after {
-        left: 27px;
-      }
+      .toggle-switch.active::after { left: 27px; }
     }
 
-    /* ==========================================
-       提交按钮 - 磨砂玻璃质感
-       ========================================== */
     /* ==========================================
        提交按钮 - 褐色高硼硅玻璃质感
        ========================================== */
@@ -872,22 +1010,17 @@
       padding: 16px;
       border: 1.5px solid rgba(159, 131, 112, 0.4);
       border-radius: var(--radius-md);
-      
-      /* 褐色高硼硅玻璃效果 - 透明质感 */
       background: transparent;
       backdrop-filter: blur(20px) saturate(150%);
       background-image: linear-gradient(
         135deg,
-        rgba(155, 131, 112, 0.35) 0%,   /* 褐色玻璃 */
+        rgba(155, 131, 112, 0.35) 0%,
         rgba(175, 160, 145, 0.25) 50%,
         rgba(155, 131, 112, 0.3) 100%
       );
-      
-      /* iOS风格边缘高光 */
       box-shadow: 
         0 4px 16px rgba(155, 131, 112, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.5);
-      
       color: var(--color-primary-dark);
       font-size: 16px;
       font-weight: 600;
@@ -896,14 +1029,11 @@
       letter-spacing: 2px;
       position: relative;
       overflow: hidden;
-      
-      /* 初始隐藏 */
       opacity: 0;
       transform: translateY(calc(-1 * var(--slide-distance)));
       pointer-events: none;
     }
 
-    /* 移动端增大按钮高度 */
     @media (max-width: 767px) {
       .submit-btn {
         padding: 18px;
@@ -918,21 +1048,17 @@
       pointer-events: auto;
     }
     
-    /* PC端光晕扫过（触摸设备禁用） */
     .submit-btn::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
       transition: left 0.5s ease;
     }
 
     @media (hover: hover) {
       .submit-btn:hover::before { left: 100%; }
-      
       .submit-btn:hover:not(:disabled) {
         transform: translateY(-3px);
         box-shadow: 
@@ -958,11 +1084,8 @@
       );
     }
 
-    /* 移动端点击反馈 */
     @media (max-width: 767px) {
-      .submit-btn:active:not(:disabled) {
-        transform: scale(0.98);
-      }
+      .submit-btn:active:not(:disabled) { transform: scale(0.98); }
     }
 
     .submit-btn:disabled {
@@ -973,7 +1096,6 @@
       border-color: transparent;
       box-shadow: none;
       backdrop-filter: none;
-    }
     }
 
     /* ==========================================
@@ -1002,42 +1124,26 @@
       align-items: center;
       gap: 10px;
       pointer-events: auto;
-      
-      /* 入场动画 */
       animation: toastSlideIn 0.3s var(--easing-bounce);
-      
-      /* 淡出动画 */
       opacity: 1;
       transition: opacity 0.3s ease;
     }
 
-    .toast.fade-out {
-      opacity: 0;
-    }
+    .toast.fade-out { opacity: 0; }
 
     @keyframes toastSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .toast .icon {
-      font-size: 16px;
-      flex-shrink: 0;
-    }
+    .toast .icon { font-size: 16px; flex-shrink: 0; }
 
     /* ==========================================
        加载状态
        ========================================== */
     .loading-spinner {
       display: inline-block;
-      width: 20px;
-      height: 20px;
+      width: 20px; height: 20px;
       border: 2px solid rgba(255,255,255,0.3);
       border-top-color: #fff;
       border-radius: 50%;
@@ -1046,6 +1152,45 @@
       margin-right: 8px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ==========================================
+       图片放大遮罩
+       ========================================== */
+    .lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      cursor: pointer;
+    }
+
+    .lightbox-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-overlay img {
+      max-width: 92vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      transform: scale(0.9);
+      transition: transform 0.3s var(--easing-bounce);
+      -webkit-touch-callout: default;
+      -webkit-user-select: auto;
+      user-select: auto;
+    }
+
+    .lightbox-overlay.active img {
+      transform: scale(1);
+    }
   </style>
 </head>
 <body>
@@ -1056,98 +1201,120 @@
   <!-- Toast 通知容器 -->
   <div class="toast-container" id="toast-container"></div>
 
+  <!-- 图片放大遮罩 -->
+  <div class="lightbox-overlay" id="lightbox" onclick="关闭放大()">
+    <img id="lightbox-img" src="" alt="放大查看">
+  </div>
+
   <div class="header">
     <div class="header-logo">Mo:link Design</div>
     <div class="header-sub">艺术空间匹配服务</div>
   </div>
 
-  <div class="container">
+  <div class="panels-wrapper" id="panels-wrapper">
+    <!-- 左侧：表单面板 -->
+    <div class="form-panel" id="form-panel">
 
-    <!-- 区域1: 服务类型选择（始终可见） -->
-    <div class="section" id="section-service">
-      <div class="section-title">服务类型选择</div>
-      <div class="service-btns">
-        <div class="service-btn" data-type="hang_in_home" onclick="选择服务(this)">
-          <div class="icon">A</div>
-          <div>作品挂进家</div>
-        </div>
-        <div class="service-btn" data-type="recommend_work" onclick="选择服务(this)">
-          <div class="icon">B</div>
-          <div>根据空间推荐作品</div>
-        </div>
-        <div class="service-btn" data-type="recommend_space" onclick="选择服务(this)">
-          <div class="icon">C</div>
-          <div>根据作品推荐空间</div>
+      <!-- 区域1: 服务类型选择（始终可见） -->
+      <div class="section" id="section-service">
+        <div class="section-title">服务类型选择</div>
+        <div class="service-btns">
+          <div class="service-btn" data-type="hang_in_home" onclick="选择服务(this)">
+            <div class="icon">A</div>
+            <div>作品挂进家</div>
+          </div>
+          <div class="service-btn" data-type="recommend_work" onclick="选择服务(this)">
+            <div class="icon">B</div>
+            <div>根据空间推荐作品</div>
+          </div>
+          <div class="service-btn" data-type="recommend_space" onclick="选择服务(this)">
+            <div class="icon">C</div>
+            <div>根据作品推荐空间</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 区域2: 图片上传 -->
-    <div class="section" id="section-upload">
-      <div class="section-title">图片上传</div>
-      <div class="upload-row">
-        <div class="upload-box disabled" id="upload-artwork" onclick="触发上传('artwork')">
-          <input type="file" id="file-artwork" accept="image/*" onchange="处理上传(this, 'artwork')">
-          <span class="plus">+</span>
-          <span class="label">作品图片</span>
-        </div>
-        <div class="upload-box disabled" id="upload-space" onclick="触发上传('space')">
-          <input type="file" id="file-space" accept="image/*" onchange="处理上传(this, 'space')">
-          <span class="plus">+</span>
-          <span class="label">空间图片</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 区域3: 接收方式 -->
-    <div class="section" id="section-receive">
-      <div class="section-title">接收方式</div>
-      <div class="receive-row">
-        <div class="receive-btn" data-method="email" onclick="选择接收方式(this)">邮箱</div>
-        <div class="receive-btn" data-method="sms" onclick="选择接收方式(this)">短信</div>
-        <div class="receive-input-wrap" id="receive-input-wrap">
-          <input type="text" id="receive-target" placeholder="">
+      <!-- 区域2: 图片上传 -->
+      <div class="section" id="section-upload">
+        <div class="section-title">图片上传</div>
+        <div class="upload-row">
+          <div class="upload-box disabled" id="upload-artwork" onclick="触发上传('artwork')">
+            <input type="file" id="file-artwork" accept="image/*" onchange="处理上传(this, 'artwork')">
+            <span class="plus">+</span>
+            <span class="label">作品图片</span>
+          </div>
+          <div class="upload-box disabled" id="upload-space" onclick="触发上传('space')">
+            <input type="file" id="file-space" accept="image/*" onchange="处理上传(this, 'space')">
+            <span class="plus">+</span>
+            <span class="label">空间图片</span>
+          </div>
         </div>
       </div>
+
+      <!-- 区域3: 接收邮箱 -->
+      <div class="section" id="section-receive">
+        <div class="section-title">接收邮箱</div>
+        <div class="email-input-area">
+          <input type="email" id="receive-email" placeholder="请输入邮箱地址">
+          <div class="email-hint">完成生成后我们将通过邮箱通知您</div>
+        </div>
+      </div>
+
+      <!-- 区域4: 附加服务 -->
+      <div class="section" id="section-extra">
+        <div class="toggle-row">
+          <div class="toggle-label">
+            挂画后软装适配性微调
+            <small>可选附加服务</small>
+          </div>
+          <div class="toggle-switch" id="extra-toggle" onclick="切换附加服务()"></div>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submit-btn" disabled onclick="提交表单()">提交</button>
+
     </div>
 
-    <!-- 区域4: 附加服务 -->
-    <div class="section" id="section-extra">
-      <div class="toggle-row">
-        <div class="toggle-label">
-          挂画后软装适配性微调
-          <small>可选附加服务</small>
-        </div>
-        <div class="toggle-switch" id="extra-toggle" onclick="切换附加服务()"></div>
+    <!-- 右侧：交付结果面板 -->
+    <div class="delivery-panel" id="delivery-panel">
+      <div class="delivery-card" id="delivery-card-content">
+        <!-- 动态填充 -->
       </div>
     </div>
-
-    <button class="submit-btn" id="submit-btn" disabled onclick="提交表单()">提交</button>
-
   </div>
 
   <script>
     /* ==========================================
-       视差滚动效果 - 背景速度为内容的50%
-       移动端和PC端都加防抖优化
+       设备 UUID 管理
+       ========================================== */
+    function 获取设备UUID() {
+      let uuid = localStorage.getItem('molink_device_uuid');
+      if (!uuid) {
+        uuid = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+          (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+        localStorage.setItem('molink_device_uuid', uuid);
+      }
+      return uuid;
+    }
+
+    const 设备UUID = 获取设备UUID();
+
+    /* ==========================================
+       视差滚动效果
        ========================================== */
     const parallaxBg = document.querySelector('.parallax-bg');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // 移动端使用固定高度，避免地址栏隐藏/显示导致的抖动
     if (isMobile) {
       const viewportHeight = window.innerHeight;
       parallaxBg.style.height = `${viewportHeight * 2}px`;
     } else {
-      // PC端：动态计算背景高度
       function 更新背景高度() {
         const docHeight = document.documentElement.scrollHeight;
         parallaxBg.style.height = `${docHeight * 1.5}px`;
       }
-      
       更新背景高度();
-      
-      // PC端防抖resize，避免频繁触发
       let resizeTimer;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
@@ -1155,16 +1322,13 @@
       });
     }
     
-    // 视差滚动：背景移动速度为滚动的50%，使用RAF优化性能
     let ticking = false;
     let lastScrollY = 0;
     
     window.addEventListener('scroll', () => {
       lastScrollY = window.scrollY;
-      
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          // 使用上次保存的scrollY值，避免强制同步布局
           parallaxBg.style.transform = `translateY(${lastScrollY * 0.5}px)`;
           ticking = false;
         });
@@ -1179,13 +1343,8 @@
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `
-        <span class="icon">${icon}</span>
-        <span>${message}</span>
-      `;
+      toast.innerHTML = `<span class="icon">${icon}</span><span>${message}</span>`;
       container.appendChild(toast);
-      
-      // 3秒后淡出并移除
       setTimeout(() => {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
@@ -1193,7 +1352,7 @@
     }
 
     /* ==========================================
-       鼠标跟踪悬停光晕（服务按钮）
+       鼠标跟踪悬停光晕
        ========================================== */
     document.querySelectorAll('.service-btn').forEach(btn => {
       btn.addEventListener('mousemove', (e) => {
@@ -1210,13 +1369,14 @@
        ========================================== */
     const 状态 = {
       服务类型: null,
-      接收方式: null,
       接收地址: '',
       附加服务: false,
       作品图文件: null,
       空间图文件: null,
       提交中: false,
-      当前步骤: 1
+      当前步骤: 1,
+      当前订单ID: null,
+      轮询定时器: null
     };
 
     /* ==========================================
@@ -1228,23 +1388,14 @@
         if (回调) 回调();
         return;
       }
-      
       section.classList.add('visible');
-      
       setTimeout(() => {
         const rect = section.getBoundingClientRect();
         const windowHeight = window.innerHeight;
-        
         if (rect.bottom > windowHeight - 20) {
-          section.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'nearest' 
-          });
+          section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-        
-        if (回调) {
-          setTimeout(回调, 300);
-        }
+        if (回调) setTimeout(回调, 300);
       }, 50);
     }
 
@@ -1347,55 +1498,24 @@
 
       if (上传完成 && 状态.当前步骤 === 2) {
         状态.当前步骤 = 3;
-        显示区域('section-receive');
+        显示区域('section-receive', () => {
+          document.getElementById('receive-email').focus();
+        });
       }
       
       检查提交条件();
     }
 
     /* ==========================================
-       接收方式选择
+       邮箱输入监听
        ========================================== */
-    function 选择接收方式(btn) {
-      const method = btn.dataset.method;
-      const inputWrap = document.getElementById('receive-input-wrap');
-      const input = document.getElementById('receive-target');
-
-      document.querySelectorAll('.receive-btn').forEach(b => b.classList.remove('active'));
-
-      if (状态.接收方式 === method) {
-        状态.接收方式 = null;
-        inputWrap.classList.remove('show');
-        input.value = '';
-        状态.接收地址 = '';
-      } else {
-        btn.classList.add('active');
-        状态.接收方式 = method;
-        inputWrap.classList.add('show');
-
-        if (method === 'email') {
-          input.type = 'email';
-          input.placeholder = '请输入邮箱地址';
-        } else {
-          input.type = 'tel';
-          input.placeholder = '请输入手机号';
-        }
-
-        input.value = '';
-        状态.接收地址 = '';
-        setTimeout(() => input.focus(), 400);
-      }
-
-      检查提交条件();
-    }
-
-    document.getElementById('receive-target').addEventListener('input', (e) => {
+    document.getElementById('receive-email').addEventListener('input', (e) => {
       状态.接收地址 = e.target.value.trim();
-      检查接收完成();
+      检查邮箱完成();
     });
 
-    function 检查接收完成() {
-      if (状态.接收方式 && 状态.接收地址 && 状态.当前步骤 === 3) {
+    function 检查邮箱完成() {
+      if (状态.接收地址 && 状态.当前步骤 === 3) {
         状态.当前步骤 = 4;
         显示区域('section-extra', () => {
           document.getElementById('submit-btn').classList.add('visible');
@@ -1419,7 +1539,7 @@
       let 可提交 = true;
 
       if (!状态.服务类型) 可提交 = false;
-      if (!状态.接收方式 || !状态.接收地址) 可提交 = false;
+      if (!状态.接收地址) 可提交 = false;
 
       if (状态.服务类型 === 'hang_in_home') {
         if (!状态.作品图文件 || !状态.空间图文件) 可提交 = false;
@@ -1430,6 +1550,98 @@
       }
 
       document.getElementById('submit-btn').disabled = !可提交;
+    }
+
+    /* ==========================================
+       Apple 风格旋转加载器
+       ========================================== */
+    function 创建Apple加载器() {
+      let petals = '';
+      for (let i = 0; i < 12; i++) {
+        const rotation = i * 30;
+        const delay = -(1 - i / 12);
+        petals += `<div class="petal" style="transform: rotate(${rotation}deg); animation-delay: ${delay}s;"></div>`;
+      }
+      return `<div class="apple-spinner">${petals}</div>`;
+    }
+
+    /* ==========================================
+       显示交付面板
+       ========================================== */
+    function 显示交付面板(内容HTML) {
+      const panel = document.getElementById('delivery-panel');
+      const cardContent = document.getElementById('delivery-card-content');
+      cardContent.innerHTML = 内容HTML;
+      panel.classList.add('visible');
+      
+      // 桌面端更新背景高度
+      if (!isMobile) {
+        setTimeout(() => {
+          if (typeof 更新背景高度 === 'function') 更新背景高度();
+        }, 700);
+      }
+    }
+
+    /* 显示等待状态 */
+    function 显示等待状态(serviceLabel) {
+      const html = `
+        <div class="apple-spinner-container">
+          ${创建Apple加载器()}
+          <div class="apple-spinner-text">${serviceLabel || '处理中'}</div>
+        </div>
+        <div class="delivery-hint">
+          您可以退出当前页面，点击邮箱链接或重新扫码即可查看生成结果。
+        </div>
+      `;
+      显示交付面板(html);
+    }
+
+    /* 显示交付结果 */
+    function 显示交付结果(data) {
+      let imagesHtml = '';
+      const images = data.images || data.Images || [];
+      if (images.length > 0) {
+        imagesHtml = `<div class="delivery-images">
+          ${images.map(img => `
+            <div class="delivery-img-wrap" onclick="放大图片('/deliveries/${img}')">
+              <img src="/deliveries/${img}" alt="交付图片">
+              <div class="delivery-img-hint">长按保存 · 点击放大</div>
+            </div>
+          `).join('')}
+        </div>`;
+      }
+
+      const textContent = data.text || data.Text || '';
+      let textHtml = '';
+      if (textContent.trim()) {
+        textHtml = `<div class="delivery-text-content">${textContent}</div>`;
+      }
+
+      const html = `
+        <div class="delivery-done-title">
+          <div class="icon">✓</div>
+          <h3>已完成</h3>
+          <p>${data.serviceTypeLabel || data.service_type_label || ''}</p>
+        </div>
+        ${imagesHtml}
+        ${textHtml}
+        <button class="new-order-btn" onclick="提交新业务()">提交新的业务</button>
+      `;
+      显示交付面板(html);
+    }
+
+    /* ==========================================
+       图片放大
+       ========================================== */
+    function 放大图片(src) {
+      const overlay = document.getElementById('lightbox');
+      const img = document.getElementById('lightbox-img');
+      img.src = src;
+      overlay.classList.add('active');
+    }
+
+    function 关闭放大() {
+      document.getElementById('lightbox').classList.remove('active');
     }
 
     /* ==========================================
@@ -1445,9 +1657,9 @@
 
       const formData = new FormData();
       formData.append('service_type', 状态.服务类型);
-      formData.append('receive_method', 状态.接收方式);
       formData.append('receive_target', 状态.接收地址);
       formData.append('extra_service', 状态.附加服务 ? '1' : '0');
+      formData.append('device_uuid', 设备UUID);
 
       if (状态.作品图文件) formData.append('artwork', 状态.作品图文件);
       if (状态.空间图文件) formData.append('space', 状态.空间图文件);
@@ -1460,13 +1672,21 @@
         const data = await resp.json();
 
         if (data.success) {
-          const methodText = 状态.接收方式 === 'email' ? '邮箱' : '短信';
-          显示Toast(`提交成功！处理完成后将通过${methodText}通知您`, '✓');
+          显示Toast('提交成功！处理完成后将通过邮箱通知您', '✓');
+          状态.当前订单ID = data.orderId;
           
-          // 2秒后重置表单
-          setTimeout(() => {
-            重置表单();
-          }, 2000);
+          // 缓存当前订单信息
+          localStorage.setItem('molink_active_order', JSON.stringify({
+            orderId: data.orderId,
+            deliveryToken: data.deliveryToken,
+            status: 'pending'
+          }));
+
+          // 显示等待面板
+          显示等待状态('正在为您生成...');
+
+          // 开始轮询
+          开始轮询(data.orderId);
         } else {
           显示Toast(data.error || '提交失败，请重试', '✗');
         }
@@ -1481,25 +1701,72 @@
     }
 
     /* ==========================================
+       轮询订单状态
+       ========================================== */
+    function 开始轮询(orderId) {
+      if (状态.轮询定时器) clearInterval(状态.轮询定时器);
+
+      状态.轮询定时器 = setInterval(async () => {
+        try {
+          const resp = await fetch(`/api/client/order-status/${orderId}`);
+          const data = await resp.json();
+
+          if (data.status === 'delivered') {
+            clearInterval(状态.轮询定时器);
+            状态.轮询定时器 = null;
+
+            // 更新缓存
+            localStorage.setItem('molink_active_order', JSON.stringify({
+              orderId: orderId,
+              status: 'delivered'
+            }));
+
+            显示交付结果(data);
+          }
+        } catch (e) {
+          console.error('轮询异常:', e);
+        }
+      }, 8000); // 每8秒轮询一次
+    }
+
+    /* ==========================================
+       提交新业务（重置）
+       ========================================== */
+    function 提交新业务() {
+      // 清除缓存
+      localStorage.removeItem('molink_active_order');
+      
+      // 隐藏交付面板
+      document.getElementById('delivery-panel').classList.remove('visible');
+
+      // 清除轮询
+      if (状态.轮询定时器) {
+        clearInterval(状态.轮询定时器);
+        状态.轮询定时器 = null;
+      }
+
+      // 重置表单
+      重置表单();
+    }
+
+    /* ==========================================
        重置表单
        ========================================== */
     function 重置表单() {
       状态.服务类型 = null;
-      状态.接收方式 = null;
       状态.接收地址 = '';
       状态.附加服务 = false;
       状态.作品图文件 = null;
       状态.空间图文件 = null;
       状态.当前步骤 = 1;
+      状态.当前订单ID = null;
 
       document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('active'));
       清除上传('artwork');
       清除上传('space');
       document.getElementById('upload-artwork').classList.add('disabled');
       document.getElementById('upload-space').classList.add('disabled');
-      document.querySelectorAll('.receive-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('receive-input-wrap').classList.remove('show');
-      document.getElementById('receive-target').value = '';
+      document.getElementById('receive-email').value = '';
       document.getElementById('extra-toggle').classList.remove('active');
       
       document.querySelectorAll('.section').forEach((s, i) => {
@@ -1510,6 +1777,32 @@
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    /* ==========================================
+       页面初始化：检查设备是否有活跃订单
+       ========================================== */
+    async function 初始化页面() {
+      try {
+        const resp = await fetch(`/api/client/device-status/${设备UUID}`);
+        const data = await resp.json();
+
+        if (data.hasActiveOrder) {
+          if (data.status === 'pending' || data.status === 'processing') {
+            状态.当前订单ID = data.orderId;
+            显示等待状态(data.serviceTypeLabel || '正在为您生成...');
+            开始轮询(data.orderId);
+          } else if (data.status === 'delivered') {
+            显示交付结果(data);
+          }
+        }
+      } catch (e) {
+        console.error('初始化检查设备状态失败:', e);
+        // 静默失败，让用户正常使用表单
+      }
+    }
+
+    // 页面加载后执行初始化
+    初始化页面();
   </script>
 </body>
 </html>
