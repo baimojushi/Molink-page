@@ -6,10 +6,7 @@
   <title>Mo:link Design · 查看交付结果</title>
   <style>
     :root {
-      /* 🎨 玻璃青色调节（0-20 推荐，数值越大青色越明显） */
       --glass-cyan-percent: 16;
-      
-      /* 品牌色系 - 清透轻盈 */
       --color-primary: #9B8370;
       --color-primary-light: #B5A091;
       --color-primary-dark: #806A54;
@@ -17,17 +14,13 @@
       --color-text-primary: #2a2a2a;
       --color-text-secondary: #5a5a5a;
       --color-text-tertiary: #8a8a8a;
-      
-      /* 玻璃态效果 - 提高透明度，iOS风格 */
-      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 98%, 0.25); /* 从0.15提高到0.25 */
-      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 95%, 0.5); /* 从0.3提高到0.5 */
+      --glass-bg: hsla(180, calc(var(--glass-cyan-percent) * 1%), 98%, 0.25);
+      --glass-border: hsla(180, calc(var(--glass-cyan-percent) * 0.8%), 95%, 0.5);
       --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
-      --glass-blur: 20px; /* 从12px增强到20px */
-      
+      --glass-blur: 20px;
       --radius-md: 12px;
       --radius-lg: 16px;
       --radius-xl: 24px;
-      
       --duration-fast: 0.2s;
       --duration-normal: 0.3s;
       --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -36,20 +29,15 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
-    /* ==========================================
-       移动端全局优化 + Chrome移动端修复
-       ========================================== */
     html {
       touch-action: manipulation;
       -webkit-user-select: none;
       user-select: none;
       scroll-behavior: smooth;
-      /* Chrome移动端：防止自动调整字体大小 */
       -webkit-text-size-adjust: 100%;
       text-size-adjust: 100%;
     }
 
-    /* 禁用移动端点击蓝色高亮 */
     * {
       -webkit-tap-highlight-color: transparent;
       -webkit-touch-callout: none;
@@ -64,25 +52,15 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ==========================================
-       视差背景层 - 支持本地图片替换，跟随滚动但速度减半
-       ========================================== */
     .parallax-bg {
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
-      /* 使用固定像素高度避免移动端地址栏导致的抖动 */
-      height: 100%; /* 继承body高度 */
-      min-height: 100%; /* 最小高度 */
+      height: 100%; min-height: 100%;
       z-index: 0;
-      opacity: 1; /* 使用原图，不降低透明度 */
+      opacity: 1;
       will-change: transform;
-      
-      /* 默认渐变背景 */
       background: linear-gradient(135deg, #f5efe9 0%, #e8dfd5 100%);
-      
-      /* 移动端图片背景（优先加载小尺寸） */
       background-image: url('/images/background-mobile.jpg');
       background-size: cover;
       background-position: center top;
@@ -90,14 +68,9 @@
       background-attachment: scroll;
     }
 
-    /* PC端使用高清图片 */
     @media (min-width: 768px) {
-      .parallax-bg {
-        background-image: url('/images/background.jpg');
-      }
+      .parallax-bg { background-image: url('/images/background.jpg'); }
     }
-
-    /* 格网背景已移除，使用纯图片背景 */
 
     .parallax-bg::after {
       content: '';
@@ -108,13 +81,9 @@
       mix-blend-mode: overlay;
     }
 
-    /* ==========================================
-       页面头部 - 玻璃态
-       ========================================== */
     .header {
       position: sticky;
-      top: 0;
-      z-index: 100;
+      top: 0; z-index: 100;
       padding: 14px 16px;
       display: flex;
       align-items: center;
@@ -123,17 +92,11 @@
       background: var(--glass-bg);
       border-bottom: 1px solid var(--glass-border);
       box-shadow: var(--glass-shadow);
-      background-image: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.3) 0%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0.1) 100%
-      );
+      background-image: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
     }
     
     .back-btn {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -143,46 +106,26 @@
       transition: all var(--duration-normal) var(--easing-bounce);
       text-decoration: none;
       color: var(--color-primary-dark);
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255,255,255,0.3);
       backdrop-filter: blur(4px);
     }
 
-    /* 移动端增大可点击区域 */
     @media (max-width: 767px) {
-      .back-btn {
-        width: 44px;
-        height: 44px;
-        font-size: 24px;
-      }
+      .back-btn { width: 44px; height: 44px; font-size: 24px; }
     }
 
-    /* PC端悬停效果（触摸设备禁用） */
     @media (hover: hover) {
-      .back-btn:hover { 
-        background: rgba(255, 255, 255, 0.5);
-        transform: translateX(-3px) scale(1.05);
-      }
+      .back-btn:hover { background: rgba(255,255,255,0.5); transform: translateX(-3px) scale(1.05); }
     }
 
     .back-btn:active { transform: translateX(-1px) scale(0.98); }
 
-    /* 移动端点击反馈 */
     @media (max-width: 767px) {
-      .back-btn:active {
-        transform: scale(0.95);
-        background: rgba(255, 255, 255, 0.5);
-      }
+      .back-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.5); }
     }
     
-    .header-title { 
-      font-size: 16px; 
-      font-weight: 600;
-      color: var(--color-primary-dark);
-    }
+    .header-title { font-size: 16px; font-weight: 600; color: var(--color-primary-dark); }
 
-    /* ==========================================
-       主容器 - 视差前景层
-       ========================================== */
     .container {
       position: relative;
       z-index: 1;
@@ -191,15 +134,12 @@
       padding: 20px 16px 60px;
     }
 
-    /* 移动端增加间距 */
     @media (max-width: 767px) {
-      .container {
-        padding: 24px 20px 80px;
-      }
+      .container { padding: 24px 20px 80px; }
     }
 
     /* ==========================================
-       状态卡片 - Glassmorphism iOS风格边缘扭曲
+       状态卡片
        ========================================== */
     .status-card {
       backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -211,58 +151,30 @@
       margin-bottom: 20px;
       box-shadow: var(--glass-shadow);
       position: relative;
-      overflow: visible; /* 允许边缘效果溢出 */
-      
-      /* 青色调玻璃边缘反光 */
-      background-image: linear-gradient(
-        135deg,
-        hsla(180, calc(var(--glass-cyan-percent) * 2), 98%, 0.4) 0%,
-        hsla(180, var(--glass-cyan-percent), 95%, 0.05) 50%,
-        hsla(180, calc(var(--glass-cyan-percent) / 2), 96%, 0.15) 100%
-      );
-      
+      overflow: visible;
+      background-image: linear-gradient(135deg, hsla(180, calc(var(--glass-cyan-percent) * 2), 98%, 0.4) 0%, hsla(180, var(--glass-cyan-percent), 95%, 0.05) 50%, hsla(180, calc(var(--glass-cyan-percent) / 2), 96%, 0.15) 100%);
       animation: slideUp 0.5s var(--easing-smooth);
     }
 
-    /* iOS风格边缘扭曲效果 - 顶部高光 */
     .status-card::after {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 1px;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.8) 50%,
-        transparent 100%
-      );
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
       border-radius: var(--radius-xl) var(--radius-xl) 0 0;
       opacity: 0.6;
     }
 
-    /* 移动端增加padding和加宽边缘 */
     @media (max-width: 767px) {
-      .status-card {
-        padding: 36px 28px;
-        margin-bottom: 24px;
-        border-width: 1.5px;
-      }
+      .status-card { padding: 36px 28px; margin-bottom: 24px; border-width: 1.5px; }
     }
 
     @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* 白色噪点纹理 */
     .status-card::before {
       content: '';
       position: absolute;
@@ -273,67 +185,28 @@
       mix-blend-mode: overlay;
     }
     
-    .status-card .icon { 
-      font-size: 40px; 
-      margin-bottom: 12px;
-      display: inline-block;
-      animation: iconBounce 0.6s var(--easing-bounce);
-    }
+    .status-card .icon { font-size: 40px; margin-bottom: 12px; display: inline-block; animation: iconBounce 0.6s var(--easing-bounce); }
 
-    /* 移动端增大图标 */
     @media (max-width: 767px) {
-      .status-card .icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-      }
+      .status-card .icon { font-size: 48px; margin-bottom: 16px; }
     }
 
-    @keyframes iconBounce {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-    }
+    @keyframes iconBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
     
-    .status-card h2 { 
-      font-size: 18px; 
-      margin-bottom: 8px;
-      color: var(--color-text-primary);
-    }
+    .status-card h2 { font-size: 18px; margin-bottom: 8px; color: var(--color-text-primary); }
 
-    @media (max-width: 767px) {
-      .status-card h2 {
-        font-size: 20px;
-        margin-bottom: 10px;
-      }
-    }
+    @media (max-width: 767px) { .status-card h2 { font-size: 20px; margin-bottom: 10px; } }
 
-    .status-card p { 
-      font-size: 14px; 
-      color: var(--color-text-secondary); 
-      line-height: 1.5; 
-    }
+    .status-card p { font-size: 14px; color: var(--color-text-secondary); line-height: 1.5; }
 
-    @media (max-width: 767px) {
-      .status-card p {
-        font-size: 15px;
-        line-height: 1.6;
-      }
-    }
+    @media (max-width: 767px) { .status-card p { font-size: 15px; line-height: 1.6; } }
 
     /* ==========================================
        图片列表
        ========================================== */
-    .image-list { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 16px; 
-    }
+    .image-list { display: flex; flex-direction: column; gap: 16px; }
 
-    /* 移动端增加间距 */
-    @media (max-width: 767px) {
-      .image-list {
-        gap: 20px;
-      }
-    }
+    @media (max-width: 767px) { .image-list { gap: 20px; } }
     
     .image-item {
       backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -344,40 +217,21 @@
       box-shadow: var(--glass-shadow);
       transition: all var(--duration-normal) var(--easing-smooth);
       position: relative;
-      
-      /* 青色调玻璃背景 */
-      background-image: linear-gradient(
-        135deg,
-        hsla(180, calc(var(--glass-cyan-tint) * 1.5), 97%, 0.25) 0%,
-        hsla(180, calc(var(--glass-cyan-tint) / 2), 95%, 0.05) 100%
-      );
-      
+      cursor: pointer;
       animation: slideUp 0.5s var(--easing-smooth);
       animation-fill-mode: both;
     }
 
-    /* 移动端加宽边缘 */
-    @media (max-width: 767px) {
-      .image-item {
-        border-width: 1.5px;
-      }
-    }
+    @media (max-width: 767px) { .image-item { border-width: 1.5px; } }
 
     .image-item:nth-child(1) { animation-delay: 0.1s; }
     .image-item:nth-child(2) { animation-delay: 0.2s; }
     .image-item:nth-child(3) { animation-delay: 0.3s; }
     .image-item:nth-child(4) { animation-delay: 0.4s; }
 
-    /* PC端悬停放大（触摸设备禁用） */
     @media (hover: hover) {
-      .image-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
-      }
-      
-      .image-item:hover img {
-        transform: scale(1.02);
-      }
+      .image-item:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(31,38,135,0.25); }
+      .image-item:hover img { transform: scale(1.02); }
     }
     
     .image-item img {
@@ -392,42 +246,163 @@
       font-size: 11px;
       color: var(--color-text-tertiary);
       text-align: center;
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(255,255,255,0.5);
       backdrop-filter: blur(4px);
     }
 
-    /* 移动端增大提示文字 */
-    @media (max-width: 767px) {
-      .image-item .hint {
-        padding: 10px 14px;
-        font-size: 12px;
-      }
-    }
+    @media (max-width: 767px) { .image-item .hint { padding: 10px 14px; font-size: 12px; } }
 
     /* ==========================================
        等待状态动画
        ========================================== */
-    .waiting-dots span {
-      animation: blink 1.4s infinite both;
-    }
+    .waiting-dots span { animation: blink 1.4s infinite both; }
     .waiting-dots span:nth-child(2) { animation-delay: 0.2s; }
     .waiting-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink {
-      0%, 80%, 100% { opacity: 0.3; }
-      40% { opacity: 1; }
+    @keyframes blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+
+    .loading { text-align: center; padding: 60px 20px; color: var(--color-text-tertiary); }
+
+    /* ==========================================
+       历史记录区域
+       ========================================== */
+    .history-section {
+      margin-top: 32px;
+      animation: slideUp 0.5s 0.3s var(--easing-smooth);
+      animation-fill-mode: both;
     }
 
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
+    .history-title {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .history-title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--color-primary);
+      border-radius: 2px;
+    }
+
+    .history-order {
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      background: var(--glass-bg);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      overflow: visible;
+      background-image: linear-gradient(135deg, hsla(180, calc(var(--glass-cyan-percent) * 2), 98%, 0.4) 0%, hsla(180, var(--glass-cyan-percent), 95%, 0.05) 50%, hsla(180, calc(var(--glass-cyan-percent) / 2), 96%, 0.15) 100%);
+      animation: slideUp 0.5s var(--easing-smooth);
+      animation-fill-mode: both;
+    }
+
+    .history-order::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-xl);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+      pointer-events: none;
+      mix-blend-mode: overlay;
+    }
+
+    .history-order-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .history-order-header h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .history-order-header time {
+      font-size: 12px;
       color: var(--color-text-tertiary);
     }
+
+    .history-images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .history-images img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--duration-normal) var(--easing-smooth);
+      border: 1px solid var(--glass-border);
+      -webkit-touch-callout: default;
+    }
+
+    @media (hover: hover) {
+      .history-images img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      }
+    }
+
+    /* ==========================================
+       图片放大遮罩
+       ========================================== */
+    .lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      cursor: pointer;
+    }
+
+    .lightbox-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-overlay img {
+      max-width: 92vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      transform: scale(0.9);
+      transition: transform 0.3s var(--easing-bounce);
+      -webkit-touch-callout: default;
+      -webkit-user-select: auto;
+      user-select: auto;
+    }
+
+    .lightbox-overlay.active img { transform: scale(1); }
   </style>
 </head>
 <body>
 
   <!-- 视差背景层 -->
   <div class="parallax-bg"></div>
+
+  <!-- 图片放大遮罩 -->
+  <div class="lightbox-overlay" id="lightbox" onclick="关闭放大()">
+    <img id="lightbox-img" src="" alt="放大查看">
+  </div>
 
   <div class="header">
     <a class="back-btn" href="/" title="返回首页">‹</a>
@@ -440,25 +415,20 @@
 
   <script>
     /* ==========================================
-       视差滚动效果 - 背景速度为内容的50%
-       移动端和PC端都加防抖优化
+       视差滚动效果
        ========================================== */
     const parallaxBg = document.querySelector('.parallax-bg');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // 移动端使用固定高度，避免地址栏隐藏/显示导致的抖动
     if (isMobile) {
       const viewportHeight = window.innerHeight;
       parallaxBg.style.height = `${viewportHeight * 2}px`;
     } else {
-      // PC端：动态计算背景高度
       function 更新背景高度() {
         const docHeight = document.documentElement.scrollHeight;
         parallaxBg.style.height = `${docHeight * 1.5}px`;
       }
-      
       更新背景高度();
-      
       let resizeTimer;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
@@ -466,13 +436,11 @@
       });
     }
     
-    // 视差滚动：背景移动速度为滚动的50%，使用RAF优化性能
     let ticking = false;
     let lastScrollY = 0;
     
     window.addEventListener('scroll', () => {
       lastScrollY = window.scrollY;
-      
       if (!ticking) {
         window.requestAnimationFrame(() => {
           parallaxBg.style.transform = `translateY(${lastScrollY * 0.5}px)`;
@@ -482,6 +450,23 @@
       }
     }, { passive: true });
 
+    /* ==========================================
+       图片放大
+       ========================================== */
+    function 放大图片(src) {
+      const overlay = document.getElementById('lightbox');
+      const img = document.getElementById('lightbox-img');
+      img.src = src;
+      overlay.classList.add('active');
+    }
+
+    function 关闭放大() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+
+    /* ==========================================
+       数据加载
+       ========================================== */
     const token = window.location.pathname.split('/d/')[1];
 
     async function 加载交付数据() {
@@ -499,6 +484,10 @@
         } else if (data.status === 'delivered') {
           渲染交付结果(data);
         }
+
+        // 加载设备历史记录
+        加载设备历史();
+
       } catch (err) {
         渲染错误('网络异常，请稍后刷新重试');
       }
@@ -514,6 +503,7 @@
           <span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span><br>
           完成后将通知您，请耐心等待。</p>
         </div>
+        <div id="history-container"></div>
       `;
     }
 
@@ -524,9 +514,9 @@
       if (data.images && data.images.length > 0) {
         imagesHtml = `<div class="image-list">
           ${data.images.map(img => `
-            <div class="image-item">
+            <div class="image-item" onclick="放大图片('/deliveries/${img}')">
               <img src="/deliveries/${img}" alt="交付图片">
-              <div class="hint">长按图片可保存到相册</div>
+              <div class="hint">长按保存 · 点击放大</div>
             </div>
           `).join('')}
         </div>`;
@@ -539,6 +529,7 @@
           <p>您的「${data.service_type_label}」服务已处理完毕<br>交付时间：${data.delivered_at}</p>
         </div>
         ${imagesHtml}
+        <div id="history-container"></div>
       `;
     }
 
@@ -551,6 +542,55 @@
           <p>${msg}</p>
         </div>
       `;
+    }
+
+    /* ==========================================
+       加载设备历史记录
+       ========================================== */
+    async function 加载设备历史() {
+      try {
+        const resp = await fetch(`/d/${token}/device-history`);
+        const data = await resp.json();
+        
+        if (!data.orders || data.orders.length <= 1) return; // 只有当前订单或没有记录时不显示历史
+
+        const container = document.getElementById('history-container');
+        if (!container) return;
+
+        // 过滤掉当前正在查看的订单
+        const currentToken = token;
+        const otherOrders = data.orders.filter(o => o.delivery_token !== currentToken);
+        
+        if (otherOrders.length === 0) return;
+
+        let historyHtml = `<div class="history-section"><div class="history-title">历史生成记录</div>`;
+
+        otherOrders.forEach((order, idx) => {
+          const images = JSON.parse(order.delivery_images || '[]');
+          let imgsHtml = '';
+          if (images.length > 0) {
+            imgsHtml = `<div class="history-images">
+              ${images.map(img => `<img src="/deliveries/${img}" alt="历史图片" onclick="放大图片('/deliveries/${img}')">`).join('')}
+            </div>`;
+          }
+
+          historyHtml += `
+            <div class="history-order" style="animation-delay: ${0.1 * (idx + 1)}s;">
+              <div class="history-order-header">
+                <h4>${order.service_type_label}</h4>
+                <time>${order.delivered_at || order.created_at}</time>
+              </div>
+              ${imgsHtml}
+            </div>
+          `;
+        });
+
+        historyHtml += `</div>`;
+        container.innerHTML = historyHtml;
+
+      } catch (e) {
+        console.error('加载历史记录失败:', e);
+      }
     }
 
     加载交付数据();
