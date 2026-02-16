@@ -915,6 +915,32 @@
       .email-hint { font-size: 13px; }
     }
 
+    .upload-description {
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, rgba(155, 131, 112, 0.06) 0%, rgba(175, 160, 145, 0.04) 100%);
+      border-left: 3px solid var(--color-primary);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .upload-description.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 767px) {
+      .upload-description { 
+        font-size: 14px;
+        padding: 12px 16px;
+      }
+    }
+
     /* ==========================================
        附加服务开关
        ========================================== */
@@ -1298,6 +1324,7 @@
             <span class="label">空间图片</span>
           </div>
         </div>
+        <div class="upload-description" id="upload-description"></div>
       </div>
 
       <!-- 区域3: 接收邮箱 -->
@@ -1481,7 +1508,26 @@
       }
 
       显示区域('section-upload');
+      更新上传说明();
       检查提交条件();
+    }
+
+    /* 更新上传说明文字 */
+    function 更新上传说明() {
+      const descBox = document.getElementById('upload-description');
+      const 说明文本 = {
+        'hang_in_home': '我们将把您上传的作品挂在空间图中最合适的位置，并推荐两幅同批展览中与所选作品相近的作品，呈现悬挂效果。',
+        'recommend_work': '我们将基于专业的空间审美为您上传的空间推荐三幅适合的作品，并呈现悬挂效果。',
+        'recommend_space': '我们将为您挑选的作品生成最适合它悬挂的三份室内设计参考，并呈现悬挂效果。'
+      };
+
+      const text = 说明文本[状态.服务类型];
+      if (text) {
+        descBox.textContent = text;
+        descBox.classList.add('show');
+      } else {
+        descBox.classList.remove('show');
+      }
     }
 
     /* ==========================================
