@@ -20,29 +20,41 @@ db.pragma('journal_mode = WAL');
 // ==========================================
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
-    id TEXT PRIMARY KEY,                          -- 订单唯一ID（UUID）
-    device_uuid TEXT,                             -- 设备唯一标识（用于识别同一设备）
-    service_type TEXT NOT NULL,                    -- 服务类型：hang_in_home / recommend_work / recommend_space
-    service_type_label TEXT NOT NULL,              -- 服务类型中文名称
-    receive_method TEXT NOT NULL,                  -- 接收方式：email
-    receive_target TEXT NOT NULL,                  -- 接收目标（邮箱地址）
-    extra_service INTEGER DEFAULT 0,              -- 是否启用附加服务（0/1）
-    artwork_image TEXT,                            -- 作品图文件名（相对路径）
-    space_image TEXT,                              -- 空间图文件名（相对路径）
-    status TEXT DEFAULT 'pending',                 -- 状态：pending / processing / delivered
-    delivery_token TEXT,                           -- 交付页面唯一令牌
-    delivery_images TEXT,                          -- 交付图片JSON数组
-    delivery_text TEXT,                            -- 交付文字内容
-    created_at TEXT DEFAULT (datetime('now','localtime')),  -- 创建时间
-    delivered_at TEXT                              -- 交付时间
+    id TEXT PRIMARY KEY,
+    device_uuid TEXT,
+    service_type TEXT NOT NULL,
+    service_type_label TEXT NOT NULL,
+    receive_method TEXT NOT NULL,
+    receive_target TEXT NOT NULL,
+    extra_service INTEGER DEFAULT 0,
+    artwork_image TEXT,
+    space_image TEXT,
+    status TEXT DEFAULT 'pending',                 -- pending / delivered / viewed / downloaded
+    delivery_token TEXT,
+    delivery_images TEXT,
+    delivery_text TEXT,
+    email_sent INTEGER DEFAULT 0,                  -- 邮件是否发送成功（0/1）
+    created_at TEXT DEFAULT (datetime('now','localtime')),
+    delivered_at TEXT,
+    viewed_at TEXT,                                -- 用户查收时间
+    downloaded_at TEXT                             -- 用户下载时间
   );
 `);
 
-// 为已有数据库添加 device_uuid 字段（兼容升级）
-try {
-  db.exec(`ALTER TABLE orders ADD COLUMN device_uuid TEXT`);
-} catch (e) {
-  // 字段已存在则忽略
+// 兼容升级：为旧数据库逐个添加可能缺失的字段
+const 升级字段 = [
+  'device_uuid TEXT',
+  'email_sent INTEGER DEFAULT 0',
+  'viewed_at TEXT',
+  'downloaded_at TEXT'
+];
+
+for (const col of 升级字段) {
+  try {
+    db.exec(`ALTER TABLE orders ADD COLUMN ${col}`);
+  } catch (e) {
+    // 字段已存在则忽略
+  }
 }
 
 // 为 device_uuid 创建索引，加速按设备查询
