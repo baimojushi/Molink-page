@@ -1111,22 +1111,41 @@
       flex-direction: column;
       gap: 10px;
       pointer-events: none;
+      width: max-content;
+      max-width: 90vw;
+    }
+
+    @media (max-width: 767px) {
+      .toast-container {
+        top: auto;
+        bottom: 100px;
+      }
     }
 
     .toast {
-      background: #000;
+      background: rgba(0, 0, 0, 0.92);
       color: #fff;
-      padding: 12px 20px;
-      border-radius: 8px;
+      padding: 14px 22px;
+      border-radius: 12px;
       font-size: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08);
       display: flex;
       align-items: center;
       gap: 10px;
       pointer-events: auto;
-      animation: toastSlideIn 0.3s var(--easing-bounce);
+      animation: toastSlideIn 0.35s var(--easing-bounce);
       opacity: 1;
       transition: opacity 0.3s ease;
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+    }
+
+    @media (max-width: 767px) {
+      .toast {
+        padding: 16px 24px;
+        font-size: 15px;
+        border-radius: 14px;
+      }
     }
 
     .toast.fade-out { opacity: 0; }
@@ -1137,6 +1156,8 @@
     }
 
     .toast .icon { font-size: 16px; flex-shrink: 0; }
+    .toast .close-toast { margin-left: 8px; opacity: 0.5; font-size: 16px; flex-shrink: 0; cursor: pointer; }
+    .toast .close-toast:hover { opacity: 1; }
 
     /* ==========================================
        加载状态
@@ -1343,12 +1364,18 @@
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `<span class="icon">${icon}</span><span>${message}</span>`;
+      toast.innerHTML = `<span class="icon">${icon}</span><span>${message}</span><span class="close-toast">✕</span>`;
       container.appendChild(toast);
-      setTimeout(() => {
-        toast.classList.add('fade-out');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+
+      function dismiss() {
+        if (toast.parentNode) {
+          toast.classList.add('fade-out');
+          setTimeout(() => toast.remove(), 300);
+        }
+      }
+
+      toast.addEventListener('click', dismiss);
+      setTimeout(dismiss, 20000);
     }
 
     /* ==========================================
@@ -1590,7 +1617,8 @@
           <div class="apple-spinner-text">${serviceLabel || '处理中'}</div>
         </div>
         <div class="delivery-hint">
-          您可以退出当前页面，点击邮箱链接或重新扫码即可查看生成结果。
+          您可以退出当前页面，点击邮箱链接或重新扫码即可查看生成结果。<br>
+          您可以在本界面等待或刷新以提交新的业务请求，并点击查看历史记录浏览所有的已生成内容。
         </div>
       `;
       显示交付面板(html);
@@ -1602,9 +1630,9 @@
       const images = data.images || data.Images || [];
       if (images.length > 0) {
         imagesHtml = `<div class="delivery-images">
-          ${images.map(img => `
+          ${images.map((img, i) => `
             <div class="delivery-img-wrap" onclick="放大图片('/deliveries/${img}')">
-              <img src="/deliveries/${img}" alt="交付图片">
+              <img src="/deliveries/${img}" alt="交付图片" ${i === 0 ? 'onload="标记已查收()"' : ''} oncontextmenu="标记已下载()">
               <div class="delivery-img-hint">长按保存 · 点击放大</div>
             </div>
           `).join('')}
@@ -1617,6 +1645,9 @@
         textHtml = `<div class="delivery-text-content">${textContent}</div>`;
       }
 
+      // 获取历史记录链接
+      const deliveryToken = localStorage.getItem('molink_active_order') ? JSON.parse(localStorage.getItem('molink_active_order')).deliveryToken : null;
+
       const html = `
         <div class="delivery-done-title">
           <div class="icon">✓</div>
@@ -1626,6 +1657,7 @@
         ${imagesHtml}
         ${textHtml}
         <button class="new-order-btn" onclick="提交新业务()">提交新的业务</button>
+        ${deliveryToken ? `<button class="new-order-btn" style="margin-top:12px; background-image:linear-gradient(135deg, rgba(122,158,126,0.35) 0%, rgba(142,178,146,0.25) 50%, rgba(122,158,126,0.3) 100%); border-color:rgba(122,158,126,0.4);" onclick="window.location.href='/d/${deliveryToken}'">查看历史记录</button>` : ''}
       `;
       显示交付面板(html);
     }
@@ -1642,6 +1674,26 @@
 
     function 关闭放大() {
       document.getElementById('lightbox').classList.remove('active');
+    }
+
+    /* 标记已查收（图片加载时触发，仅调用一次） */
+    let 已标记查收 = false;
+    function 标记已查收() {
+      if (已标记查收) return;
+      if (状态.当前订单ID) {
+        已标记查收 = true;
+        fetch(`/api/client/mark-viewed/${状态.当前订单ID}`, { method: 'POST' }).catch(() => {});
+      }
+    }
+
+    /* 标记已下载（长按保存触发，仅调用一次） */
+    let 已标记下载 = false;
+    function 标记已下载() {
+      if (已标记下载) return;
+      if (状态.当前订单ID) {
+        已标记下载 = true;
+        fetch(`/api/client/mark-downloaded/${状态.当前订单ID}`, { method: 'POST' }).catch(() => {});
+      }
     }
 
     /* ==========================================

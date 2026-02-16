@@ -6,29 +6,26 @@
   <title>Mo:link Design · 管理后台</title>
   <style>
     :root {
-      /* 统一色调 - 与前台一致 */
-      --color-primary: #9B8370;        /* 提高明度，降低红调 */
+      --color-primary: #9B8370;
       --color-primary-light: #B5A091;
       --color-primary-dark: #806A54;
       --color-accent: #7a9e7e;
       --color-accent-dark: #5a7e5e;
-      
       --color-bg: #F5F0EB;
       --color-card: #ffffff;
       --color-border: #E5DDD5;
       --color-text-primary: #2a2a2a;
       --color-text-secondary: #5a5a5a;
       --color-text-tertiary: #8a8a8a;
-      
       --color-danger: #c45c4a;
       --color-pending: #d4a843;
       --color-delivered: #7a9e7e;
-      
+      --color-viewed: #5b8abf;
+      --color-downloaded: #8b6eb5;
       --radius: 10px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
       background: var(--color-bg);
@@ -36,7 +33,6 @@
       min-height: 100vh;
     }
 
-    /* 头部 */
     .header {
       background: var(--color-primary-dark);
       color: #fff;
@@ -47,7 +43,6 @@
     }
     .header h1 { font-size: 18px; font-weight: 600; }
 
-    /* 验证栏 */
     .auth-bar {
       background: var(--color-card);
       padding: 16px 24px;
@@ -57,204 +52,125 @@
       align-items: center;
     }
     .auth-bar input {
-      flex: 1;
-      max-width: 300px;
-      padding: 10px 14px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      font-size: 14px;
-      outline: none;
+      flex: 1; max-width: 300px; padding: 10px 14px;
+      border: 1px solid var(--color-border); border-radius: var(--radius);
+      font-size: 14px; outline: none;
     }
     .auth-bar input:focus { border-color: var(--color-primary); }
     .auth-bar button {
-      padding: 10px 20px;
-      background: var(--color-primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      cursor: pointer;
-      font-size: 14px;
+      padding: 10px 20px; background: var(--color-primary); color: #fff;
+      border: none; border-radius: var(--radius); cursor: pointer; font-size: 14px;
     }
     .auth-bar button:hover { background: var(--color-primary-dark); }
 
-    /* 筛选栏 */
-    .filter-bar {
-      padding: 16px 24px;
-      display: flex;
-      gap: 8px;
-    }
+    .filter-bar { padding: 16px 24px; display: flex; gap: 8px; flex-wrap: wrap; }
     .filter-btn {
-      padding: 8px 16px;
-      border: 1px solid var(--color-border);
-      border-radius: 20px;
-      background: var(--color-card);
-      font-size: 13px;
-      cursor: pointer;
-      color: var(--color-text-secondary);
+      padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 20px;
+      background: var(--color-card); font-size: 13px; cursor: pointer; color: var(--color-text-secondary);
     }
-    .filter-btn.active {
-      background: var(--color-primary);
-      color: #fff;
-      border-color: var(--color-primary);
-    }
+    .filter-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 
-    /* 订单容器 */
     .orders-container { padding: 0 24px 40px; }
 
-    /* 订单卡片 */
     .order-card {
-      background: var(--color-card);
-      border-radius: var(--radius);
-      margin-bottom: 16px;
-      border: 1px solid var(--color-border);
-      overflow: hidden;
+      background: var(--color-card); border-radius: var(--radius);
+      margin-bottom: 16px; border: 1px solid var(--color-border); overflow: hidden;
     }
     .order-header {
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      border-bottom: 1px solid var(--color-border);
+      padding: 16px 20px; display: flex; align-items: center;
+      justify-content: space-between; cursor: pointer; border-bottom: 1px solid var(--color-border);
     }
     .order-header:hover { background: #fafafa; }
     .order-info { display: flex; flex-direction: column; gap: 4px; }
     .order-service { font-size: 15px; font-weight: 600; }
     .order-meta { font-size: 12px; color: var(--color-text-secondary); }
-    .order-status {
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-    }
+    .order-status { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
     .status-pending { background: #fef3cd; color: #856404; }
     .status-delivered { background: #d4edda; color: #155724; }
+    .status-viewed { background: #cce5ff; color: #004085; }
+    .status-downloaded { background: #e2d9f3; color: #4a306d; }
 
-    /* 订单详情 */
     .order-body {
-      padding: 0 20px;
-      max-height: 0;
-      overflow: hidden;
+      padding: 0 20px; max-height: 0; overflow: hidden;
       transition: max-height 0.4s ease, padding 0.3s ease;
     }
-    .order-body.open {
-      max-height: 2000px;
-      padding: 20px;
-    }
+    .order-body.open { max-height: 5000px; padding: 20px; }
 
-    .original-images {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .original-images .img-wrap {
-      flex: 1;
-      text-align: center;
-    }
-    .original-images img {
-      max-width: 100%;
-      max-height: 200px;
-      border-radius: 8px;
-      border: 1px solid var(--color-border);
-    }
-    .original-images .img-label {
-      font-size: 12px;
-      color: var(--color-text-secondary);
-      margin-top: 4px;
-    }
+    .images-section { margin-bottom: 16px; }
+    .images-section h4 { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 8px; font-weight: 600; }
+    .images-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .img-wrap { text-align: center; }
+    .img-wrap img { max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid var(--color-border); cursor: pointer; }
+    .img-wrap .img-label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
 
-    /* 交付区 */
+    .delivery-link-row {
+      display: flex; align-items: center; gap: 10px; margin: 12px 0;
+      padding: 10px 14px; background: #f9f7f5; border-radius: var(--radius); font-size: 13px;
+    }
+    .delivery-link-row a { color: var(--color-primary-dark); word-break: break-all; }
+    .copy-btn {
+      padding: 4px 12px; background: var(--color-primary); color: #fff; border: none;
+      border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;
+    }
+    .copy-btn:hover { background: var(--color-primary-dark); }
+
+    .email-fail-box {
+      margin: 12px 0; padding: 14px; background: #fff5f5; border: 1px solid #f5c6cb;
+      border-radius: var(--radius); font-size: 13px; color: #721c24;
+    }
+    .email-fail-box .fail-title { font-weight: 600; margin-bottom: 8px; }
+    .email-fail-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .email-fail-actions .copy-btn { background: var(--color-danger); }
+    .email-fail-actions .copy-btn:hover { background: #a94442; }
+
     .deliver-section { margin-top: 16px; }
-    .deliver-section h4 {
-      font-size: 14px;
-      color: var(--color-text-secondary);
-      margin-bottom: 10px;
-    }
+    .deliver-section h4 { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 10px; }
     .drop-zone {
-      border: 2px dashed var(--color-border);
-      border-radius: var(--radius);
-      padding: 24px;
-      text-align: center;
-      color: var(--color-text-tertiary);
-      font-size: 14px;
-      cursor: pointer;
-      margin-bottom: 12px;
-      position: relative;
+      border: 2px dashed var(--color-border); border-radius: var(--radius);
+      padding: 24px; text-align: center; color: var(--color-text-tertiary);
+      font-size: 14px; cursor: pointer; margin-bottom: 12px; position: relative;
     }
-    .drop-zone.dragover {
-      border-color: var(--color-accent);
-      background: rgba(122,158,126,0.05);
-    }
-    .drop-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
-    .drop-previews {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .drop-previews img {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid var(--color-border);
-    }
+    .drop-zone.dragover { border-color: var(--color-accent); background: rgba(122,158,126,0.05); }
+    .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .drop-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .drop-previews img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--color-border); }
     .deliver-text {
-      width: 100%;
-      min-height: 80px;
-      padding: 12px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      font-size: 14px;
-      resize: vertical;
-      outline: none;
-      font-family: inherit;
-      margin-bottom: 12px;
+      width: 100%; min-height: 80px; padding: 12px;
+      border: 1px solid var(--color-border); border-radius: var(--radius);
+      font-size: 14px; resize: vertical; outline: none; font-family: inherit; margin-bottom: 12px;
     }
     .deliver-text:focus { border-color: var(--color-primary); }
-
     .deliver-btn {
-      padding: 12px 28px;
-      background: var(--color-accent);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+      padding: 12px 28px; background: var(--color-accent); color: #fff;
+      border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer;
     }
     .deliver-btn:hover { background: var(--color-accent-dark); }
     .deliver-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--color-text-tertiary);
-    }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--color-text-tertiary); }
     .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
 
-    .detail-row {
-      display: flex;
-      padding: 6px 0;
-      font-size: 13px;
+    .detail-row { display: flex; padding: 6px 0; font-size: 13px; }
+    .detail-row .label { width: 80px; color: var(--color-text-secondary); flex-shrink: 0; }
+
+    /* 图片放大遮罩 */
+    .lightbox-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease; cursor: pointer;
     }
-    .detail-row .label {
-      width: 80px;
-      color: var(--color-text-secondary);
-      flex-shrink: 0;
-    }
+    .lightbox-overlay.active { opacity: 1; pointer-events: auto; }
+    .lightbox-overlay img { max-width: 92vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>Mo:link Design 管理后台</h1>
+  <div class="lightbox-overlay" id="lightbox" onclick="this.classList.remove('active')">
+    <img id="lightbox-img" src="" alt="">
   </div>
+
+  <div class="header"><h1>Mo:link Design 管理后台</h1></div>
 
   <div class="auth-bar">
     <input type="password" id="admin-secret" placeholder="请输入管理密钥">
@@ -262,16 +178,15 @@
   </div>
 
   <div class="filter-bar">
-    <div class="filter-btn active" data-status="" onclick="筛选订单(this, '')">全部</div>
-    <div class="filter-btn" data-status="pending" onclick="筛选订单(this, 'pending')">待处理</div>
-    <div class="filter-btn" data-status="delivered" onclick="筛选订单(this, 'delivered')">已交付</div>
+    <div class="filter-btn active" onclick="筛选订单(this, '')">全部</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'pending')">待处理</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'delivered')">已交付</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'viewed')">已查收</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'downloaded')">已下载</div>
   </div>
 
   <div class="orders-container" id="orders-container">
-    <div class="empty-state">
-      <div class="icon">○</div>
-      <p>请输入管理密钥后进入</p>
-    </div>
+    <div class="empty-state"><div class="icon">○</div><p>请输入管理密钥后进入</p></div>
   </div>
 
   <script>
@@ -280,25 +195,18 @@
     let 当前筛选 = '';
     const 交付文件缓存 = {};
 
-    function 获取密钥() {
-      return document.getElementById('admin-secret').value.trim();
-    }
+    function 获取密钥() { return document.getElementById('admin-secret').value.trim(); }
 
     async function 加载订单() {
       管理密钥 = 获取密钥();
       if (!管理密钥) return alert('请输入管理密钥');
-
       try {
-        const resp = await fetch('/api/admin/orders', {
-          headers: { 'x-admin-secret': 管理密钥 }
-        });
+        const resp = await fetch('/api/admin/orders', { headers: { 'x-admin-secret': 管理密钥 } });
         if (resp.status === 403) return alert('密钥错误');
         const data = await resp.json();
         全部订单 = data.orders;
         渲染订单列表();
-      } catch (err) {
-        alert('加载失败: ' + err.message);
-      }
+      } catch (err) { alert('加载失败: ' + err.message); }
     }
 
     function 筛选订单(btn, status) {
@@ -308,89 +216,163 @@
       渲染订单列表();
     }
 
+    function 状态文本(status) {
+      const m = { pending: '待处理', delivered: '已交付', viewed: '已查收', downloaded: '已下载', processing: '处理中' };
+      return m[status] || status;
+    }
+    function 状态CSS(status) {
+      const m = { pending: 'status-pending', delivered: 'status-delivered', viewed: 'status-viewed', downloaded: 'status-downloaded' };
+      return m[status] || 'status-pending';
+    }
+
+    function 生成交付链接(token) { return `https://molink.art/d/${token}`; }
+
     function 渲染订单列表() {
       const container = document.getElementById('orders-container');
       let orders = 全部订单;
-      if (当前筛选) {
-        orders = orders.filter(o => o.status === 当前筛选);
-      }
-
+      if (当前筛选) orders = orders.filter(o => o.status === 当前筛选);
       if (orders.length === 0) {
         container.innerHTML = `<div class="empty-state"><div class="icon">○</div><p>暂无订单</p></div>`;
         return;
       }
 
-      container.innerHTML = orders.map(order => `
+      container.innerHTML = orders.map(order => {
+        const 已交付 = ['delivered','viewed','downloaded'].includes(order.status);
+        const 交付图片 = 已交付 && order.delivery_images ? JSON.parse(order.delivery_images) : [];
+        const deliveryUrl = 生成交付链接(order.delivery_token);
+        const emailFailed = 已交付 && !order.email_sent;
+
+        return `
         <div class="order-card" id="card-${order.id}">
           <div class="order-header" onclick="展开订单('${order.id}')">
             <div class="order-info">
               <div class="order-service">${order.service_type_label}</div>
-              <div class="order-meta">
-                ${order.receive_method === 'email' ? '邮箱' : '短信'} ${order.receive_target}
-                · ${order.created_at}
-                ${order.extra_service ? ' · 附加服务' : ''}
-              </div>
+              <div class="order-meta">邮箱 ${order.receive_target} · ${order.created_at}${order.extra_service ? ' · 附加服务' : ''}</div>
             </div>
-            <span class="order-status ${order.status === 'delivered' ? 'status-delivered' : 'status-pending'}">
-              ${order.status === 'delivered' ? '已交付' : '待处理'}
-            </span>
+            <span class="order-status ${状态CSS(order.status)}">${状态文本(order.status)}</span>
           </div>
           <div class="order-body" id="body-${order.id}">
             <div class="detail-row"><span class="label">订单编号</span><span>${order.id.substring(0,8)}...</span></div>
-            <div class="detail-row"><span class="label">接收方式</span><span>${order.receive_method === 'email' ? '邮箱' : '短信'}: ${order.receive_target}</span></div>
+            <div class="detail-row"><span class="label">接收邮箱</span><span>${order.receive_target}</span></div>
             <div class="detail-row"><span class="label">附加服务</span><span>${order.extra_service ? '是' : '否'}</span></div>
 
-            <div class="original-images">
-              ${order.artwork_image ? `<div class="img-wrap"><img src="/uploads/${order.artwork_image}" alt="作品图"><div class="img-label">作品图</div></div>` : ''}
-              ${order.space_image ? `<div class="img-wrap"><img src="/uploads/${order.space_image}" alt="空间图"><div class="img-label">空间图</div></div>` : ''}
-            </div>
+            <!-- 用户上传图 -->
+            ${(order.artwork_image || order.space_image) ? `
+            <div class="images-section">
+              <h4>用户上传</h4>
+              <div class="images-row">
+                ${order.artwork_image ? `<div class="img-wrap"><img src="/uploads/${order.artwork_image}" alt="作品图" onclick="放大图片(this.src)"><div class="img-label">作品图</div></div>` : ''}
+                ${order.space_image ? `<div class="img-wrap"><img src="/uploads/${order.space_image}" alt="空间图" onclick="放大图片(this.src)"><div class="img-label">空间图</div></div>` : ''}
+              </div>
+            </div>` : ''}
 
+            <!-- 交付图 -->
+            ${交付图片.length > 0 ? `
+            <div class="images-section">
+              <h4>交付图片</h4>
+              <div class="images-row">
+                ${交付图片.map((img, i) => `<div class="img-wrap"><img src="/deliveries/${img}" alt="交付图${i+1}" onclick="放大图片(this.src)"><div class="img-label">交付${i+1}</div></div>`).join('')}
+              </div>
+            </div>` : ''}
+
+            <!-- 交付链接 -->
+            ${已交付 ? `
+            <div class="delivery-link-row">
+              <span style="color:var(--color-text-secondary)">交付链接：</span>
+              <a href="${deliveryUrl}" target="_blank">${deliveryUrl}</a>
+              <button class="copy-btn" onclick="复制文本('${deliveryUrl}', this)">复制</button>
+            </div>` : ''}
+
+            <!-- 邮件发送失败提示 -->
+            ${emailFailed ? `
+            <div class="email-fail-box">
+              <div class="fail-title">⚠ 邮件通知发送失败，请手动联系用户</div>
+              <div>用户邮箱：${order.receive_target}</div>
+              <div class="email-fail-actions">
+                <button class="copy-btn" onclick="复制文本('${order.receive_target}', this)">复制邮箱</button>
+                <button class="copy-btn" onclick="复制邮件模板('${order.id}')">复制邮件内容</button>
+              </div>
+            </div>` : ''}
+
+            <!-- 已交付信息 -->
+            ${已交付 ? `
+            <div style="padding: 8px 0; color: var(--color-delivered); font-size: 13px;">
+              交付于 ${order.delivered_at}
+              ${order.viewed_at ? ` · 查收于 ${order.viewed_at}` : ''}
+              ${order.downloaded_at ? ` · 下载于 ${order.downloaded_at}` : ''}
+            </div>` : ''}
+
+            <!-- 待处理：交付操作 -->
             ${order.status === 'pending' ? `
-              <div class="deliver-section">
-                <h4>交付操作</h4>
-                <div class="drop-zone" id="drop-${order.id}"
-                  ondragover="event.preventDefault(); this.classList.add('dragover')"
-                  ondragleave="this.classList.remove('dragover')"
-                  ondrop="处理拖放(event, '${order.id}')">
-                  拖入或点击上传处理后的图片（可多张）
-                  <input type="file" multiple accept="image/*" onchange="处理选择文件(this, '${order.id}')">
-                </div>
-                <div class="drop-previews" id="previews-${order.id}"></div>
-                <textarea class="deliver-text" id="text-${order.id}" placeholder="输入回传文字（可选，将渲染为图片供用户下载）"></textarea>
-                <button class="deliver-btn" onclick="执行交付('${order.id}')">交付</button>
+            <div class="deliver-section">
+              <h4>交付操作</h4>
+              <div class="drop-zone" id="drop-${order.id}"
+                ondragover="event.preventDefault(); this.classList.add('dragover')"
+                ondragleave="this.classList.remove('dragover')"
+                ondrop="处理拖放(event, '${order.id}')">
+                拖入或点击上传处理后的图片（可多张）
+                <input type="file" multiple accept="image/*" onchange="处理选择文件(this, '${order.id}')">
               </div>
-            ` : `
-              <div style="padding: 12px 0; color: var(--color-delivered); font-size: 14px;">
-                已于 ${order.delivered_at} 交付
-              </div>
-            `}
+              <div class="drop-previews" id="previews-${order.id}"></div>
+              <textarea class="deliver-text" id="text-${order.id}" placeholder="输入回传文字（可选，将渲染为图片供用户下载）"></textarea>
+              <button class="deliver-btn" onclick="执行交付('${order.id}')">交付</button>
+            </div>` : ''}
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     function 展开订单(id) {
-      const body = document.getElementById(`body-${id}`);
-      body.classList.toggle('open');
+      document.getElementById(`body-${id}`).classList.toggle('open');
+    }
+
+    function 放大图片(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    function 复制文本(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(() => btn.textContent = orig, 1500);
+      }).catch(() => {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+        const orig = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(() => btn.textContent = orig, 1500);
+      });
+    }
+
+    function 复制邮件模板(orderId) {
+      const order = 全部订单.find(o => o.id === orderId);
+      if (!order) return;
+      const deliveryUrl = 生成交付链接(order.delivery_token);
+      const template = `您好，\n\n您在 Mo:link Design 提交的「${order.service_type_label}」服务已处理完成。\n\n请点击以下链接查看交付结果：\n${deliveryUrl}\n\n感谢您的使用！\nMo:link Design`;
+      const fullText = `收件人：${order.receive_target}\n主题：${order.service_type_label} - 交付结果\n\n${template}`;
+      navigator.clipboard.writeText(fullText).then(() => {
+        alert('邮件模板已复制到剪贴板，包含收件人、主题和正文');
+      }).catch(() => alert('复制失败，请手动操作'));
     }
 
     function 处理拖放(e, orderId) {
       e.preventDefault();
       e.currentTarget.classList.remove('dragover');
-      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-      添加交付文件(orderId, files);
+      添加交付文件(orderId, Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
     }
 
     function 处理选择文件(input, orderId) {
-      const files = Array.from(input.files);
-      添加交付文件(orderId, files);
+      添加交付文件(orderId, Array.from(input.files));
       input.value = '';
     }
 
     function 添加交付文件(orderId, files) {
       if (!交付文件缓存[orderId]) 交付文件缓存[orderId] = [];
       交付文件缓存[orderId].push(...files);
-
       const container = document.getElementById(`previews-${orderId}`);
       files.forEach(f => {
         const img = document.createElement('img');
@@ -402,10 +384,7 @@
     async function 执行交付(orderId) {
       const files = 交付文件缓存[orderId] || [];
       const text = document.getElementById(`text-${orderId}`).value;
-
-      if (files.length === 0 && !text.trim()) {
-        return alert('请至少上传一张图片或输入文字');
-      }
+      if (files.length === 0 && !text.trim()) return alert('请至少上传一张图片或输入文字');
 
       const formData = new FormData();
       files.forEach(f => formData.append('images', f));
@@ -418,17 +397,18 @@
           body: formData
         });
         const data = await resp.json();
-
         if (data.success) {
-          alert(`${data.message}\n交付链接: ${data.deliveryUrl}`);
+          let msg = data.message + '\n交付链接: ' + data.deliveryUrl;
+          if (!data.emailSent) {
+            msg += '\n\n⚠ 邮件发送失败，请在订单详情中复制邮件模板手动发送。';
+          }
+          alert(msg);
           delete 交付文件缓存[orderId];
           加载订单();
         } else {
           alert(data.error || '交付失败');
         }
-      } catch (err) {
-        alert('交付请求失败: ' + err.message);
-      }
+      } catch (err) { alert('交付请求失败: ' + err.message); }
     }
 
     document.getElementById('admin-secret').addEventListener('keydown', e => {

@@ -464,11 +464,18 @@
       document.getElementById('lightbox').classList.remove('active');
     }
 
+    /* 标记已下载（长按保存触发） */
+    let 已标记下载 = false;
+    const token = window.location.pathname.split('/d/')[1];
+    function 标记已下载() {
+      if (已标记下载) return;
+      已标记下载 = true;
+      fetch(`/d/${token}/mark-downloaded`, { method: 'POST' }).catch(() => {});
+    }
+
     /* ==========================================
        数据加载
        ========================================== */
-    const token = window.location.pathname.split('/d/')[1];
-
     async function 加载交付数据() {
       try {
         const resp = await fetch(`/d/${token}/data`);
@@ -483,6 +490,8 @@
           渲染等待中(data);
         } else if (data.status === 'delivered') {
           渲染交付结果(data);
+          // 标记已查收
+          fetch(`/d/${token}/mark-viewed`, { method: 'POST' }).catch(() => {});
         }
 
         // 加载设备历史记录
@@ -515,7 +524,7 @@
         imagesHtml = `<div class="image-list">
           ${data.images.map(img => `
             <div class="image-item" onclick="放大图片('/deliveries/${img}')">
-              <img src="/deliveries/${img}" alt="交付图片">
+              <img src="/deliveries/${img}" alt="交付图片" oncontextmenu="标记已下载()">
               <div class="hint">长按保存 · 点击放大</div>
             </div>
           `).join('')}
