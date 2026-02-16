@@ -35,6 +35,7 @@ router.get('/:token/data', (req, res) => {
 
   res.json({
     status: 'delivered',
+    orderId: order.id,
     service_type_label: order.service_type_label,
     images: JSON.parse(order.delivery_images || '[]'),
     text: order.delivery_text || '',
@@ -58,11 +59,39 @@ router.get('/:token/device-history', (req, res) => {
   const orders = db.prepare(`
     SELECT id, service_type_label, status, delivery_token, delivery_images, delivery_text, delivered_at, created_at
     FROM orders
-    WHERE device_uuid = ? AND status = 'delivered'
+    WHERE device_uuid = ? AND status IN ('delivered','viewed','downloaded')
     ORDER BY delivered_at DESC
   `).all(order.device_uuid);
 
   res.json({ orders });
+});
+
+// ==========================================
+// 标记已查收（delivery 页加载图片时触发）
+// POST /d/:token/mark-viewed
+// ==========================================
+router.post('/:token/mark-viewed', (req, res) => {
+  const order = db.prepare('SELECT id, status FROM orders WHERE delivery_token = ?').get(req.params.token);
+  if (!order) return res.status(404).json({ error: '订单不存在' });
+
+  if (order.status === 'delivered') {
+    db.prepare("UPDATE orders SET status = 'viewed', viewed_at = datetime('now','localtime') WHERE id = ?").run(order.id);
+  }
+  res.json({ success: true });
+});
+
+// ==========================================
+// 标记已下载（delivery 页下载图片时触发）
+// POST /d/:token/mark-downloaded
+// ==========================================
+router.post('/:token/mark-downloaded', (req, res) => {
+  const order = db.prepare('SELECT id, status FROM orders WHERE delivery_token = ?').get(req.params.token);
+  if (!order) return res.status(404).json({ error: '订单不存在' });
+
+  if (['delivered', 'viewed'].includes(order.status)) {
+    db.prepare("UPDATE orders SET status = 'downloaded', downloaded_at = datetime('now','localtime') WHERE id = ?").run(order.id);
+  }
+  res.json({ success: true });
 });
 
 module.exports = router;

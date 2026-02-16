@@ -91,15 +91,24 @@ router.post('/deliver/:id',
         req.params.id
       );
 
-      // 生成交付页面链接
-      const deliveryUrl = `${process.env.BASE_URL}/d/${order.delivery_token}`;
+      // 生成交付页面链接（使用 molink.art 域名）
+      const deliveryUrl = `https://molink.art/d/${order.delivery_token}`;
 
       // 发送邮箱通知
-      const notifySuccess = await 发送交付通知到用户邮箱(order, deliveryUrl);
+      let emailSent = false;
+      try {
+        emailSent = await 发送交付通知到用户邮箱(order, deliveryUrl);
+      } catch (e) {
+        console.error('邮件发送失败:', e);
+      }
+
+      // 记录邮件发送结果
+      db.prepare('UPDATE orders SET email_sent = ? WHERE id = ?').run(emailSent ? 1 : 0, req.params.id);
 
       res.json({
         success: true,
-        message: notifySuccess ? '交付成功，通知已发送' : '交付成功，通知发送失败（请手动联系用户）',
+        emailSent,
+        message: emailSent ? '交付成功，通知已发送' : '交付成功，邮件发送失败（请手动通知用户）',
         deliveryUrl
       });
 

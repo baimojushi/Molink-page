@@ -192,4 +192,34 @@ router.get('/device-orders/:uuid', (req, res) => {
   res.json({ orders });
 });
 
+// ==========================================
+// 标记为已查收（用户在 index 页加载了交付图）
+// POST /api/client/mark-viewed/:orderId
+// ==========================================
+router.post('/mark-viewed/:orderId', (req, res) => {
+  const order = db.prepare('SELECT status FROM orders WHERE id = ?').get(req.params.orderId);
+  if (!order) return res.status(404).json({ error: '订单不存在' });
+
+  // 仅在 delivered 状态时更新为 viewed
+  if (order.status === 'delivered') {
+    db.prepare("UPDATE orders SET status = 'viewed', viewed_at = datetime('now','localtime') WHERE id = ?").run(req.params.orderId);
+  }
+  res.json({ success: true });
+});
+
+// ==========================================
+// 标记为已下载（用户长按保存了图片）
+// POST /api/client/mark-downloaded/:orderId
+// ==========================================
+router.post('/mark-downloaded/:orderId', (req, res) => {
+  const order = db.prepare('SELECT status FROM orders WHERE id = ?').get(req.params.orderId);
+  if (!order) return res.status(404).json({ error: '订单不存在' });
+
+  // viewed 或 delivered 状态均可更新为 downloaded
+  if (['delivered', 'viewed'].includes(order.status)) {
+    db.prepare("UPDATE orders SET status = 'downloaded', downloaded_at = datetime('now','localtime') WHERE id = ?").run(req.params.orderId);
+  }
+  res.json({ success: true });
+});
+
 module.exports = router;
