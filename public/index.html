@@ -1212,6 +1212,33 @@
     .lightbox-overlay.active img {
       transform: scale(1);
     }
+
+    .lightbox-download-btn {
+      position: absolute;
+      bottom: 40px;
+      padding: 12px 28px;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: all 0.2s ease;
+      z-index: 10001;
+    }
+
+    .lightbox-download-btn:hover {
+      background: var(--color-primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    }
+
+    .lightbox-download-btn:active {
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -1225,6 +1252,7 @@
   <!-- 图片放大遮罩 -->
   <div class="lightbox-overlay" id="lightbox" onclick="关闭放大()">
     <img id="lightbox-img" src="" alt="放大查看">
+    <button class="lightbox-download-btn" onclick="event.stopPropagation(); 下载放大图片()">⬇ 下载图片</button>
   </div>
 
   <div class="header">
@@ -1674,6 +1702,22 @@
 
     function 关闭放大() {
       document.getElementById('lightbox').classList.remove('active');
+    }
+
+    function 下载放大图片() {
+      const imgSrc = document.getElementById('lightbox-img').src;
+      if (!imgSrc) return;
+      
+      // 创建临时链接下载
+      const a = document.createElement('a');
+      a.href = imgSrc;
+      a.download = imgSrc.split('/').pop() || 'molink-image.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      // 标记已下载
+      标记已下载();
     }
 
     /* 标记已查收（图片加载时触发，仅调用一次） */

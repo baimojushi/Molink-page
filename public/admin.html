@@ -162,6 +162,17 @@
     }
     .lightbox-overlay.active { opacity: 1; pointer-events: auto; }
     .lightbox-overlay img { max-width: 92vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }
+
+    /* 删除订单区域 */
+    .delete-section {
+      margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border);
+    }
+    .delete-btn {
+      padding: 8px 20px; background: var(--color-danger); color: #fff;
+      border: none; border-radius: var(--radius); font-size: 13px; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .delete-btn:hover { background: #a94442; transform: translateY(-1px); }
   </style>
 </head>
 <body>
@@ -317,6 +328,11 @@
               <textarea class="deliver-text" id="text-${order.id}" placeholder="输入回传文字（可选，将渲染为图片供用户下载）"></textarea>
               <button class="deliver-btn" onclick="执行交付('${order.id}')">交付</button>
             </div>` : ''}
+
+            <!-- 删除订单区域 -->
+            <div class="delete-section">
+              <button class="delete-btn" onclick="删除订单('${order.id}', '${order.service_type_label}')">🗑 删除订单</button>
+            </div>
           </div>
         </div>`;
       }).join('');
@@ -409,6 +425,25 @@
           alert(data.error || '交付失败');
         }
       } catch (err) { alert('交付请求失败: ' + err.message); }
+    }
+
+    async function 删除订单(orderId, serviceLabel) {
+      const confirmed = confirm(`确认删除订单「${serviceLabel}」？\n\n订单及相关图片文件将被永久删除，此操作无法撤销。`);
+      if (!confirmed) return;
+
+      try {
+        const resp = await fetch(`/api/admin/orders/${orderId}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-secret': 管理密钥 }
+        });
+        const data = await resp.json();
+        if (data.success) {
+          alert('订单已删除');
+          加载订单();
+        } else {
+          alert(data.error || '删除失败');
+        }
+      } catch (err) { alert('删除请求失败: ' + err.message); }
     }
 
     document.getElementById('admin-secret').addEventListener('keydown', e => {
