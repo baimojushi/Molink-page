@@ -119,4 +119,62 @@ router.post('/deliver/:id',
   }
 );
 
+// ==========================================
+// 删除订单：删除订单记录及相关图片文件
+// DELETE /api/admin/orders/:id
+// ==========================================
+router.delete('/orders/:id', (req, res) => {
+  try {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: '订单不存在' });
+    }
+
+    const fs = require('fs');
+    const UPLOADS_DIR = path.join(PERSISTENT_ROOT, 'uploads');
+
+    // 删除用户上传的图片
+    const 待删除文件 = [];
+    if (order.artwork_image) {
+      待删除文件.push(path.join(UPLOADS_DIR, order.artwork_image));
+    }
+    if (order.space_image) {
+      待删除文件.push(path.join(UPLOADS_DIR, order.space_image));
+    }
+
+    // 删除交付图片
+    if (order.delivery_images) {
+      try {
+        const deliveryImgs = JSON.parse(order.delivery_images);
+        deliveryImgs.forEach(img => {
+          待删除文件.push(path.join(DELIVERIES_DIR, img));
+        });
+      } catch (e) {
+        console.error('解析交付图片列表失败:', e);
+      }
+    }
+
+    // 执行文件删除
+    待删除文件.forEach(filePath => {
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log('已删除文件:', filePath);
+        }
+      } catch (e) {
+        console.error('删除文件失败:', filePath, e);
+      }
+    });
+
+    // 删除数据库记录
+    db.prepare('DELETE FROM orders WHERE id = ?').run(req.params.id);
+
+    res.json({ success: true, message: '订单及相关文件已删除' });
+
+  } catch (error) {
+    console.error('❌ 删除订单失败:', error);
+    res.status(500).json({ error: '删除订单异常' });
+  }
+});
+
 module.exports = router;
