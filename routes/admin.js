@@ -92,7 +92,7 @@ router.post('/deliver/:id',
       );
 
       // 生成交付页面链接（使用 molink.art 域名）
-      const deliveryUrl = `https://molink.art/d/${order.delivery_token}`;
+      const deliveryUrl = `https://www.molink.art/d/${order.delivery_token}`;
 
       // 发送邮箱通知
       let emailSent = false;
