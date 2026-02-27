@@ -11,8 +11,8 @@ const { ses } = require('tencentcloud-sdk-nodejs-ses');
 //   SES_FROM_NAME            - 发件人别名，如 Molink
 //   SES_ORDER_TEMPLATE_ID    - 订单通知邮件模板 ID（数字）
 //   SES_DELIVERY_TEMPLATE_ID - 交付通知邮件模板 ID（数字）
-//   ADMIN_EMAIL              - 目标机操作者邮箱
-//   BASE_URL                 - 站点地址
+//   ADMIN_EMAIL              - 目标机操作者邮箱，多个用逗号分隔
+//   BASE_URL                 - 站点地址，如 https://molink.art
 // ==========================================
 
 const SesClient = ses.v20201002.Client;
@@ -28,7 +28,6 @@ const client = new SesClient({
   },
 });
 
-// 构造发件人地址（带别名）
 function getFromAddress() {
   const name = process.env.SES_FROM_NAME || 'Molink';
   const email = process.env.SES_FROM_EMAIL || 'notice@mail.molink.art';
@@ -36,19 +35,36 @@ function getFromAddress() {
 }
 
 /**
+ * 从完整 URL 中提取路径部分（去掉 BASE_URL 域名前缀）
+ * 例：https://molink.art/delivery/abc123  =>  /delivery/abc123
+ */
+function extractPath(fullUrl) {
+  const base = (process.env.BASE_URL || '').replace(/\/$/, '');
+  if (base && fullUrl.startsWith(base)) {
+    return fullUrl.slice(base.length) || '/';
+  }
+  // 兜底：尝试用 URL 解析取路径
+  try {
+    const u = new URL(fullUrl);
+    return u.pathname + u.search + u.hash;
+  } catch {
+    return fullUrl;
+  }
+}
+
+/**
  * 发送新订单通知给目标机操作者
  * @param {Object} order - 订单信息
  *
- * 【对应模板变量（在腾讯云控制台创建模板时使用）】
- *   {{orderId}}        - 订单编号
- *   {{serviceType}}    - 服务类型
- *   {{receiveMethod}}  - 接收方式（如 "邮箱: xxx" 或 "短信: xxx"）
- *   {{extraService}}   - 附加服务（"是" 或 "否"）
- *   {{createdAt}}      - 提交时间
- *   {{adminUrl}}       - 管理后台链接
+ * 【模板变量】
+ *   {{orderId}}       - 订单编号
+ *   {{serviceType}}   - 服务类型
+ *   {{receiveMethod}} - 接收方式
+ *   {{extraService}}  - 附加服务
+ *   {{createdAt}}     - 提交时间
+ *   （管理后台链接域名已在模板中硬编码，无需传入变量）
  */
 async function 发送订单通知到目标机(order) {
-  // 支持多个邮箱，逗号分隔
   const adminEmails = (process.env.ADMIN_EMAIL || '').split(',').map(e => e.trim()).filter(Boolean);
   if (adminEmails.length === 0) {
     console.error('未配置 ADMIN_EMAIL，跳过订单通知');
@@ -61,10 +77,8 @@ async function 发送订单通知到目标机(order) {
     receiveMethod: `${order.receive_method === 'email' ? '邮箱' : '短信'}: ${order.receive_target}`,
     extraService: order.extra_service ? '是' : '否',
     createdAt: order.created_at,
-    adminUrl: `${process.env.BASE_URL}/admin`,
   });
 
-  // 逐个发送（非群发，避免收件人互相可见）
   for (const toEmail of adminEmails) {
     try {
       await client.SendEmail({
@@ -75,7 +89,7 @@ async function 发送订单通知到目标机(order) {
           TemplateID: parseInt(process.env.SES_ORDER_TEMPLATE_ID),
           TemplateData: templateData,
         },
-        TriggerType: 1, // 触发类邮件，即时发送
+        TriggerType: 1,
       });
       console.log(`📧 订单通知已发送到目标机邮箱: ${toEmail}`);
     } catch (error) {
@@ -87,11 +101,12 @@ async function 发送订单通知到目标机(order) {
 /**
  * 发送交付通知给用户（邮箱方式）
  * @param {Object} order - 订单信息
- * @param {string} deliveryUrl - 交付页面链接
+ * @param {string} deliveryUrl - 交付页面完整链接
  *
- * 【对应模板变量】
- *   {{serviceType}}  - 服务类型
- *   {{deliveryUrl}}  - 交付结果链接
+ * 【模板变量】
+ *   {{serviceType}}   - 服务类型
+ *   {{deliveryPath}}  - 交付路径（不含域名），模板中域名已硬编码
+ *                       模板示例：https://molink.art{{deliveryPath}}
  */
 async function 发送交付通知到用户邮箱(order, deliveryUrl) {
   try {
@@ -103,7 +118,7 @@ async function 发送交付通知到用户邮箱(order, deliveryUrl) {
         TemplateID: parseInt(process.env.SES_DELIVERY_TEMPLATE_ID),
         TemplateData: JSON.stringify({
           serviceType: order.service_type_label,
-          deliveryUrl: deliveryUrl,
+          deliveryPath: extractPath(deliveryUrl),
         }),
       },
       TriggerType: 1,
