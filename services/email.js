@@ -39,9 +39,10 @@ function getFromAddress() {
  * 例：https://molink.art/delivery/abc123  =>  /delivery/abc123
  */
 function extractPath(fullUrl) {
-  const base = (process.env.BASE_URL || '').replace(/\/$/, '');
-  if (base && fullUrl.startsWith(base)) {
-    return fullUrl.slice(base.length) || '/';
+  // 关键修改行：同时去掉开头和末尾的斜杠
+  const base = (process.env.BASE_URL || '').replace(/^\/|\/$/g, '');
+  if (base && fullUrl.startsWith(`/${base}`)) { // 注意：这里要补开头斜杠匹配
+    return fullUrl.slice(`/${base}`.length) || '/';
   }
   // 兜底：尝试用 URL 解析取路径
   try {
