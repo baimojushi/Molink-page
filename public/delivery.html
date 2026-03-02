@@ -610,10 +610,13 @@
        ========================================== */
     async function 加载设备历史() {
       try {
-        const resp = await fetch(`/d/${token}/device-history`);
+        // 读取本机存储的 device_uuid，传给服务端做身份验证
+        const localUuid = localStorage.getItem('molink_device_uuid') || '';
+        const resp = await fetch(`/d/${token}/device-history?device_uuid=${encodeURIComponent(localUuid)}`);
         const data = await resp.json();
-        
-        if (!data.orders || data.orders.length <= 1) return; // 只有当前订单或没有记录时不显示历史
+
+        // 未通过 UUID 验证或无历史记录时不显示历史区域
+        if (!data.authorized || !data.orders || data.orders.length <= 1) return;
 
         const container = document.getElementById('history-container');
         if (!container) return;
