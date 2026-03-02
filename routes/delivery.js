@@ -24,7 +24,9 @@ router.get('/:token/data', (req, res) => {
     return res.status(404).json({ error: '页面不存在' });
   }
 
-  if (order.status !== 'delivered') {
+  const DELIVERED_STATUSES = ['delivered', 'viewed', 'downloaded'];
+
+  if (!DELIVERED_STATUSES.includes(order.status)) {
     return res.json({
       status: 'pending',
       message: '您的服务正在处理中，完成后将通知您。',
@@ -49,11 +51,16 @@ router.get('/:token/data', (req, res) => {
 // GET /d/:token/device-history
 // ==========================================
 router.get('/:token/device-history', (req, res) => {
-  // 先找到这个 token 对应的订单，获取其 device_uuid
   const order = db.prepare('SELECT device_uuid FROM orders WHERE delivery_token = ?').get(req.params.token);
-  
+
   if (!order || !order.device_uuid) {
-    return res.json({ orders: [] });
+    return res.json({ orders: [], authorized: false });
+  }
+
+  // 验证请求方的 device_uuid 与订单提交时的 device_uuid 一致
+  const requesterUuid = req.query.device_uuid || '';
+  if (requesterUuid !== order.device_uuid) {
+    return res.json({ orders: [], authorized: false });
   }
 
   const orders = db.prepare(`
@@ -63,7 +70,7 @@ router.get('/:token/device-history', (req, res) => {
     ORDER BY delivered_at DESC
   `).all(order.device_uuid);
 
-  res.json({ orders });
+  res.json({ orders, authorized: true });
 });
 
 // ==========================================
