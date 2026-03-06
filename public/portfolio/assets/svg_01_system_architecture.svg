@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560" font-family="Georgia, 'Times New Roman', serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0c0c0c"/>
+      <stop offset="100%" style="stop-color:#080808"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.04)"/>
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.01)"/>
+    </linearGradient>
+    <linearGradient id="cardGradHot" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,106,0,0.18)"/>
+      <stop offset="100%" style="stop-color:rgba(255,106,0,0.04)"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrowOrange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#ff6a00" opacity="0.8"/>
+    </marker>
+    <marker id="arrowMuted" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,0.25)"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="560" fill="url(#bgGrad)"/>
+
+  <!-- Subtle grid -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.022)" stroke-width="0.5"/>
+  </pattern>
+  <rect width="1200" height="560" fill="url(#grid)"/>
+
+  <!-- Ambient orange glow top-right -->
+  <radialGradient id="ambientGlow" cx="85%" cy="8%" r="30%">
+    <stop offset="0%" style="stop-color:rgba(255,106,0,0.12)"/>
+    <stop offset="100%" style="stop-color:rgba(255,106,0,0)"/>
+  </radialGradient>
+  <rect width="1200" height="560" fill="url(#ambientGlow)"/>
+
+  <!-- Title area -->
+  <text x="52" y="54" fill="rgba(255,106,0,0.9)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="3" text-transform="uppercase">SYSTEM ARCHITECTURE</text>
+  <text x="52" y="88" fill="#f5f1ea" font-size="32" letter-spacing="-1.5">Five-Layer Stack</text>
+  <text x="52" y="108" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" letter-spacing="0.5">from body signal to ambient response</text>
+
+  <!-- Vertical connector line -->
+  <line x1="200" y1="150" x2="200" y2="480" stroke="rgba(255,106,0,0.2)" stroke-width="1" stroke-dasharray="2 6"/>
+
+  <!-- ── LAYER 1: SENSING ── -->
+  <g transform="translate(52, 148)">
+    <!-- Card -->
+    <rect x="0" y="0" width="680" height="62" rx="14" fill="url(#cardGradHot)" stroke="rgba(255,106,0,0.45)" stroke-width="1"/>
+    <!-- Layer number -->
+    <text x="22" y="24" fill="rgba(255,106,0,0.5)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="2">01</text>
+    <text x="22" y="44" fill="#ff6a00" font-size="18" letter-spacing="-0.5" filter="url(#glow)">感知层  Sensing</text>
+    <!-- Tags -->
+    <rect x="186" y="22" width="120" height="22" rx="11" fill="rgba(255,106,0,0.1)" stroke="rgba(255,106,0,0.3)" stroke-width="0.5"/>
+    <text x="196" y="37" fill="#ff6a00" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">mmWave Radar</text>
+    <rect x="316" y="22" width="106" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+    <text x="326" y="37" fill="#d0cbc3" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">Waist Pressure</text>
+    <rect x="432" y="22" width="106" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+    <text x="442" y="37" fill="#d0cbc3" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">HRV Wristband</text>
+    <!-- Dot on timeline -->
+    <circle cx="148" cy="31" r="5" fill="#ff6a00" filter="url(#glow)"/>
+  </g>
+
+  <!-- Arrow 1→2 -->
+  <line x1="200" y1="218" x2="200" y2="238" stroke="rgba(255,106,0,0.5)" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- ── LAYER 2: SIGNAL PROCESSING ── -->
+  <g transform="translate(52, 244)">
+    <rect x="0" y="0" width="680" height="62" rx="14" fill="url(#cardGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <text x="22" y="24" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="2">02</text>
+    <text x="22" y="44" fill="#f5f1ea" font-size="18" letter-spacing="-0.5">解算层  Signal Processing</text>
+    <rect x="254" y="22" width="78" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="264" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">Low-Pass</text>
+    <rect x="342" y="22" width="56" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="352" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">ACF</text>
+    <rect x="408" y="22" width="66" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="418" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">Hilbert</text>
+    <rect x="484" y="22" width="96" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="494" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">Confidence</text>
+    <circle cx="148" cy="31" r="4" fill="rgba(255,255,255,0.2)"/>
+  </g>
+
+  <!-- Arrow 2→3 -->
+  <line x1="200" y1="314" x2="200" y2="334" stroke="rgba(255,106,0,0.5)" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- ── LAYER 3: TRANSPORT ── -->
+  <g transform="translate(52, 340)">
+    <rect x="0" y="0" width="680" height="62" rx="14" fill="url(#cardGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <text x="22" y="24" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="2">03</text>
+    <text x="22" y="44" fill="#f5f1ea" font-size="18" letter-spacing="-0.5">通信层  Transport</text>
+    <rect x="210" y="22" width="56" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="220" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">ESP32</text>
+    <rect x="276" y="22" width="96" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="286" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">BT Serial</text>
+    <rect x="382" y="22" width="116" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="392" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">JSON Stream 10Hz</text>
+    <circle cx="148" cy="31" r="4" fill="rgba(255,255,255,0.2)"/>
+  </g>
+
+  <!-- Arrow 3→4 -->
+  <line x1="200" y1="410" x2="200" y2="430" stroke="rgba(255,106,0,0.5)" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- ── LAYER 4: EXPERIENCE OUTPUT ── -->
+  <g transform="translate(52, 436)">
+    <rect x="0" y="0" width="680" height="62" rx="14" fill="url(#cardGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <text x="22" y="24" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="2">04</text>
+    <text x="22" y="44" fill="#f5f1ea" font-size="18" letter-spacing="-0.5">表现层  Experience Output</text>
+    <rect x="270" y="22" width="116" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="280" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">Light Mapping</text>
+    <rect x="396" y="22" width="128" height="22" rx="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    <text x="406" y="37" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">TouchDesigner</text>
+    <circle cx="148" cy="31" r="4" fill="rgba(255,255,255,0.2)"/>
+  </g>
+
+  <!-- ── RIGHT PANEL: EVALUATION LAYER (5) ── -->
+  <g transform="translate(780, 148)">
+    <rect x="0" y="0" width="368" height="350" rx="20" fill="url(#cardGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <!-- Glow corner -->
+    <radialGradient id="cornerGlow" cx="100%" cy="100%" r="50%">
+      <stop offset="0%" style="stop-color:rgba(255,106,0,0.15)"/>
+      <stop offset="100%" style="stop-color:rgba(255,106,0,0)"/>
+    </radialGradient>
+    <rect x="0" y="0" width="368" height="350" rx="20" fill="url(#cornerGlow)"/>
+
+    <text x="24" y="36" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="2">05</text>
+    <text x="24" y="64" fill="#f5f1ea" font-size="22" letter-spacing="-0.5">评估层</text>
+    <text x="24" y="88" fill="#f5f1ea" font-size="22" letter-spacing="-0.5">Evaluation</text>
+
+    <line x1="24" y1="104" x2="344" y2="104" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+
+    <text x="24" y="130" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" line-height="1.8">HRV 验证层</text>
+    <text x="24" y="154" fill="#706a62" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12">检测焦虑缓解与副交感活跃度</text>
+
+    <!-- HRV metric cards -->
+    <rect x="24" y="170" width="152" height="66" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="38" y="193" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">HRV RMSSD</text>
+    <text x="38" y="218" fill="#f5f1ea" font-size="20" letter-spacing="-1">↑ SDNN</text>
+
+    <rect x="192" y="170" width="152" height="66" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="206" y="193" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">PARASYMPATHETIC</text>
+    <text x="206" y="218" fill="#f5f1ea" font-size="20" letter-spacing="-1">LF/HF</text>
+
+    <line x1="24" y1="258" x2="344" y2="258" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+
+    <text x="24" y="283" fill="#706a62" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12">Experience + Evidence</text>
+    <text x="24" y="306" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">让装置从"有感觉"</text>
+    <text x="24" y="326" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">推进到"有证据"</text>
+  </g>
+
+  <!-- Connector from layer 4 to eval panel -->
+  <path d="M 732 467 Q 760 467 760 323 Q 760 200 780 200" stroke="rgba(255,106,0,0.25)" stroke-width="1" fill="none" stroke-dasharray="3 5" marker-end="url(#arrowOrange)"/>
+  <text x="738" y="360" fill="rgba(255,106,0,0.5)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1.5" transform="rotate(-90, 738, 360)">EVALUATE</text>
+
+  <!-- Bottom label -->
+  <text x="52" y="536" fill="rgba(255,255,255,0.15)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" letter-spacing="2">MEDITATION TENT — SYSTEM ARCHITECTURE v2.0</text>
+  <text x="1148" y="536" fill="rgba(255,255,255,0.1)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" text-anchor="end">01 / 03</text>
+</svg>

@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meditation Tent — Interactive Installation Portfolio</title>
+  <style>
+    :root {
+      --bg: #070707;
+      --bg-soft: #101010;
+      --panel: #121212;
+      --panel-2: #171717;
+      --text: #f0ece5;
+      --muted: #9e978d;
+      --line: rgba(255,255,255,0.07);
+      --accent: #ff6a00;
+      --accent-soft: rgba(255,106,0,0.14);
+      --accent-strong: rgba(255,106,0,0.28);
+      --shadow: 0 24px 80px rgba(0,0,0,0.5);
+      --max: 1440px;
+      --ease: cubic-bezier(.19,1,.22,1);
+    }
+
+    * { box-sizing: border-box; margin: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", "PingFang SC", "Noto Sans SC", sans-serif;
+      background:
+        radial-gradient(ellipse at 75% -5%, rgba(255,106,0,0.10), transparent 32%),
+        radial-gradient(ellipse at 15% 8%, rgba(255,106,0,0.06), transparent 26%),
+        linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+      color: var(--text);
+      overflow-x: hidden;
+      cursor: none;
+      line-height: 1.6;
+    }
+
+    ::selection {
+      background: rgba(255,106,0,0.30);
+      color: white;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Custom cursor ── */
+    .cursor, .cursor-dot {
+      position: fixed; top: 0; left: 0;
+      pointer-events: none; z-index: 9999; border-radius: 999px;
+      transform: translate(-50%, -50%);
+      transition: width 220ms var(--ease), height 220ms var(--ease), opacity 220ms var(--ease), border-radius 220ms var(--ease), background 220ms var(--ease), border-color 220ms var(--ease);
+    }
+    .cursor {
+      width: 32px; height: 32px;
+      border: 1px solid rgba(255,106,0,0.7);
+      background: rgba(255,106,0,0.06);
+      backdrop-filter: blur(4px);
+      mix-blend-mode: screen;
+    }
+    .cursor-dot {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(255,106,0,0.8);
+    }
+    body.cursor-hover .cursor {
+      width: 68px; height: 68px; border-radius: 20px;
+      background: rgba(255,106,0,0.12);
+      border-color: var(--accent);
+    }
+
+    .page-frame {
+      position: fixed; inset: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+      pointer-events: none; z-index: 4;
+    }
+
+    .noise {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 1; opacity: 0.045;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px);
+      background-size: 10px 10px;
+      mix-blend-mode: soft-light;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(16px);
+      background: rgba(7,7,7,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .topbar-inner {
+      max-width: var(--max); margin: 0 auto;
+      padding: 16px 28px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .brand {
+      font-size: 13px; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .nav { display: flex; gap: 18px; flex-wrap: wrap; }
+    .nav a {
+      font-size: 12px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted);
+      transition: color 260ms var(--ease);
+    }
+    .nav a:hover { color: var(--text); }
+
+    /* ── Sections ── */
+    main { position: relative; z-index: 2; }
+
+    section {
+      max-width: var(--max); margin: 0 auto;
+      padding: 80px 28px;
+    }
+
+    .eyebrow {
+      display: inline-block; color: var(--accent);
+      font-size: 11px; letter-spacing: 0.22em;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: grid; align-items: end;
+      padding-top: 100px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 32px; align-items: end;
+    }
+    .display {
+      font-family: Georgia, "Noto Serif SC", serif;
+      font-weight: 700;
+      font-size: clamp(3.8rem, 9vw, 8.5rem);
+      line-height: 0.88;
+      letter-spacing: -0.05em;
+    }
+    .display .accent {
+      color: var(--accent);
+      text-shadow: 0 0 40px rgba(255,106,0,0.18);
+    }
+    .hero-copy {
+      max-width: 560px; margin-top: 24px;
+      color: #c8c2b9; font-size: 17px; line-height: 1.8;
+    }
+    .hero-media {
+      position: relative; min-height: 660px;
+      display: grid; gap: 16px; align-content: end;
+    }
+    .hero-stack {
+      display: grid;
+      grid-template-columns: 0.6fr 0.4fr;
+      gap: 16px; align-items: end;
+    }
+
+    .cta-row { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px; padding: 13px 22px;
+      font-size: 12px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--text);
+      background: rgba(255,255,255,0.02);
+      transition: transform 280ms var(--ease), border-color 280ms var(--ease), background 280ms var(--ease), box-shadow 280ms var(--ease);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,106,0,0.8);
+      background: rgba(255,106,0,0.08);
+      box-shadow: 0 16px 48px rgba(255,106,0,0.10);
+    }
+    .btn.primary {
+      background: var(--accent); color: #0a0a0a;
+      border-color: var(--accent); font-weight: 700;
+    }
+
+    /* ── Cards & Shared ── */
+    .meta-card, .card, .quote, .contact-card, .tool, .image-card, .stat-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0.012));
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .meta-card {
+      padding: 20px; min-height: 150px;
+      position: relative; overflow: hidden;
+    }
+    .meta-card::after {
+      content: ""; position: absolute;
+      inset: auto -40px -40px auto;
+      width: 140px; height: 140px;
+      background: radial-gradient(circle, rgba(255,106,0,0.20), transparent 60%);
+      filter: blur(10px);
+    }
+    .meta-label {
+      font-size: 11px; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+    }
+    .meta-value { font-size: 24px; line-height: 1.2; max-width: 300px; }
+    .meta-small { margin-top: 12px; color: var(--muted); line-height: 1.65; font-size: 13px; }
+
+    /* ── Section layout ── */
+    .section-head {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 32px; align-items: start; margin-bottom: 40px;
+    }
+    .section-title {
+      font-size: clamp(2rem, 3.8vw, 4.2rem);
+      line-height: 0.95; letter-spacing: -0.04em;
+      font-family: Georgia, "Noto Serif SC", serif;
+    }
+    .section-desc {
+      color: #c4beb5; font-size: 16px; line-height: 1.85;
+      max-width: 720px;
+    }
+
+    /* ── Editorial grid ── */
+    .editorial-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr 1.2fr;
+      gap: 18px; grid-auto-rows: minmax(150px, auto);
+    }
+    .card {
+      padding: 24px; position: relative; overflow: hidden;
+      transition: transform 300ms var(--ease), border-color 300ms var(--ease), background 300ms var(--ease);
+    }
+    .card:hover, .image-card:hover, .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,106,0,0.45);
+      background: linear-gradient(180deg, rgba(255,106,0,0.06), rgba(255,255,255,0.015));
+    }
+    .span-2r { grid-row: span 2; }
+    .span-2c { grid-column: span 2; }
+
+    .card h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.1; letter-spacing: -0.02em; }
+    .card p, .card li { color: #ccc7be; line-height: 1.78; font-size: 14.5px; }
+    .card ul { padding-left: 18px; }
+    .big-number {
+      font-size: clamp(2.8rem, 5vw, 5.5rem);
+      line-height: 0.85; font-family: Georgia, serif;
+      color: var(--accent); margin-bottom: 12px;
+    }
+
+    /* ── Quote ── */
+    .quote { padding: 30px; display: grid; gap: 16px; }
+    .quote p {
+      font-size: clamp(1.4rem, 2.4vw, 2.6rem);
+      line-height: 1.15; letter-spacing: -0.03em;
+      font-family: Georgia, "Noto Serif SC", serif;
+    }
+    .quote small { color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; font-size: 11px; }
+
+    /* ── Timeline ── */
+    .timeline { display: grid; gap: 0; }
+    .timeline-item {
+      display: grid; grid-template-columns: 110px 1fr;
+      gap: 20px; padding: 20px 0;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .timeline-item:first-child { border-top: none; }
+    .timeline-year {
+      color: var(--accent); font-size: 11px;
+      letter-spacing: 0.2em; text-transform: uppercase; padding-top: 4px;
+    }
+    .timeline-title { font-size: 22px; margin-bottom: 8px; letter-spacing: -0.02em; }
+
+    /* ── Tool / Stack ── */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 16px;
+    }
+    .tool {
+      padding: 20px; min-height: 170px;
+      transition: transform 300ms var(--ease), border-color 300ms var(--ease), background 300ms var(--ease);
+    }
+    .tool:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,106,0,0.5);
+      background: linear-gradient(180deg, rgba(255,106,0,0.06), rgba(255,255,255,0.015));
+    }
+    .tool-kicker {
+      color: var(--accent); font-size: 10px;
+      letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .tool h4 { margin: 0 0 10px; font-size: 18px; }
+    .tool p { color: #c8c2b8; line-height: 1.75; font-size: 13.5px; }
+
+    /* ── Code block ── */
+    .code-block {
+      background: #0c0c0c;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px; padding: 22px; overflow: auto;
+      font-family: "SF Mono", "Fira Code", Consolas, monospace;
+      font-size: 12.5px; line-height: 1.85; color: #f0d4bb;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Grids ── */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .image-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 18px; align-items: stretch; }
+    .image-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+
+    .image-card {
+      overflow: hidden; position: relative;
+      transition: transform 320ms var(--ease), border-color 320ms var(--ease), background 320ms var(--ease);
+    }
+    .image-card.tall { min-height: 600px; }
+    .image-card.medium { min-height: 380px; }
+    .image-card.short { min-height: 280px; }
+
+    .image-card img {
+      width: 100%; height: 100%; display: block;
+      object-fit: cover;
+      filter: saturate(0.90) contrast(1.02);
+      transition: transform 600ms var(--ease), filter 400ms var(--ease);
+    }
+    .image-card:hover img {
+      transform: scale(1.03);
+      filter: saturate(1) contrast(1.04);
+    }
+    .image-overlay {
+      position: absolute; inset: auto 0 0 0;
+      padding: 20px;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.85) 100%);
+    }
+    .image-kicker {
+      font-size: 10px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+    }
+    .image-title { font-size: 20px; margin: 0 0 6px; letter-spacing: -0.02em; }
+    .image-caption { color: #d8d2ca; line-height: 1.7; font-size: 13px; max-width: 68ch; }
+
+    /* ── SVG diagrams ── */
+    .svg-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px; margin-top: 22px;
+    }
+    .svg-card { overflow: hidden; position: relative; }
+    .svg-frame {
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .svg-frame object, .svg-frame img {
+      display: block; width: 100%; height: auto;
+      border-radius: 14px; background: #0a0a0a;
+    }
+
+    /* ── Stats ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 16px;
+    }
+    .stat-card {
+      padding: 22px;
+      transition: transform 320ms var(--ease), border-color 320ms var(--ease), background 320ms var(--ease);
+    }
+    .stat-num {
+      font-size: clamp(2.4rem, 3.5vw, 3.6rem);
+      line-height: 0.9; font-family: Georgia, serif;
+      color: var(--accent); margin-bottom: 10px;
+    }
+    .stat-card h4 { margin: 0 0 8px; font-size: 18px; }
+    .stat-card p { color: #c8c2b8; line-height: 1.75; font-size: 13.5px; }
+
+    /* ── Contact ── */
+    .contact-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
+    .contact-card {
+      padding: 26px; min-height: 240px;
+      position: relative; overflow: hidden;
+      transition: transform 320ms var(--ease), border-color 320ms var(--ease);
+    }
+    .contact-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,106,0,0.6);
+    }
+    .contact-card::before {
+      content: ""; position: absolute;
+      inset: auto -50px -50px auto;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(255,106,0,0.20), transparent 64%);
+      filter: blur(10px);
+    }
+    .contact-card h3 {
+      margin: 0 0 12px;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      letter-spacing: -0.03em; line-height: 0.95;
+    }
+    .contact-card p { max-width: 520px; color: #ccc7be; line-height: 1.8; font-size: 15px; }
+    .contact-list { display: grid; gap: 10px; margin-top: 20px; }
+    .contact-line {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 12px 0;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      color: #e8e2da;
+      transition: transform 200ms var(--ease), color 200ms var(--ease);
+    }
+    .contact-line:hover { transform: translateX(3px); color: var(--accent); }
+
+    .footer-note {
+      padding: 0 28px 36px;
+      max-width: var(--max); margin: 0 auto;
+      color: var(--muted); font-size: 12px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ── Reveal ── */
+    .reveal {
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 800ms var(--ease), transform 800ms var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive ── */
+    @media (max-width: 1200px) {
+      .hero-grid, .hero-stack, .section-head, .stack-grid,
+      .split, .contact-grid, .editorial-grid, .image-grid,
+      .image-strip, .stat-grid, .svg-grid {
+        grid-template-columns: 1fr;
+      }
+      .span-2c, .span-2r { grid-column: span 1; grid-row: span 1; }
+      .hero-media { min-height: auto; }
+      .image-card.tall, .image-card.medium, .image-card.short { min-height: auto; aspect-ratio: 4/3; }
+    }
+
+    @media (max-width: 780px) {
+      body { cursor: auto; }
+      .cursor, .cursor-dot, .page-frame { display: none; }
+      section { padding: 56px 18px; }
+      .topbar-inner { padding: 14px 18px; }
+      .display { font-size: clamp(2.8rem, 14vw, 5rem); }
+      .hero-copy, .section-desc { font-size: 15px; }
+      .timeline-item { grid-template-columns: 1fr; gap: 6px; }
+      .nav { gap: 10px; }
+      .image-card.tall, .image-card.medium, .image-card.short { aspect-ratio: 3/2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="cursor"></div>
+  <div class="cursor-dot"></div>
+  <div class="page-frame"></div>
+  <div class="noise"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand magnetic" href="#hero">Meditation Tent</a>
+      <nav class="nav">
+        <a class="magnetic" href="#overview">Overview</a>
+        <a class="magnetic" href="#gallery">Gallery</a>
+        <a class="magnetic" href="#system">System</a>
+        <a class="magnetic" href="#thinking">Process</a>
+        <a class="magnetic" href="#stack">Stack</a>
+        <a class="magnetic" href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ════ HERO ════ -->
+    <section class="hero" id="hero">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow reveal">Interactive Installation · Full-Stack Case Study</span>
+          <h1 class="display reveal">
+            <span class="accent">Meditation<br/>Tent</span><br/>
+            breath in,<br/>space responds.
+          </h1>
+          <p class="hero-copy reveal">
+            一套完整的交互装置系统——从呼吸与 HRV 生理数据采集，到嵌入式实时解算、蓝牙数据传输、TouchDesigner 视觉联动，到最终的空间沉浸体验与焦虑缓解效果验证。我在这个项目中同时承担系统架构、嵌入式开发、信号处理和视觉叙事。
+          </p>
+          <div class="cta-row reveal">
+            <a class="btn primary magnetic" href="#gallery">Visual Narrative →</a>
+            <a class="btn magnetic" href="#system">System Architecture →</a>
+          </div>
+        </div>
+        <div class="hero-media reveal">
+          <div class="image-card tall magnetic">
+            <img src="./assets/realistic-rendering.jpg" alt="Meditation Tent realistic rendering" />
+            <div class="image-overlay">
+              <div class="image-kicker">V2 Vision</div>
+              <h3 class="image-title">呼吸驱动整个空间的光影。</h3>
+              <p class="image-caption">V2 阶段的目标渲染——非接触式呼吸感知与空间灯光系统联动，使用者的每次呼吸都被转化为环境反馈。</p>
+            </div>
+          </div>
+          <div class="hero-stack">
+            <div class="meta-card magnetic">
+              <div class="meta-label">Role</div>
+              <div class="meta-value">系统架构 · 嵌入式原型 · 信号处理 · 视觉联动</div>
+              <div class="meta-small">独立完成从传感采集到空间表达的全链路开发。</div>
+            </div>
+            <div class="image-card short magnetic">
+              <img src="./assets/main-visualization.png" alt="Main visualization output" />
+              <div class="image-overlay">
+                <div class="image-kicker">Realtime output</div>
+                <p class="image-caption">呼吸算法输出经纹理化处理后的视觉形态。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ OVERVIEW ════ -->
+    <section id="overview">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">Project overview</span>
+          <h2 class="section-title">给神经系统<br/>一个安静的接口。</h2>
+        </div>
+        <div class="section-desc">
+          Meditation Tent 是一套交互装置系统。早期版本通过腰带压力传感和 HRV 手环探索生理输入与反馈映射，后期引入毫米波雷达做非接触呼吸检测，最终通过灯光与实时视觉构建空间级反馈。HRV 手环始终保留——它的角色是效能验证：评估装置是否帮助使用者降低焦虑、提升副交感神经活跃度，形成"体验层 + 验证层"的双层架构。
+        </div>
+      </div>
+
+      <div class="editorial-grid">
+        <article class="card span-2r reveal magnetic">
+          <div class="big-number">01</div>
+          <h3>项目的核心判断</h3>
+          <p>多数冥想类装置停留在视觉氛围层面，体验柔和，反馈却缺少个体化。真正能帮助使用者进入状态的，是"自身生理节律被准确感知并被即时回应"——所以整个项目围绕一个工程问题展开：如何把看不见的呼吸与自主神经状态，转成可被身体理解的空间反馈。</p>
+        </article>
+
+        <article class="card reveal magnetic">
+          <div class="meta-label">体验闭环</div>
+          <h3>Experience Loop</h3>
+          <p>进入装置 → 被感知 → 获得反馈 → 节律趋稳 → 状态改善 → 数据验证。一个完整闭环，每个环节对应明确的技术实现。</p>
+        </article>
+
+        <article class="card reveal magnetic">
+          <div class="meta-label">视觉语言</div>
+          <h3>Dark + Signal Orange</h3>
+          <p>黑色承接空间沉浸感，橙色作为生理信号流动的视觉隐喻——同时带有仪器感和情绪温度。</p>
+        </article>
+
+        <article class="card span-2c reveal magnetic">
+          <div class="meta-label">系统定位</div>
+          <h3>可测量的身心交互界面</h3>
+          <p>同时关心量的身心交互界面</h3>
+          <p>同时关心两件事：它是否足够打动人，它是否真的产生了生理层面的积极效果。前者需要空间设计与视觉表达，标闭环。两条线始终同步推进。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ════ GALLERY ════ -->
+    <section id="gallery">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">Visual narrative</span>
+          <h2 class="section-title">空间、原型、<br/>测试与验证。</h2>
+        </div>
+        <div class="section-desc">
+          从最终空间效果图、真实搭建现场、用户测试到结构拆解——每张图片对应项目推进中的一个具体阶段。
+        </div>
+      </div>
+
+      <div class="image-grid">
+        <div class="image-card tall reveal magnetic">
+          <img src="./assets/live-action.jpg" alt="Live-action meditation tent setup" />
+          <div class="image-overlay">
+            <div class="image-kicker">实景搭建</div>
+            <h3 class="image-title">装置已经是一个房间。</h3>
+            <p class="image-caption">半围合白色空间、坐垫、植物与投影光影构成体验现场。项目已从概念推进到可感知的空间原型。</p>
+          </div>
+        </div>
+        <div class="image-strip">
+          <div class="image-card medium reveal magnetic">
+            <img src="./assets/场景图.png" alt="Scene rendering" />
+            <div class="image-overlay">
+              <div class="image-kicker">场景渲染</div>
+              <p class="image-caption">产品放回自然环境，强调"庇护 / 隔离 / 沉静"的空间语义。</p>
+            </div>
+          </div>
+          <div class="image-card medium reveal magnetic">
+            <img src="./assets/照明设计.png" alt="Lighting design" />
+            <div class="image-overlay">
+              <div class="image-kicker">照明设计</div>
+              <p class="image-caption">光线作为心理引导介质，体现"内向凝视"的体验目标。</p>
+            </div>
+          </div>
+          <div class="image-card medium reveal magnetic">
+            <img src="./assets/demo实景用户体验测试.png" alt="Demo user testing" />
+            <div class="image-overlay">
+              <div class="image-kicker">早期 Demo</div>
+              <p class="image-caption">装置在黑暗环境中完成的第一轮体验验证。</p>
+            </div>
+          </div>
+          <div class="image-card medium reveal magnetic">
+            <img src="./assets/灵感来源.png" alt="Inspiration" />
+            <div class="image-overlay">
+              <div class="image-kicker">灵感参照</div>
+              <p class="image-caption">东方建筑白墙黑瓦的包裹感，转译为当代装置语言。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ SYSTEM ════ -->
+    <section id="system">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">System architecture</span>
+          <h2 class="section-title">从身体信号<br/>到空间响应。</h2>
+        </div>
+        <div class="section-desc">
+          装置拆成五层：感知、解算、通信、表现、评估。分层架构让系统可以在原型阶段快速替换输入方式和输出媒介——接触式与非接触式方案共存，体验反馈与验证机制同时成立。
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card reveal magnetic">
+          <div class="meta-label">Architecture</div>
+          <h3>五层栈</h3>
+          <ul>
+            <li><strong>感知层</strong> — 腰带压力传感 / HRV 手环 / 毫米波雷达</li>
+            <li><strong>解算层</strong> — 低通滤波 / ACF / Hilbert / 置信度 / 伪影复位</li>
+            <li><strong>通信层</strong> — ESP32 蓝牙串口 JSON 数据流</li>
+            <li><strong>表现层</strong> — 灯光映射 / TouchDesigner 视觉联动 / 空间渲染</li>
+            <li><strong>评估层</strong> — HRV 时域指标 · 焦虑缓解 · 副交感活跃度验证</li>
+          </ul>
+        </div>
+        <div class="code-block reveal">
+[SENSING]
+waist pressure / HRV wristband / mmWave radar
+      ↓
+[SIGNAL PROCESSING]
+low-pass → ACF → Hilbert → confidence → artifact reset
+      ↓
+[TRANSPORT]
+ESP32 + Bluetooth Serial → JSON stream
+      ↓
+[EXPERIENCE OUTPUT]
+LED mapping / generative visual / spatial ambient
+      ↓
+[EVALUATION]
+HRV validation / anxiety relief evidence
+        </div>
+      </div>
+
+      <div class="image-grid" style="margin-top: 22px;">
+        <div class="image-card medium reveal magnetic">
+          <img src="./assets/产品流程图.png" alt="Product flow diagram" />
+          <div class="image-overlay">
+            <div class="image-kicker">产品链路</div>
+            <h3 class="image-title">模块化的产品逻辑。</h3>
+            <p class="image-caption">毫米波雷达、可穿戴设备、呼吸心率监测、环境声、灯光与冥想状态报告，串联在同一条产品链路中。</p>
+          </div>
+        </div>
+        <div class="image-strip">
+          <div class="image-card medium reveal magnetic">
+            <img src="./assets/爆炸图带说明.png" alt="Exploded view" />
+            <div class="image-overlay">
+              <div class="image-kicker">装配爆炸图</div>
+              <p class="image-caption">篷布、碳纤维帐杆、风绳、地钉、音响与交互界面逐层展开。</p>
+            </div>
+          </div>
+          <div class="image-card medium reveal magnetic">
+            <img src="./assets/结构图.png" alt="Structural diagram" />
+            <div class="image-overlay">
+              <div class="image-kicker">结构工程</div>
+              <p class="image-caption">可搭建的杆件系统，装置有明确的物理结构支撑。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="svg-grid">
+        <article class="svg-card card reveal magnetic">
+          <div class="svg-frame">
+            <object data="./assets/svg_01_system_architecture.svg" type="image/svg+xml" aria-label="System architecture">
+              <img src="./assets/svg_01_system_architecture.svg" alt="System architecture diagram" />
+            </object>
+          </div>
+          <div style="padding: 20px;">
+            <div class="image-kicker">Diagram 01</div>
+            <h3 class="image-title">系统总览</h3>
+            <p class="image-caption">感知层、解算层、通信层、表现层和评估层的完整架构图。</p>
+          </div>
+        </article>
+
+        <article class="svg-card card reveal magnetic">
+          <div class="svg-frame">
+            <object data="./assets/svg_02_signal_algorithm.svg" type="image/svg+xml" aria-label="Signal algorithm">
+              <img src="./assets/svg_02_signal_algorithm.svg" alt="Signal algorithm diagram" />
+            </object>
+          </div>
+          <div style="padding: 20px;">
+            <div class="image-kicker">Diagram 02</div>
+            <h3 class="image-title">信号算法</h3>
+            <p class="image-caption">呼吸估计的工程核心：滤波 → ACF → Hilbert → 置信度 → 伪影处理。</p>
+          </div>
+        </article>
+
+        <article class="svg-card card reveal magnetic">
+          <div class="svg-frame">
+            <object data="./assets/svg_03_hardware_topology.svg" type="image/svg+xml" aria-label="Hardware topology">
+              <img src="./assets/svg_03_hardware_topology.svg" alt="Hardware topology diagram" />
+            </object>
+          </div>
+          <div style="padding: 20px;">
+            <div class="image-kicker">Diagram 03</div>
+            <h3 class="image-title">硬件拓扑</h3>
+            <p class="image-caption">毫米波雷达、ESP32、蓝牙串口、TouchDesigner 与 HRV 验证支线的完整连接关系。</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ════ THINKING ════ -->
+    <section id="thinking">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">Developer thinking</span>
+          <h2 class="section-title">关键判断，<br/>公开展示。</h2>
+        </div>
+        <div class="section-desc">
+          展示结果，也展示决策。交互装置里真正有价值的，是为什么在某个阶段选择某种方案、为什么保留某条支线、为什么把美学判断和工程约束放在一起权衡。
+        </div>
+      </div>
+
+      <div class="editorial-grid">
+        <article class="card reveal magnetic">
+          <div class="big-number">A</div>
+          <h3>接触式 / 非接触式共存</h3>
+          <p>毫米波雷达减少穿戴摩擦，让体验更自然——适合最终装置。HRV 手环回答另一个问题：体验是否有效。一个降低交互门槛，一个提高证据密度。</p>
+        </article>
+
+        <article class="card span-2c reveal magnetic">
+          <div class="big-number">B</div>
+          <h3>把"疗愈感"翻译成工程指标</h3>
+          <p>氛围、沉浸、放松——这些感性描述需要对应到可跟踪变量：呼吸频率是否趋于稳定、视觉响应延迟是否足够低、伪影是否会破坏体验连续性、HRV 是否出现副交感活跃度相关的积极变化。感性目标翻译成技术指标，项目才能被推进和迭代。</p>
+        </article>
+
+        <article class="card span-2r reveal magnetic">
+          <div class="big-number">C</div>
+          <h3>空间反馈需要节律逻辑</h3>
+          <p>视觉系统对噪声、抖动和过度敏感做了抑制。反馈像呼吸一样有张有弛——视觉平滑度、灯光渐变曲线、数据置信度阈值，全部属于体验设计的工程表达。</p>
+        </article>
+
+        <article class="card reveal magnetic">
+          <div class="meta-label">美学选择</div>
+          <h3>Why orange on black</h3>
+          <p>黑色承载安静，橙色像热量、脉搏和被点亮的神经信号。同时具有仪器感和情绪温度。</p>
+        </article>
+
+        <article class="card reveal magnetic">
+          <div class="meta-label">工程选择</div>
+          <h3>Why modular layers</h3>
+          <p>原型阶段输入设备和输出媒介都在迭代。分层架构让系统替换成本更低，验证路径更清晰。</p>
+        </article>
+      </div>
+
+      <div class="image-grid" style="margin-top: 22px;">
+        <div class="image-card medium reveal magnetic">
+          <img src="./assets/设计推演路径2.png" alt="Design iteration path" />
+          <div class="image-overlay">
+            <div class="image-kicker">推演路径</div>
+            <h3 class="image-title">从田野观察到系统整合。</h3>
+            <p class="image-caption">绘画实践、田野观察、原型制作、用户研究、呼吸灯实验与整合设计串成一条推理链。</p>
+          </div>
+        </div>
+        <div class="image-strip">
+          <div class="image-card medium reveal magnetic">
+            <img src="./assets/早期单LED呼吸灯用户体验测试.png" alt="Early LED breathing light test" />
+            <div class="image-overlay">
+              <div class="image-kicker">最小可验证反馈</div>
+              <p class="image-caption">单 LED 呼吸灯测试——从最小交互单元开始验证体验假设。</p>
+            </div>
+          </div>
+          <div class="image-card medium reveal magnetic">
+            <img src="./assets/HRV手环滤波解析算法调试（仅用于档案查看）.jpg" alt="HRV wristband signal debugging" />
+            <div class="image-overlay">
+              <div class="image-kicker">信号调试</div>
+              <p class="image-caption">硬件原型、实时波形与 HRV 时域分析同框的开发现场。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ QUOTE ════ -->
+    <section>
+      <div class="quote reveal magnetic">
+        <small>Design principle</small>
+        <p>美学建立吸引力。产品思维组织体验路径。工程思维让一切可运行、可测量、可迭代。</p>
+      </div>
+    </section>
+
+    <!-- ════ VALIDATION ════ -->
+    <section>
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">Validation</span>
+          <h2 class="section-title">它有效吗？</h2>
+        </div>
+        <div class="section-desc">
+          多数交互装置到"体验很好"就结束了。这个项目多做了一步：HRV 手环纳入验证闭环，观察装置与焦虑缓解、副交感神经活跃度提升之间的关联。在最终版本中，HRV 继续作为系统的评估接口存在。
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card reveal magnetic">
+          <div class="stat-num">01</div>
+          <h4>Experience Layer</h4>
+          <p>毫米波雷达与空间视觉负责无负担的体验入口，降低穿戴摩擦，让使用者自然进入状态。</p>
+        </div>
+        <div class="stat-card reveal magnetic">
+          <div class="stat-num">02</div>
+          <h4>Validation Layer</h4>
+          <p>HRV 手环提供时域生理指标，检测副交感活跃度是否在体验过程中出现积极变化。</p>
+        </div>
+        <div class="stat-card reveal magnetic">
+          <div class="stat-num">03</div>
+          <h4>Product Layer</h4>
+          <p>体验与验证同时纳入，装置从"氛围设备"升级为"可评估的身心交互界面"。</p>
+        </div>
+      </div>
+
+      <div class="image-grid" style="margin-top: 22px;">
+        <div class="image-card medium reveal magnetic">
+          <img src="./assets/HRV检测有效性测试.jpeg" alt="HRV effectiveness test" />
+          <div class="image-overlay">
+            <div class="image-kicker">效能验证</div>
+            <h3 class="image-title">HRV 是证据层。</h3>
+            <p class="image-caption">使用者在冥想垫上体验，旁边电脑显示实时生理曲线。手环用于检测装置对焦虑缓解和副交感神经活跃度的影响。</p>
+          </div>
+        </div>
+        <div class="image-card medium reveal magnetic">
+          <img src="./assets/main-visualization.png" alt="Main visualization" />
+          <div class="image-overlay">
+            <div class="image-kicker">输出层</div>
+            <p class="image-caption">验证层回答"是否有效"，视觉层回答"如何被感知"。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ TIMELINE ════ -->
+    <section>
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">Version evolution</span>
+          <h2 class="section-title">从原型到系统。</h2>
+        </div>
+        <div class="section-desc">
+          项目经历了产品概念设计、硬件验证、呼吸灯体验测试、HRV 有效性探索，再到毫米波雷达与 TouchDesigner 视觉联动。每个版本回答更具体的问题。
+        </div>
+      </div>
+
+      <div class="timeline reveal">
+        <div class="timeline-item magnetic">
+          <div class="timeline-year">V1 / Concept</div>
+          <div>
+            <div class="timeline-title">空间冥想 → 产品原型</div>
+            <div class="section-desc">结构设计、场景表达、交互路径与物理形态。核心叙事："身体进入一个被回应的空间"。</div>
+          </div>
+        </div>
+        <div class="timeline-item magnetic">
+          <div class="timeline-year">V1 / Sensing</div>
+          <div>
+            <div class="timeline-title">腰带压力映射 + HRV 手环验证</div>
+            <div class="section-desc">穿戴式输入探索呼吸与状态反馈的映射关系。同步引入 HRV 手环建立焦虑缓解和副交感活跃度的验证方向。</div>
+          </div>
+        </div>
+        <div class="timeline-item magnetic">
+          <div class="timeline-year">V2 / Radar</div>
+          <div>
+            <div class="timeline-title">毫米波雷达 + ESP32 + 蓝牙数据流</div>
+            <div class="section-desc">非接触式呼吸检测。嵌入式侧完成滤波、呼吸率估计、置信度与伪影处理，JSON 数据送往外部视觉系统。</div>
+          </div>
+        </div>
+        <div class="timeline-item magnetic">
+          <div class="timeline-year">V2 / Spatial</div>
+          <div>
+            <div class="timeline-title">TouchDesigner 视觉联动 + 空间沉浸</div>
+            <div class="section-desc">感知数据扩展为环境反馈——改变整个空间的呼吸节律，使用者与装置形成共振。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ STACK ════ -->
+    <section id="stack">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">Tooling &amp; Stack</span>
+          <h2 class="section-title">安静背后的<br/>技术栈。</h2>
+        </div>
+        <div class="section-desc">
+          每个模块对应我在项目里真实承担的工程职责。核心关注点：不同学科如何被组织成一个能交付的系统。
+        </div>
+      </div>
+
+      <div class="stack-grid">
+        <article class="tool reveal magnetic">
+          <div class="tool-kicker">Embedded</div>
+          <h4>ESP32 / Arduino C++</h4>
+          <p>传感器连接、串口数据读取、滤波与节律估计、蓝牙输出控制。保证实时性与数据稳定性。</p>
+        </article>
+        <article class="tool reveal magnetic">
+          <div class="tool-kicker">Signal</div>
+          <h4>Breath + HRV</h4>
+          <p>呼吸率检测驱动体验，HRV 验证效果。装置从"有感觉"推进到"有证据"。</p>
+        </article>
+        <article class="tool reveal magnetic">
+          <div class="tool-kicker">Realtime</div>
+          <h4>TouchDesigner</h4>
+          <p>承接实时数据，生成空间视觉反馈，将身体节律放大为环境节律。</p>
+        </article>
+        <article class="tool reveal magnetic">
+          <div class="tool-kicker">Product</div>
+          <h4>Interaction Design</h4>
+          <p>进入方式、节奏递进、反馈语言与验证机制，构成完整体验路径。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ════ FRAMING ════ -->
+    <section>
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">Portfolio framing</span>
+          <h2 class="section-title">这个项目说明了<br/>什么。</h2>
+        </div>
+        <div class="section-desc">
+          我擅长把跨学科项目收束成一个有判断力的整体：知道什么时候强调叙事，什么时候把体验拆成模块，什么时候需要实验数据来支撑设计直觉。
+        </div>
+      </div>
+
+      <div class="editorial-grid">
+        <article class="card reveal magnetic">
+          <div class="big-number">01</div>
+          <h3>为情感清晰度设计</h3>
+          <p>关心装置给人的第一感受。视觉、排版、节奏、材质语义——体验的每一层都需要被设计。</p>
+        </article>
+        <article class="card reveal magnetic">
+          <div class="big-number">02</div>
+          <h3>为技术可信度构建</h3>
+          <p>原型能跑、能连、能调、能解释、能继续迭代。工程可靠性是体验可信度的前提。</p>
+        </article>
+        <article class="card span-2c reveal magnetic">
+          <div class="big-number">03</div>
+          <h3>以系统视角思考</h3>
+          <p>输入信号、处理逻辑、输出媒介、用户状态、环境语义和评估指标——必须在同一张图里被理解。Meditation Tent 就是那张图。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ════ CONTACT ════ -->
+    <section id="contact">
+      <div class="contact-grid">
+        <div class="contact-card reveal magnetic">
+          <span class="eyebrow">Contact</span>
+          <h3>聊聊下一个<br/>交互系统。</h3>
+          <p>如果你在寻找一个能同时处理实时系统、组织视觉叙事、把产品验证纳入体验设计的人——这类项目正是我的工作语境。</p>
+          <div class="contact-list">
+            <a href="mailto:hello@example.com" class="contact-line magnetic"><span>Email</span><span>hello@example.com</span></a>
+            <a href="#" class="contact-line magnetic"><span>Portfolio</span><span>Available on request</span></a>
+            <a href="#hero" class="contact-line magnetic"><span>Back to top</span><span>↑</span></a>
+          </div>
+        </div>
+        <div class="contact-card reveal magnetic">
+          <span class="eyebrow">Keywords</span>
+          <h3>Interactive Systems ·<br/>Biosensing · Spatial Media</h3>
+          <p>Creative Technology / Embedded Prototyping / Human-Centered Systems / Editorial Web / Experience Validation</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="footer-note">Meditation Tent — Interactive Installation Portfolio</div>
+
+  <script>
+    /* ── Custom cursor ── */
+    const cursor = document.querySelector('.cursor');
+    const cursorDot = document.querySelector('.cursor-dot');
+    const hoverTargets = document.querySelectorAll('a, .magnetic');
+    let mouseX = innerWidth / 2, mouseY = innerHeight / 2;
+    let cursorX = mouseX, cursorY = mouseY;
+    let dotX = mouseX, dotY = mouseY;
+
+    if (!matchMedia('(pointer: coarse)').matches) {
+      addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+      hoverTargets.forEach(el => {
+        el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+        el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+      });
+      (function tick() {
+        cursorX += (mouseX - cursorX) * 0.13;
+        cursorY += (mouseY - cursorY) * 0.13;
+        dotX += (mouseX - dotX) * 0.26;
+        dotY += (mouseY - dotY) * 0.26;
+        cursor.style.transform = `translate(${cursorX}px,${cursorY}px) translate(-50%,-50%)`;
+        cursorDot.style.transform = `translate(${dotX}px,${dotY}px) translate(-50%,-50%)`;
+        requestAnimationFrame(tick);
+      })();
+    }
+
+    /* ── Scroll reveal ── */
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -4% 0px' });
+
+    document.querySelectorAll('.reveal').forEach((el, i) => {
+      el.style.transitionDelay = `${Math.min(i * 40, 300)}ms`;
+      obs.observe(el);
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560" font-family="Georgia, 'Times New Roman', serif">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a"/>
+      <stop offset="100%" style="stop-color:#070707"/>
+    </linearGradient>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="waveGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="waveClip1"><rect x="0" y="0" width="180" height="70"/></clipPath>
+    <clipPath id="waveClip2"><rect x="0" y="0" width="180" height="70"/></clipPath>
+    <clipPath id="waveClip3"><rect x="0" y="0" width="180" height="70"/></clipPath>
+    <clipPath id="waveClip4"><rect x="0" y="0" width="180" height="70"/></clipPath>
+    <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(255,106,0,0.7)"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="560" fill="url(#bg2)"/>
+  <pattern id="grid2" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.018)" stroke-width="0.5"/>
+  </pattern>
+  <rect width="1200" height="560" fill="url(#grid2)"/>
+  <radialGradient id="amb2" cx="15%" cy="90%" r="35%">
+    <stop offset="0%" style="stop-color:rgba(255,106,0,0.1)"/>
+    <stop offset="100%" style="stop-color:rgba(0,0,0,0)"/>
+  </radialGradient>
+  <rect width="1200" height="560" fill="url(#amb2)"/>
+
+  <!-- Header -->
+  <text x="52" y="54" fill="rgba(255,106,0,0.9)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="3">SIGNAL PROCESSING PIPELINE</text>
+  <text x="52" y="88" fill="#f5f1ea" font-size="32" letter-spacing="-1.5">Breath Algorithm</text>
+  <text x="52" y="108" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" letter-spacing="0.5">DiffACF + Hilbert + KeyAnnotation  ·  50Hz sampling  ·  700-point window</text>
+
+  <!-- ═══ STAGE 1: RAW PHASE ═══ -->
+  <g transform="translate(52, 146)">
+    <rect x="0" y="0" width="200" height="140" rx="16" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <text x="16" y="22" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">RAW</text>
+    <text x="16" y="44" fill="#f5f1ea" font-size="15" letter-spacing="-0.5">雷达相位</text>
+
+    <!-- Noisy sine wave -->
+    <g transform="translate(10, 60)" clip-path="url(#waveClip1)">
+      <polyline points="
+        0,35 6,28 8,40 12,18 16,42 20,22 24,38 28,14 32,44 36,20 40,36 44,12 48,40 52,24 56,38 60,16 64,42 68,22 72,34 76,18 80,40 84,26 88,36 92,14 96,42 100,20 104,36 108,12 112,44 116,22 120,36 124,18 128,40 132,28 136,34 140,14 144,42 148,24 152,38 156,16 160,40 164,26 168,34 172,18 176,38 180,26"
+        fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+    </g>
+    <text x="16" y="128" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">noisy / artifact-prone</text>
+  </g>
+
+  <!-- Arrow 1→2 -->
+  <g transform="translate(258, 200)">
+    <line x1="0" y1="0" x2="44" y2="0" stroke="rgba(255,106,0,0.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="8" y="-8" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1">filter</text>
+  </g>
+
+  <!-- ═══ STAGE 2: LOW-PASS ═══ -->
+  <g transform="translate(308, 146)">
+    <rect x="0" y="0" width="200" height="140" rx="16" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <text x="16" y="22" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">STAGE 01</text>
+    <text x="16" y="44" fill="#f5f1ea" font-size="15" letter-spacing="-0.5">低通滤波</text>
+
+    <!-- Smoothed sine wave -->
+    <g transform="translate(10, 60)" clip-path="url(#waveClip2)">
+      <path d="M0,35 C15,10 30,8 45,30 C60,52 75,54 90,32 C105,10 120,8 135,30 C150,52 165,54 180,32"
+        fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2"/>
+    </g>
+    <text x="16" y="122" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">fc ≈ 0.8 Hz</text>
+    <text x="16" y="136" fill="rgba(255,255,255,0.15)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10">artifact cleared</text>
+  </g>
+
+  <!-- Arrow 2→3 -->
+  <g transform="translate(514, 200)">
+    <line x1="0" y1="0" x2="44" y2="0" stroke="rgba(255,106,0,0.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="4" y="-8" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1">ACF</text>
+  </g>
+
+  <!-- ═══ STAGE 3: DIFF ACF ═══ -->
+  <g transform="translate(564, 146)">
+    <rect x="0" y="0" width="200" height="140" rx="16" fill="rgba(255,106,0,0.06)" stroke="rgba(255,106,0,0.3)" stroke-width="1"/>
+    <text x="16" y="22" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">STAGE 02</text>
+    <text x="16" y="44" fill="#f5f1ea" font-size="15" letter-spacing="-0.5">差分自相关</text>
+
+    <!-- ACF shape: decaying cosine -->
+    <g transform="translate(10, 56)">
+      <line x1="0" y1="40" x2="180" y2="40" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <path d="M0,40 C20,5 40,5 60,40 C80,75 100,75 120,40 C140,5 160,5 180,40"
+        fill="none" stroke="#ff6a00" stroke-width="2" opacity="0.8" filter="url(#glow2)"/>
+      <!-- Peak marker -->
+      <line x1="60" y1="5" x2="60" y2="75" stroke="rgba(255,106,0,0.3)" stroke-width="1" stroke-dasharray="3 4"/>
+      <text x="58" y="16" fill="rgba(255,106,0,0.8)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" text-anchor="middle">lag*</text>
+    </g>
+    <text x="16" y="122" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">lag 100~375 pts</text>
+    <text x="16" y="136" fill="rgba(255,255,255,0.15)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10">→ 9~30 bpm candidate</text>
+  </g>
+
+  <!-- Arrow 3→4 -->
+  <g transform="translate(770, 200)">
+    <line x1="0" y1="0" x2="44" y2="0" stroke="rgba(255,106,0,0.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="2" y="-8" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1">Hilbert</text>
+  </g>
+
+  <!-- ═══ STAGE 4: HILBERT ═══ -->
+  <g transform="translate(820, 146)">
+    <rect x="0" y="0" width="200" height="140" rx="16" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <text x="16" y="22" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">STAGE 03</text>
+    <text x="16" y="44" fill="#f5f1ea" font-size="15" letter-spacing="-0.5">Hilbert 变换</text>
+
+    <!-- Phase envelope -->
+    <g transform="translate(10, 56)">
+      <path d="M0,35 C15,12 30,10 45,32 C60,54 75,56 90,34 C105,12 120,10 135,32 C150,54 165,54 180,34"
+        fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <!-- Envelope -->
+      <path d="M0,12 C45,8 90,8 135,10 C150,10 165,11 180,12"
+        fill="none" stroke="#ff6a00" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.8"/>
+      <path d="M0,58 C45,62 90,62 135,60 C150,60 165,59 180,58"
+        fill="none" stroke="#ff6a00" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.8"/>
+    </g>
+    <text x="16" y="122" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11">amplitude + phase</text>
+    <text x="16" y="136" fill="rgba(255,255,255,0.15)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10">stability check</text>
+  </g>
+
+  <!-- Arrow 4→5 (down) -->
+  <g transform="translate(920, 292)">
+    <line x1="0" y1="0" x2="0" y2="44" stroke="rgba(255,106,0,0.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+  </g>
+
+  <!-- ═══ OUTPUT: CONFIDENCE + JSON ═══ -->
+  <g transform="translate(52, 336)">
+    <!-- Full-width output bar -->
+    <rect x="0" y="0" width="968" height="100" rx="16" fill="rgba(255,106,0,0.05)" stroke="rgba(255,106,0,0.2)" stroke-width="1"/>
+
+    <!-- Output metrics -->
+    <text x="24" y="28" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">OUTPUT METRICS — 10Hz JSON STREAM</text>
+
+    <!-- Metric chips -->
+    <g transform="translate(24, 44)">
+      <!-- br -->
+      <rect x="0" y="0" width="106" height="36" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,106,0,0.25)" stroke-width="1"/>
+      <text x="12" y="14" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="1.5">BR</text>
+      <text x="12" y="30" fill="#f5f1ea" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">9–50 bpm</text>
+
+      <!-- conf -->
+      <rect x="118" y="0" width="106" height="36" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="130" y="14" fill="rgba(255,255,255,0.3)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="1.5">CONF</text>
+      <text x="130" y="30" fill="#d0cbc3" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">0.0 – 1.0</text>
+
+      <!-- amp -->
+      <rect x="236" y="0" width="106" height="36" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="248" y="14" fill="rgba(255,255,255,0.3)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="1.5">AMP</text>
+      <text x="248" y="30" fill="#d0cbc3" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">rad</text>
+
+      <!-- cv -->
+      <rect x="354" y="0" width="106" height="36" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="366" y="14" fill="rgba(255,255,255,0.3)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="1.5">CV</text>
+      <text x="366" y="30" fill="#d0cbc3" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">variability</text>
+
+      <!-- score -->
+      <rect x="472" y="0" width="140" height="36" rx="8" fill="rgba(255,106,0,0.08)" stroke="rgba(255,106,0,0.3)" stroke-width="1"/>
+      <text x="484" y="14" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="1.5">SCORE</text>
+      <text x="484" y="30" fill="#ff6a00" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">amp × conf_acf</text>
+
+      <!-- hil_ph -->
+      <rect x="624" y="0" width="106" height="36" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="636" y="14" fill="rgba(255,255,255,0.3)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="1.5">HIL_PH</text>
+      <text x="636" y="30" fill="#d0cbc3" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">phase</text>
+
+      <!-- lag_err -->
+      <rect x="742" y="0" width="150" height="36" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="754" y="14" fill="rgba(255,255,255,0.3)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="1.5">LAG_ERR</text>
+      <text x="754" y="30" fill="#d0cbc3" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">key annotation</text>
+    </g>
+  </g>
+
+  <!-- Arrow output to TouchDesigner -->
+  <g transform="translate(1026, 386)">
+    <line x1="0" y1="0" x2="74" y2="0" stroke="rgba(255,106,0,0.5)" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+  </g>
+
+  <!-- TD box -->
+  <g transform="translate(1106, 352)">
+    <rect x="0" y="0" width="82" height="68" rx="12" fill="rgba(255,106,0,0.1)" stroke="rgba(255,106,0,0.4)" stroke-width="1"/>
+    <text x="12" y="26" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1">TOUCH</text>
+    <text x="12" y="44" fill="#ff6a00" font-size="16" letter-spacing="-1">TD</text>
+    <text x="12" y="60" fill="rgba(255,106,0,0.5)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9">visual</text>
+  </g>
+
+  <!-- Button annotation -->
+  <g transform="translate(52, 460)">
+    <rect x="0" y="0" width="500" height="64" rx="12" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <text x="16" y="22" fill="rgba(255,106,0,0.5)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">KEY ANNOTATION — GROUND TRUTH CHANNEL</text>
+    <text x="16" y="46" fill="#706a62" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13">按键时间戳 → br_key → lag_err_pct 误差对比 → 算法验证基准</text>
+  </g>
+
+  <!-- Bottom label -->
+  <text x="52" y="536" fill="rgba(255,255,255,0.12)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" letter-spacing="2">MEDITATION TENT — BREATH SIGNAL ALGORITHM</text>
+  <text x="1148" y="536" fill="rgba(255,255,255,0.1)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" text-anchor="end">02 / 03</text>
+</svg>

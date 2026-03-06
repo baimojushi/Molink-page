@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560" font-family="Georgia, 'Times New Roman', serif">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#090909"/>
+      <stop offset="100%" style="stop-color:#060606"/>
+    </linearGradient>
+    <filter id="g3">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="g3soft">
+      <feGaussianBlur stdDeviation="10" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arH" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,106,0,0.85)"/>
+    </marker>
+    <marker id="arHmuted" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,0.25)"/>
+    </marker>
+    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:rgba(255,106,0,0.35)"/>
+      <stop offset="100%" style="stop-color:rgba(255,106,0,0)"/>
+    </radialGradient>
+    <radialGradient id="esp32Glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:rgba(255,106,0,0.5)"/>
+      <stop offset="100%" style="stop-color:rgba(255,106,0,0)"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="560" fill="url(#bg3)"/>
+  <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+    <circle cx="12" cy="12" r="0.8" fill="rgba(255,255,255,0.055)"/>
+  </pattern>
+  <rect width="1200" height="560" fill="url(#dots)"/>
+
+  <!-- Header -->
+  <text x="52" y="54" fill="rgba(255,106,0,0.9)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="3">HARDWARE TOPOLOGY</text>
+  <text x="52" y="88" fill="#f5f1ea" font-size="32" letter-spacing="-1.5">System Wiring</text>
+  <text x="52" y="108" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" letter-spacing="0.5">ESP32 · mmWave Radar · Bluetooth Serial · TouchDesigner · HRV Wristband</text>
+
+  <!-- ══════ NODES ══════ -->
+
+  <!-- NODE: mmWave Radar -->
+  <g transform="translate(68, 176)">
+    <circle cx="88" cy="88" r="84" fill="rgba(255,106,0,0.06)" stroke="rgba(255,106,0,0.25)" stroke-width="1"/>
+    <!-- Radar waves -->
+    <path d="M88,88 C88,50 130,40 148,68" fill="none" stroke="rgba(255,106,0,0.2)" stroke-width="1.5" stroke-dasharray="3 4"/>
+    <path d="M88,88 C88,38 144,22 168,60" fill="none" stroke="rgba(255,106,0,0.12)" stroke-width="1" stroke-dasharray="2 6"/>
+    <path d="M88,88 C88,26 158,4 188,52" fill="none" stroke="rgba(255,106,0,0.07)" stroke-width="0.8" stroke-dasharray="2 8"/>
+    <!-- Emit dot -->
+    <circle cx="88" cy="88" r="10" fill="rgba(255,106,0,0.15)" stroke="rgba(255,106,0,0.6)" stroke-width="1.5"/>
+    <circle cx="88" cy="88" r="4" fill="#ff6a00" filter="url(#g3)"/>
+
+    <text x="88" y="140" fill="#f5f1ea" font-size="15" text-anchor="middle" letter-spacing="-0.5">毫米波雷达</text>
+    <text x="88" y="157" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" text-anchor="middle">mmWave Radar</text>
+
+    <!-- Pin detail -->
+    <rect x="24" y="168" width="128" height="20" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+    <text x="34" y="181" fill="rgba(255,255,255,0.25)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10">UART  1382400 baud</text>
+  </g>
+
+  <!-- Connection line: Radar → ESP32 -->
+  <line x1="240" y1="264" x2="370" y2="264" stroke="rgba(255,106,0,0.5)" stroke-width="2" marker-end="url(#arH)"/>
+  <rect x="250" y="248" width="100" height="18" rx="5" fill="rgba(255,106,0,0.08)" stroke="rgba(255,106,0,0.15)" stroke-width="0.5"/>
+  <text x="258" y="261" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1">RX16 / TX4</text>
+
+  <!-- NODE: ESP32 (center, primary) -->
+  <g transform="translate(372, 166)">
+    <!-- Glow halo -->
+    <circle cx="110" cy="98" r="110" fill="url(#esp32Glow)" opacity="0.5"/>
+    <!-- Box -->
+    <rect x="0" y="20" width="220" height="156" rx="20" fill="rgba(255,106,0,0.08)" stroke="rgba(255,106,0,0.5)" stroke-width="1.5"/>
+    <!-- Inner chip outline -->
+    <rect x="50" y="52" width="120" height="90" rx="10" fill="rgba(255,106,0,0.06)" stroke="rgba(255,106,0,0.2)" stroke-width="1" stroke-dasharray="4 3"/>
+    <!-- Chip label -->
+    <text x="110" y="86" fill="#ff6a00" font-size="14" text-anchor="middle" letter-spacing="2" filter="url(#g3)">ESP32</text>
+    <text x="110" y="104" fill="rgba(255,255,255,0.3)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" text-anchor="middle" letter-spacing="1.5">DUAL CORE</text>
+    <text x="110" y="122" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" text-anchor="middle">Core0: UART  Core1: BT</text>
+
+    <text x="110" y="194" fill="#f5f1ea" font-size="15" text-anchor="middle" letter-spacing="-0.5">主控单元</text>
+    <!-- Pin row bottom -->
+    <g transform="translate(14, 156)">
+      <line x1="0" y1="0" x2="192" y2="0" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+      <!-- Pin marks -->
+      <rect x="8" y="4" width="40" height="12" rx="3" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+      <text x="12" y="14" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="8">BTN_17</text>
+      <rect x="58" y="4" width="56" height="12" rx="3" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+      <text x="62" y="14" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="8">FreeRTOS</text>
+      <rect x="124" y="4" width="60" height="12" rx="3" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+      <text x="128" y="14" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="8">C++ Arduino</text>
+    </g>
+  </g>
+
+  <!-- Arrow: ESP32 → BT -->
+  <line x1="592" y1="264" x2="714" y2="264" stroke="rgba(255,106,0,0.5)" stroke-width="2" marker-end="url(#arH)"/>
+  <rect x="612" y="248" width="80" height="18" rx="5" fill="rgba(255,106,0,0.08)" stroke="rgba(255,106,0,0.15)" stroke-width="0.5"/>
+  <text x="620" y="261" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1">BT Serial</text>
+
+  <!-- NODE: Bluetooth -->
+  <g transform="translate(716, 206)">
+    <circle cx="64" cy="58" r="60" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+    <!-- BT symbol -->
+    <path d="M64,30 L80,46 L58,62 L80,78 L64,94 L64,62 L46,78" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- Signal arcs -->
+    <path d="M90,30 C110,44 110,72 90,86" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+    <path d="M100,20 C128,38 128,78 100,96" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+
+    <text x="64" y="134" fill="#f5f1ea" font-size="14" text-anchor="middle" letter-spacing="-0.5">蓝牙串口</text>
+    <text x="64" y="150" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" text-anchor="middle">Bluetooth Serial</text>
+    <rect x="10" y="158" width="108" height="18" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+    <text x="18" y="171" fill="rgba(255,255,255,0.22)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10">JSON · 10Hz stream</text>
+  </g>
+
+  <!-- Arrow: BT → TD -->
+  <line x1="908" y1="264" x2="1006" y2="264" stroke="rgba(255,106,0,0.5)" stroke-width="2" marker-end="url(#arH)"/>
+  <rect x="920" y="248" width="66" height="18" rx="5" fill="rgba(255,106,0,0.08)" stroke="rgba(255,106,0,0.15)" stroke-width="0.5"/>
+  <text x="928" y="261" fill="rgba(255,106,0,0.7)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1">wireless</text>
+
+  <!-- NODE: TouchDesigner -->
+  <g transform="translate(1008, 190)">
+    <rect x="0" y="0" width="160" height="148" rx="20" fill="rgba(255,106,0,0.06)" stroke="rgba(255,106,0,0.35)" stroke-width="1.5"/>
+    <!-- TD grid visualization -->
+    <g transform="translate(16, 16)" opacity="0.6">
+      <rect x="0" y="0" width="38" height="28" rx="5" fill="rgba(255,106,0,0.1)" stroke="rgba(255,106,0,0.3)" stroke-width="0.8"/>
+      <text x="6" y="18" fill="rgba(255,106,0,0.8)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9">CHOP</text>
+      <line x1="38" y1="14" x2="56" y2="14" stroke="rgba(255,106,0,0.4)" stroke-width="0.8" marker-end="url(#arH)"/>
+      <rect x="56" y="0" width="38" height="28" rx="5" fill="rgba(255,106,0,0.1)" stroke="rgba(255,106,0,0.3)" stroke-width="0.8"/>
+      <text x="62" y="18" fill="rgba(255,106,0,0.8)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9">TOP</text>
+      <line x1="75" y1="28" x2="75" y2="46" stroke="rgba(255,106,0,0.4)" stroke-width="0.8" marker-end="url(#arH)"/>
+      <rect x="56" y="46" width="38" height="28" rx="5" fill="rgba(255,106,0,0.15)" stroke="rgba(255,106,0,0.4)" stroke-width="0.8"/>
+      <text x="62" y="64" fill="#ff6a00" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9">OUT</text>
+    </g>
+    <text x="80" y="116" fill="#f5f1ea" font-size="14" text-anchor="middle" letter-spacing="-0.5">TouchDesigner</text>
+    <text x="80" y="133" fill="#a09a91" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" text-anchor="middle">实时视觉生成</text>
+  </g>
+
+  <!-- ── HRV branch (below, dashed) ── -->
+  <!-- Arrow: ESP32 down to HRV -->
+  <line x1="482" y1="342" x2="482" y2="404" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="4 5" marker-end="url(#arHmuted)"/>
+
+  <!-- HRV Wristband node -->
+  <g transform="translate(322, 408)">
+    <rect x="0" y="0" width="320" height="80" rx="14" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <!-- HRV icon (simple wrist + waveform) -->
+    <rect x="20" y="20" width="44" height="40" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+    <polyline points="26,40 32,36 36,44 40,28 44,50 48,34 52,40 56,38 62,40" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+
+    <text x="78" y="28" fill="rgba(255,106,0,0.6)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">EVALUATION LAYER</text>
+    <text x="78" y="48" fill="#f5f1ea" font-size="15" letter-spacing="-0.5">HRV 手环</text>
+    <text x="78" y="65" fill="#706a62" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12">焦虑缓解与副交感活跃度验证</text>
+  </g>
+
+  <!-- Dashed label on HRV line -->
+  <text x="492" y="376" fill="rgba(255,255,255,0.18)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="10" letter-spacing="1.5">VERIFY</text>
+
+  <!-- BTN annotation -->
+  <g transform="translate(372, 408)">
+    <!-- covered by HRV box, reposition -->
+  </g>
+
+  <!-- Button node (key annotation) -->
+  <g transform="translate(680, 408)">
+    <rect x="0" y="0" width="200" height="80" rx="14" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+    <!-- Button symbol -->
+    <circle cx="40" cy="40" r="22" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    <circle cx="40" cy="40" r="10" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+    <text x="76" y="28" fill="rgba(255,255,255,0.2)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="9" letter-spacing="2">KEY INPUT</text>
+    <text x="76" y="48" fill="#f5f1ea" font-size="15" letter-spacing="-0.5">物理按钮</text>
+    <text x="76" y="65" fill="#706a62" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12">GPIO 17 · ground truth</text>
+  </g>
+
+  <!-- Line: Button → ESP32 -->
+  <path d="M 780 408 Q 780 380 592 348" stroke="rgba(255,255,255,0.15)" stroke-width="1" fill="none" stroke-dasharray="3 5" marker-end="url(#arHmuted)"/>
+
+  <!-- Bottom label -->
+  <text x="52" y="536" fill="rgba(255,255,255,0.12)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" letter-spacing="2">MEDITATION TENT — HARDWARE TOPOLOGY v2.0</text>
+  <text x="1148" y="536" fill="rgba(255,255,255,0.1)" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" text-anchor="end">03 / 03</text>
+</svg>
