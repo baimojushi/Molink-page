@@ -69,21 +69,22 @@
     .cursor-ripple {
       position: fixed; pointer-events: none; z-index: 9997;
       border-radius: 50%;
-      background: rgba(255, 106, 0, 0.45);
+      background: rgba(255, 106, 0, 0.42);
       transform: translate(-50%, -50%);
-      animation: ripple-out 900ms cubic-bezier(.19,1,.22,1) forwards;
+      width: 4px; height: 4px;
+      animation: ripple-out 1200ms cubic-bezier(.19,1,.22,1) forwards;
     }
     @keyframes ripple-out {
-      0%   { width: 4px; height: 4px; opacity: 0.55; }
-      100% { width: 56px; height: 56px; opacity: 0; }
+      0%   { width: 4px; height: 4px; opacity: 0.50; }
+      60%  { opacity: 0.22; }
+      100% { width: 96px; height: 96px; opacity: 0; }
     }
 
-    /* ── Spread border overlay (JS-injected) ── */
+    /* ── Spread border overlay (JS-injected, transition managed by JS) ── */
     .spread-overlay {
-      position: absolute; inset: -1px; border-radius: inherit;
-      border: 1px solid var(--accent); opacity: 0;
+      position: absolute; inset: 0; border-radius: inherit;
+      border: 1.5px solid var(--accent); opacity: 0;
       pointer-events: none; z-index: 2;
-      transition: clip-path 580ms var(--ease), opacity 120ms;
       clip-path: circle(0% at 50% 50%);
     }
 
@@ -669,7 +670,7 @@
           <h2 class="section-title">木漏日——<br/>技术翻译为感知语言。</h2>
         </div>
         <div class="section-desc">
-          木漏日（Komorebi）——日语，阳光穿透树叶间隙在地面形成的光影交织。Meditation Tent 的投影系统将这个瞬间引入室内：毫米波雷达实时读取呼吸节律，将生理数据翻译为两条同步映射轨道。朝霞与晚霞的暖色，在东方文化中是最广泛共识的宁静时刻的视觉符码，与副交感神经激活状态之间存在跨文化的语义共鸣——选择朝霞色温作为放松状态的视觉奖励，这是文化语义与生理现实之间的对位，而不是装饰判断。
+          木漏日（Komorebi）——日语，阳光穿透树叶间隙在地面形成的光影交织。Meditation Tent 的投影系统将这个瞬间引入室内：毫米波雷达实时读取呼吸节律，将生理数据翻译为两条同步映射轨道。朝霞与晚霞的暖色是东方文化中宁静时刻最广泛的视觉符码，与副交感神经激活状态之间存在跨文化的语义共鸣——选择朝霞色温作为放松状态的视觉奖励，是文化语义与生理现实的对位，有其内在逻辑。
         </div>
       </div>
 
@@ -880,7 +881,7 @@
         <article class="card reveal magnetic">
           <div class="meta-label">视觉选择</div>
           <h3>为什么是朝霞的颜色</h3>
-          <p>投影光温随呼吸放缓趋向橙红——这不是配色决定，是映射逻辑的直接视觉结果。朝霞与晚霞是跨文化语境中最具共识的宁静时刻，副交感激活状态在视觉上自然找到了对应的语义位置。</p>
+          <p>投影光温随呼吸放缓趋向橙红——这是映射逻辑的直接视觉结果，不是配色决定。朝霞与晚霞在跨文化语境中是具有高度共识的宁静时刻符码，与副交感激活状态在视觉层面自然对应。</p>
         </article>
 
         <article class="card reveal magnetic">
@@ -914,7 +915,7 @@
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="信号调试"
                data-caption="硬件原型、实时波形与 HRV 时域分析同框的开发现场。">
-            <img src="./assets/HRV%E6%89%8B%E7%8E%AF%E6%BB%A4%E6%B3%A2%E8%A7%A3%E6%9E%90%E7%AE%97%E6%B3%95%E8%B0%83%E8%AF%95%EF%BC%88%E4%BB%85%E7%94%A8%E4%BA%8E%E6%A1%A3%E6%A1%88%E6%9F%A5%E7%9C%8B%EF%BC%89.jpg" alt="HRV wristband signal debugging" />
+            <img src="./assets/HRV手环滤波解析算法调试（仅用于档案查看）.jpg" alt="HRV wristband signal debugging" />
             <div class="image-overlay">
               <div class="image-kicker">信号调试</div>
               <p class="image-caption">硬件原型、实时波形与 HRV 时域分析同框的开发现场。</p>
@@ -1185,7 +1186,7 @@
           <h3>聊聊下一个<br/>交互系统。</h3>
           <p>如果你在寻找一个能同时处理实时系统、组织视觉叙事、把产品验证纳入体验设计的人——这类项目正是我的工作语境。</p>
           <div class="contact-list">
-            <a href="mailto:hello@example.com" class="contact-line magnetic"><span>Email</span><span>hello@example.com</span></a>
+            <a href="/cdn-cgi/l/email-protection#e8808d848487a88d90898598848dc68b8785" class="contact-line magnetic"><span>Email</span><span><span class="__cf_email__" data-cfemail="5b333e3737341b3e233a362b373e75383436">[email&#160;protected]</span></span></a>
             <a href="#" class="contact-line magnetic"><span>Portfolio</span><span>Available on request</span></a>
             <a href="#hero" class="contact-line magnetic"><span>Back to top</span><span>↑</span></a>
           </div>
@@ -1202,7 +1203,7 @@
 
   <div class="footer-note">Meditation Tent — Interactive Installation Portfolio</div>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     /* ── Custom cursor ── */
     const cursor    = document.querySelector('.cursor');
     const cursorDot = document.querySelector('.cursor-dot');
@@ -1211,7 +1212,7 @@
     let mouseX = innerWidth / 2, mouseY = innerHeight / 2;
     let cursorX = mouseX, cursorY = mouseY;
     let dotX = mouseX, dotY = mouseY;
-    let lastRippleTime = 0, lastRippleX = 0, lastRippleY = 0;
+    let lastRippleTime = 0, lastRippleDotX = mouseX, lastRippleDotY = mouseY;
 
     function createRipple(x, y) {
       const r = document.createElement('div');
@@ -1223,15 +1224,7 @@
     }
 
     if (!isTouch) {
-      addEventListener('mousemove', e => {
-        mouseX = e.clientX; mouseY = e.clientY;
-        const now  = Date.now();
-        const dist = Math.hypot(e.clientX - lastRippleX, e.clientY - lastRippleY);
-        if (now - lastRippleTime > 90 && dist > 28) {
-          createRipple(e.clientX, e.clientY);
-          lastRippleTime = now; lastRippleX = e.clientX; lastRippleY = e.clientY;
-        }
-      });
+      addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
 
       (function tick() {
         cursorX += (mouseX - cursorX) * 0.13;
@@ -1240,11 +1233,21 @@
         dotY    += (mouseY - dotY)    * 0.28;
         cursor.style.transform    = `translate(${cursorX}px,${cursorY}px) translate(-50%,-50%)`;
         cursorDot.style.transform = `translate(${dotX}px,${dotY}px) translate(-50%,-50%)`;
+
+        /* ripples follow the dot's lagged position */
+        const now  = Date.now();
+        const dist = Math.hypot(dotX - lastRippleDotX, dotY - lastRippleDotY);
+        if (now - lastRippleTime > 110 && dist > 22) {
+          createRipple(dotX, dotY);
+          lastRippleTime = now; lastRippleDotX = dotX; lastRippleDotY = dotY;
+        }
+
         requestAnimationFrame(tick);
       })();
     }
 
     /* ── Spread border effect ── */
+    const SPREAD_DUR = '620ms cubic-bezier(.19,1,.22,1)';
     function setupSpread(el) {
       const overlay = document.createElement('div');
       overlay.className = 'spread-overlay';
@@ -1255,16 +1258,23 @@
         const rect = el.getBoundingClientRect();
         const mx = ((e.clientX - rect.left) / rect.width  * 100).toFixed(1) + '%';
         const my = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1) + '%';
-        overlay.style.clipPath = `circle(0% at ${mx} ${my})`;
-        overlay.style.opacity  = '1';
-        overlay.getBoundingClientRect(); // force reflow
-        overlay.style.clipPath = `circle(160% at ${mx} ${my})`;
+
+        /* kill transition, snap to origin point */
+        overlay.style.transition = 'none';
+        overlay.style.opacity    = '1';
+        overlay.style.clipPath   = `circle(0% at ${mx} ${my})`;
+        /* force reflow so browser registers the reset */
+        overlay.getBoundingClientRect();
+        /* now animate outward */
+        overlay.style.transition = `clip-path ${SPREAD_DUR}`;
+        overlay.style.clipPath   = `circle(160% at ${mx} ${my})`;
+
         document.body.classList.add('cursor-hover');
       });
 
       el.addEventListener('mouseleave', () => {
-        overlay.style.opacity  = '0';
-        overlay.style.clipPath = 'circle(0% at 50% 50%)';
+        overlay.style.transition = 'opacity 280ms ease';
+        overlay.style.opacity    = '0';
         document.body.classList.remove('cursor-hover');
       });
     }
@@ -1290,17 +1300,40 @@
     const lbText       = document.getElementById('lightbox-text');
     const lbClose      = document.getElementById('lightbox-close');
 
+    /* ── Lightbox ── */
+    const lightbox = document.getElementById('lightbox');
+    const lbImg    = document.getElementById('lightbox-img');
+    const lbKicker = document.getElementById('lightbox-kicker');
+    const lbText   = document.getElementById('lightbox-text');
+    const lbClose  = document.getElementById('lightbox-close');
+
+    function openLightbox(src, kicker, caption, alt) {
+      lbImg.src = src; lbImg.alt = alt || '';
+      lbKicker.textContent = kicker || '';
+      lbText.textContent   = caption || '';
+      lightbox.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    /* image cards */
     document.querySelectorAll('.lightbox-trigger').forEach(card => {
       card.style.cursor = 'zoom-in';
-      card.addEventListener('click', e => {
+      card.addEventListener('click', () => {
         const img = card.querySelector('img');
         if (!img) return;
-        lbImg.src     = img.src;
-        lbImg.alt     = img.alt;
-        lbKicker.textContent = card.dataset.kicker || '';
-        lbText.textContent   = card.dataset.caption || '';
-        lightbox.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        openLightbox(img.src, card.dataset.kicker, card.dataset.caption, img.alt);
+      });
+    });
+
+    /* SVG diagram cards */
+    document.querySelectorAll('.svg-card').forEach(card => {
+      card.style.cursor = 'zoom-in';
+      card.addEventListener('click', () => {
+        const obj     = card.querySelector('object');
+        const kicker  = card.querySelector('.image-kicker')?.textContent || '';
+        const caption = card.querySelector('.image-caption')?.textContent || '';
+        const title   = card.querySelector('.image-title')?.textContent || '';
+        if (obj) openLightbox(obj.data, kicker, caption, title);
       });
     });
 
@@ -1311,7 +1344,9 @@
     }
 
     lbClose.addEventListener('click', closeLightbox);
-    lightbox.addEventListener('click', e => { if (e.target === lightbox || e.target.id === 'lightbox-inner') closeLightbox(); });
+    lightbox.addEventListener('click', e => {
+      if (e.target === lightbox) closeLightbox();
+    });
     addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
   </script>
 </body>
