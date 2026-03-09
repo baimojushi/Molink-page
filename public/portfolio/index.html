@@ -5,243 +5,505 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meditation Tent — Interactive Installation Portfolio</title>
   <style>
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【CSS变量定义（全局主题色系统）】
+    
+    功能说明：
+    使用CSS Custom Properties(变量)定义整个网站的颜色系统和动画参数
+    所有颜色、尺寸、缓动函数都集中在:root中管理，便于统一调整
+    
+    变量说明：
+    --bg: 主背景色(深灰黑 #070707)
+    --bg-soft: 柔和背景色(稍浅 #101010，用于卡片背景)
+    --panel/panel-2: 面板背景(分层深度不同)
+    --text: 主文字颜色(亮米色 #f0ece5)
+    --muted: 次要文字(灰棕色 #9e978d，用于标签和副文本)
+    --line: 分割线(半透明白色，0.07不透明度)
+    --accent: 强调色(橙色 #ff6a00，按钮、链接等交互元素)
+    --accent-soft/strong: 强调色的半透明变体(用于背景层)
+    --shadow: 深阴影(24px模糊，深黑色)
+    --max: 最大内容宽度(1440px)
+    --ease: 标准缓动曲线(cubic-bezier，快速开始->缓慢结束)
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     :root {
-      --bg: #070707;
-      --bg-soft: #101010;
-      --panel: #121212;
-      --panel-2: #171717;
-      --text: #f0ece5;
-      --muted: #9e978d;
-      --line: rgba(255,255,255,0.07);
-      --accent: #ff6a00;
-      --accent-soft: rgba(255,106,0,0.14);
-      --accent-strong: rgba(255,106,0,0.28);
-      --shadow: 0 24px 80px rgba(0,0,0,0.5);
-      --max: 1440px;
-      --ease: cubic-bezier(.19,1,.22,1);
+      /* ─── 主色系 ─── */
+      --bg: #070707;           /* 页面主背景色 */
+      --bg-soft: #101010;      /* 柔和背景(卡片、面板) */
+      --panel: #121212;        /* 面板1级(稍浅) */
+      --panel-2: #171717;      /* 面板2级(更浅) */
+      
+      /* ─── 文字色系 ─── */
+      --text: #f0ece5;         /* 主文字(亮米色) */
+      --muted: #9e978d;        /* 次要文字(灰棕色) */
+      
+      /* ─── 分割线和细节 ─── */
+      --line: rgba(255,255,255,0.07);  /* 淡白色分割线 */
+      
+      /* ─── 强调色(橙色系) ─── */
+      --accent: #ff6a00;                     /* 基础橙色 */
+      --accent-soft: rgba(255,106,0,0.14);  /* 柔和橙(14%不透明) */
+      --accent-strong: rgba(255,106,0,0.28); /* 强橙(28%不透明) */
+      
+      /* ─── 阴影和尺寸 ─── */
+      --shadow: 0 24px 80px rgba(0,0,0,0.5);  /* 深阴影(用于卡片) */
+      --max: 1440px;                          /* 最大内容宽度 */
+      --ease: cubic-bezier(.19,1,.22,1);      /* 标准缓动曲线(快出慢进) */
     }
 
-    * { box-sizing: border-box; margin: 0; }
-    html { scroll-behavior: smooth; }
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【通用重置和基础样式】
+    
+    功能说明：
+    - 清除浏览器默认样式(margin、padding)
+    - 设置全局font和颜色
+    - 隐藏默认光标，由JS控制自定义光标
+    ═════════════════════════════════════════════════════════════════════════════
+    */
+    * { box-sizing: border-box; margin: 0; }  /* 所有元素：边框计算模式 + 清除外边距 */
+    html { scroll-behavior: smooth; }         /* 平滑滚动动画(点击锚点时) */
+    
     body {
+      /* 字体栈：优先系统字体，最后降级到通用无serif体 */
       font-family: -apple-system, "Helvetica Neue", "PingFang SC", "Noto Sans SC", sans-serif;
+      
+      /* 背景：多层渐变(径向+线性组合营造深度感) */
       background:
-        radial-gradient(ellipse at 75% -5%, rgba(255,106,0,0.10), transparent 32%),
-        radial-gradient(ellipse at 15% 8%, rgba(255,106,0,0.06), transparent 26%),
-        linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
-      color: var(--text);
-      overflow-x: hidden;
-      cursor: none;
-      line-height: 1.6;
+        radial-gradient(ellipse at 75% -5%, rgba(255,106,0,0.10), transparent 32%),    /* 右上角橙色光晕 */
+        radial-gradient(ellipse at 15% 8%, rgba(255,106,0,0.06), transparent 26%),     /* 左上角橙色微光 */
+        linear-gradient(180deg, #0a0a0a 0%, #050505 100%);                             /* 竖向渐变(上深下更深) */
+      
+      color: var(--text);           /* 主文字颜色 */
+      overflow-x: hidden;           /* 禁用横向滚动(防止宽屏时出现滚动条) */
+      cursor: none;                 /* 隐藏系统光标(由.cursor/.cursor-dot替代) */
+      line-height: 1.6;             /* 行高(文字间距) */
     }
 
-    ::selection { background: rgba(255,106,0,0.30); color: white; }
-    a { color: inherit; text-decoration: none; }
+    ::selection { background: rgba(255,106,0,0.30); color: white; }  /* 文字选中效果(橙色高亮) */
+    a { color: inherit; text-decoration: none; }  /* 链接：继承颜色，移除下划线 */
 
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【自定义光标样式】
+    
+    功能说明：
+    - .cursor: 外环(22px边框圆环，橙色，带蓝光混合模式)
+    - .cursor-dot: 中心点(5px，发光橙色圆点)
+    - 悬停时外环扩张、内点不动(视觉反馈)
+    
+    animation: ripple-out 1200ms
+    - 涟漪从4px扩张到96px
+    - 透明度从50%衰减到0
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Custom cursor ── */
     .cursor, .cursor-dot {
       position: fixed; top: 0; left: 0;
-      pointer-events: none; z-index: 9999; border-radius: 999px;
-      transform: translate(-50%, -50%);
+      pointer-events: none;                  /* 光标不拦截鼠标事件 */
+      z-index: 9999;                        /* 最高层级，确保总在顶部 */
+      border-radius: 999px;                  /* 完全圆形(999px >> 实际大小) */
+      transform: translate(-50%, -50%);      /* 偏移-50%使圆心与鼠标重合 */
     }
+    
     .cursor {
       width: 22px; height: 22px;
-      border: 1px solid rgba(255,106,0,0.6);
-      background: rgba(255,106,0,0.04);
-      backdrop-filter: blur(6px);
-      mix-blend-mode: screen;
+      border: 1px solid rgba(255,106,0,0.6);  /* 半透明橙色边框 */
+      background: rgba(255,106,0,0.04);       /* 极淡橙色内填充 */
+      backdrop-filter: blur(6px);             /* 毛玻璃效果(模糊背景) */
+      mix-blend-mode: screen;                 /* 屏幕混合(白色变亮，黑色不变) */
       transition: width 300ms var(--ease), height 300ms var(--ease),
-                  opacity 300ms var(--ease), border-color 300ms var(--ease);
+                  opacity 300ms var(--ease), border-color 300ms var(--ease);  /* 4个属性动画 */
     }
+    
     .cursor-dot {
       width: 5px; height: 5px;
-      background: var(--accent);
-      box-shadow: 0 0 14px rgba(255,106,0,0.9);
-      transition: transform 80ms linear;
+      background: var(--accent);              /* 纯橙色 */
+      box-shadow: 0 0 14px rgba(255,106,0,0.9);  /* 橙色发光效果 */
+      transition: transform 80ms linear;      /* 极快响应(80ms) */
     }
+    
     body.cursor-hover .cursor {
-      width: 52px; height: 52px;
-      opacity: 0;
-      border-color: var(--accent);
+      /* 鼠标进入可交互元素时的扩张效果 */
+      width: 52px; height: 52px;             /* 扩张至52px(2.36倍) */
+      opacity: 0;                            /* 立即淡隐 */
+      border-color: var(--accent);           /* 边框变为不透明橙色 */
     }
 
     /* ── Cursor ripple ── */
     .cursor-ripple {
       position: fixed; pointer-events: none; z-index: 9997;
       border-radius: 50%;
-      background: rgba(255, 106, 0, 0.42);
+      background: rgba(255, 106, 0, 0.42);   /* 橙色涟漪(42%不透明) */
       transform: translate(-50%, -50%);
       width: 4px; height: 4px;
-      animation: ripple-out 1200ms cubic-bezier(.19,1,.22,1) forwards;
+      animation: ripple-out 2000ms cubic-bezier(.19,1,.22,1) forwards;  /* 2.0s快进慢出 */
     }
+    
     @keyframes ripple-out {
+      /* 涟漪扩张动画：从4px扩至96px，透明度递减 */
       0%   { width: 4px; height: 4px; opacity: 0.50; }
-      60%  { opacity: 0.22; }
-      100% { width: 96px; height: 96px; opacity: 0; }
+      15%  { opacity: 0.22; }                /* 60%时开始快速衰减 */
+      100% { width: 96px; height: 96px; opacity: 0; }  /* 最终完全透明消失 */
     }
 
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【点击涂布遮罩(Spread Overlay)】
+    
+    功能说明：
+    - clip-path实现圆形mask从点击位置向外扩散
+    - 配合JS的setupSpread()函数实现交互效果
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Spread border overlay (JS-injected, transition managed by JS) ── */
     .spread-overlay {
-      position: absolute; inset: 0; border-radius: inherit;
-      border: 1.5px solid var(--accent); opacity: 0;
-      pointer-events: none; z-index: 2;
-      clip-path: circle(0% at 50% 50%);
+      position: absolute; inset: 0; border-radius: inherit;  /* 继承父元素圆角 */
+      border: 1.5px solid var(--accent);  /* 橙色边框 */
+      opacity: 0;                          /* 初始不可见 */
+      pointer-events: none;                /* 不拦截鼠标事件 */
+      z-index: 2;                         /* 在内容上方 */
+      clip-path: circle(0% at 50% 50%);   /* 初始裁剪为圆心点(0半径) */
     }
 
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【页面装饰元素】
+    
+    功能说明：
+    .page-frame: 固定的页面边框(装饰线，视觉引导)
+    .noise: 噪点纹理背景(质感层，soft-light混合增加细腻感)
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     .page-frame {
-      position: fixed; inset: 16px;
-      border: 1px solid rgba(255,255,255,0.05);
-      pointer-events: none; z-index: 4;
+      position: fixed; inset: 16px;         /* 距离视口四周16px */
+      border: 1px solid rgba(255,255,255,0.05);  /* 极淡白色边框 */
+      pointer-events: none; z-index: 4;     /* 仅装饰，不拦截事件 */
     }
+    
     .noise {
       position: fixed; inset: 0;
-      pointer-events: none; z-index: 1; opacity: 0.045;
+      pointer-events: none; z-index: 1; opacity: 0.045;  /* 极淡(4.5%) */
+      /* 放射状渐变生成噪点：10x10px网格，白点 */
       background-image: radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px);
       background-size: 10px 10px;
-      mix-blend-mode: soft-light;
+      mix-blend-mode: soft-light;           /* 柔光混合(增强质感) */
     }
 
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【顶部导航栏(Topbar)】
+    
+    功能说明：
+    - sticky定位：滚动时固定在顶部
+    - 品牌名和导航菜单flex布局(两端对齐)
+    - 半透明背景+毛玻璃模糊
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Topbar ── */
     .topbar {
       position: sticky; top: 0; z-index: 10;
-      backdrop-filter: blur(16px);
-      background: rgba(7,7,7,0.6);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(16px);          /* 毛玻璃模糊效果 */
+      background: rgba(7,7,7,0.6);          /* 深色半透明背景 */
+      border-bottom: 1px solid rgba(255,255,255,0.05);  /* 淡色下边框 */
     }
+    
     .topbar-inner {
-      max-width: var(--max); margin: 0 auto;
+      max-width: var(--max); margin: 0 auto;  /* 内容最大宽度1440px，居中 */
       padding: 16px 28px;
-      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;  /* 两端对齐 */
     }
+    
     .brand { font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
-    .nav { display: flex; gap: 18px; flex-wrap: wrap; }
+    /* 品牌名：小号大写+宽字距，灰棕色 */
+    
+    .nav { display: flex; gap: 18px; flex-wrap: wrap; }  /* 导航菜单：flex行 */
+    
     .nav a {
       font-size: 12px; letter-spacing: 0.14em;
       text-transform: uppercase; color: var(--muted);
-      transition: color 260ms var(--ease);
+      transition: color 260ms var(--ease);  /* 颜色平滑变化 */
     }
-    .nav a:hover { color: var(--text); }
+    
+    .nav a:hover { color: var(--text); }  /* 悬停变亮 */
 
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【页面布局基础】
+    
+    功能说明：
+    - main: 主内容区(position:relative确保relative子元素正常)
+    - section: 内容段落(max-width:1440px，上下两侧内边距80px)
+    - .eyebrow: 眉注标签(上标，颜色为橙色，字距宽)
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Sections ── */
-    main { position: relative; z-index: 2; }
-    section { max-width: var(--max); margin: 0 auto; padding: 80px 28px; }
+    main { position: relative; z-index: 2; }  /* 在装饰层之上 */
+    
+    section { max-width: var(--max); margin: 0 auto; padding: 80px 28px; }  /* 内容宽度限制+居中 */
+    
     .eyebrow {
-      display: inline-block; color: var(--accent);
+      display: inline-block; color: var(--accent);  /* 橙色小标签 */
       font-size: 11px; letter-spacing: 0.22em;
       text-transform: uppercase; margin-bottom: 16px;
     }
 
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【英雄区(Hero)样式】
+    
+    功能说明：
+    - .hero: 最小高度100vh(全屏高度)，grid下对齐
+    - .hero-grid: 2列布局(1.2fr左+0.8fr右)
+    - .display: 大号serif标题(响应式尺寸，8.5rem最大)
+    - .hero-copy: 副标题(560px最大宽度)
+    - .hero-media: 右侧媒体堆栈(grid+gap)
+    - .cta-row: 按钮行(flex+wrap)
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Hero ── */
     .hero { min-height: 100vh; display: grid; align-items: end; padding-top: 100px; }
+    /* 最小高度100vh，下对齐(content靠下)，上padding100px */
+    
     .hero-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; align-items: end; }
+    /* 2列网格：左侧较宽(1.2fr)，右侧较窄(0.8fr)，下对齐 */
+    
     .display {
-      font-family: Georgia, "Noto Serif SC", serif;
+      font-family: Georgia, "Noto Serif SC", serif;  /* serif大气风格 */
       font-weight: 700;
-      font-size: clamp(3.8rem, 9vw, 8.5rem);
-      line-height: 0.88; letter-spacing: -0.05em;
+      font-size: clamp(3.8rem, 9vw, 8.5rem);  /* 响应式：最小3.8rem，最大8.5rem */
+      line-height: 0.88; letter-spacing: -0.05em;  /* 紧凑行高和字距 */
     }
+    
     .display .accent { color: var(--accent); text-shadow: 0 0 40px rgba(255,106,0,0.18); }
+    /* 橙色部分带发光效果 */
+    
     .hero-copy { max-width: 560px; margin-top: 24px; color: #c8c2b9; font-size: 17px; line-height: 1.8; }
+    /* 副标题：限宽560px，行高1.8(宽松) */
+    
     .hero-media { position: relative; min-height: 660px; display: grid; gap: 16px; align-content: end; }
+    /* 右侧媒体：最小高度660px，grid下对齐 */
+    
     .hero-stack { display: grid; grid-template-columns: 0.6fr 0.4fr; gap: 16px; align-items: end; }
+    /* 英雄区下方的2列小卡片 */
 
     .cta-row { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+    /* CTA按钮行：flex行布局，支持换行 */
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【按钮样式(Button)】
+    
+    功能说明：
+    - .btn: 通用按钮(边框圆形，flex行布局，4个变化属性)
+    - .btn.primary: 主按钮(实心橙色背景，黑色字)
+    - hover效果：上浮、边框变橙、背景变橙、阴影增强
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     .btn {
-      display: inline-flex; align-items: center; gap: 10px;
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 10px;  /* flex行：居中+间隔 */
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 999px;  /* 圆角边框 */
       padding: 13px 22px; font-size: 12px; letter-spacing: 0.16em;
       text-transform: uppercase; color: var(--text);
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.02);  /* 极淡白色背景 */
       transition: transform 280ms var(--ease), border-color 280ms var(--ease),
                   background 280ms var(--ease), box-shadow 280ms var(--ease);
+      /* 4个属性平滑变化 */
     }
+    
     .btn:hover {
-      transform: translateY(-2px); border-color: rgba(255,106,0,0.8);
-      background: rgba(255,106,0,0.08); box-shadow: 0 16px 48px rgba(255,106,0,0.10);
+      transform: translateY(-2px);            /* 上浮2px */
+      border-color: rgba(255,106,0,0.8);    /* 边框变橙 */
+      background: rgba(255,106,0,0.08);     /* 背景淡橙 */
+      box-shadow: 0 16px 48px rgba(255,106,0,0.10);  /* 橙色阴影 */
     }
-    .btn.primary { background: var(--accent); color: #0a0a0a; border-color: var(--accent); font-weight: 700; }
+    
+    .btn.primary { 
+      background: var(--accent); color: #0a0a0a; border-color: var(--accent); font-weight: 700;
+      /* 主按钮：实心橙色，黑色字，加粗 */
+    }
 
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【卡片组件和共享样式】
+    
+    功能说明：
+    - .card等卡片：半透明背景+淡边框+深阴影+圆角
+    - position:relative + overflow:hidden：为spread-overlay做准备
+    - .meta-card: 元信息卡片(标签+值+附加说明)
+    - 所有交互卡片支持hover上浮+边框变橙+背景淡橙
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Cards & Shared ── */
     .meta-card, .card, .quote, .contact-card, .tool, .image-card, .stat-card {
       background: linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0.012));
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 24px; box-shadow: var(--shadow);
+      /* 竖向微妙渐变(上略亮下略暗) */
+      border: 1px solid rgba(255,255,255,0.07);  /* 淡白色边框 */
+      border-radius: 24px; box-shadow: var(--shadow);  /* 圆角+深阴影 */
     }
 
     /* All interactive containers need relative positioning for spread overlay */
     .card, .image-card, .stat-card, .tool, .contact-card, .quote, .svg-card, .meta-card {
-      position: relative; overflow: hidden;
+      position: relative; overflow: hidden;  /* 为spread-overlay的clip-path准备 */
     }
 
     .meta-card { padding: 20px; min-height: 150px; }
+    
     .meta-card::after {
+      /* 卡片右下角的装饰光晕 */
       content: ""; position: absolute; inset: auto -40px -40px auto;
       width: 140px; height: 140px;
       background: radial-gradient(circle, rgba(255,106,0,0.20), transparent 60%);
-      filter: blur(10px); pointer-events: none;
+      filter: blur(10px); pointer-events: none;  /* 不拦截事件 */
     }
+    
     .meta-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    /* 标签：小号上标 */
+    
     .meta-value { font-size: 24px; line-height: 1.2; max-width: 300px; }
+    /* 主值：大号，限宽 */
+    
     .meta-small { margin-top: 12px; color: var(--muted); line-height: 1.65; font-size: 13px; }
+    /* 附加说明：小号，灰色 */
 
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【内容区段头和栅栏布局】
+    
+    功能说明：
+    - .section-head: 段落标题区(2列：左标题+右描述)
+    - .editorial-grid: 编辑栅栏(3列，支持span-2r/span-2c合并)
+    - .span-2r: 占用2行
+    - .span-2c: 占用2列
+    - .card内的h3和p有统一样式
+    - .big-number: 大号编号(用于强调)
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Section layout ── */
     .section-head { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 32px; align-items: start; margin-bottom: 40px; }
+    /* 2列：左标题0.8fr，右描述1.2fr */
+    
     .section-title {
-      font-size: clamp(2rem, 3.8vw, 4.2rem);
-      line-height: 0.95; letter-spacing: -0.04em;
+      font-size: clamp(2rem, 3.8vw, 4.2rem);  /* 响应式标题 */
+      line-height: 0.95; letter-spacing: -0.04em;  /* 紧凑 */
       font-family: Georgia, "Noto Serif SC", serif;
     }
+    
     .section-desc { color: #c4beb5; font-size: 16px; line-height: 1.85; max-width: 720px; }
+    /* 描述文本：限宽720px，行高宽松 */
 
     /* ── Editorial grid ── */
     .editorial-grid { display: grid; grid-template-columns: 1.1fr 0.9fr 1.2fr; gap: 18px; grid-auto-rows: minmax(150px, auto); }
+    /* 3列栅栏：不等宽(1.1:0.9:1.2)，自动行高最少150px */
+    
     .card {
       padding: 24px;
       transition: transform 300ms var(--ease), border-color 300ms var(--ease), background 300ms var(--ease);
+      /* hover效果的3个属性 */
     }
+    
     .card:hover, .image-card:hover, .stat-card:hover {
-      transform: translateY(-4px); border-color: rgba(255,106,0,0.45);
+      transform: translateY(-4px);          /* 上浮4px */
+      border-color: rgba(255,106,0,0.45);  /* 边框变橙 */
       background: linear-gradient(180deg, rgba(255,106,0,0.06), rgba(255,255,255,0.015));
+      /* 背景变淡橙 */
     }
-    .span-2r { grid-row: span 2; }
-    .span-2c { grid-column: span 2; }
+    
+    .span-2r { grid-row: span 2; }          /* 占用2行 */
+    .span-2c { grid-column: span 2; }       /* 占用2列 */
+    
     .card h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.1; letter-spacing: -0.02em; }
     .card p, .card li { color: #ccc7be; line-height: 1.78; font-size: 14.5px; }
     .card ul { padding-left: 18px; }
+    
     .big-number {
       font-size: clamp(2.8rem, 5vw, 5.5rem); line-height: 0.85;
       font-family: Georgia, serif; color: var(--accent); margin-bottom: 12px;
+      /* 大号编号：响应式，橙色 */
     }
 
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【引语卡片(Quote)】
+    
+    功能说明：
+    - .quote: 引语容器(padding:30px，grid竖排)
+    - .quote p: 大号serif引文(响应式1.4-2.6rem)
+    - .quote small: 作者标签(灰色小号)
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Quote ── */
     .quote { padding: 30px; display: grid; gap: 16px; }
+    
     .quote p {
-      font-size: clamp(1.4rem, 2.4vw, 2.6rem); line-height: 1.15;
-      letter-spacing: -0.03em; font-family: Georgia, "Noto Serif SC", serif;
+      font-size: clamp(1.4rem, 2.4vw, 2.6rem);  /* 响应式大标题 */
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      font-family: Georgia, "Noto Serif SC", serif;
     }
+    
     .quote small { color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; font-size: 11px; }
+    /* 出处标签：小号上标，灰色 */
 
     /* ── Timeline ── */
-    .timeline { display: grid; gap: 0; }
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【时间线(Timeline)样式】
+    ═════════════════════════════════════════════════════════════════════════════
+    */
+    .timeline { display: grid; gap: 0; }  /* 竖向列表：gap为0，自己处理分割线 */
+    
     .timeline-item {
-      display: grid; grid-template-columns: 110px 1fr;
-      gap: 20px; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.07);
+      display: grid; grid-template-columns: 110px 1fr;  /* 2列：标签110px，内容占满 */
+      gap: 20px; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.07);  /* 上边框分割 */
+      align-items: start;
     }
-    .timeline-item:first-child { border-top: none; }
+    
+    .timeline-item:first-child { border-top: none; }  /* 首项无上边框 */
+    
     .timeline-year { color: var(--accent); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; padding-top: 4px; }
+    /* 年份标签：橙色小号 */
+    
     .timeline-title { font-size: 22px; margin-bottom: 8px; letter-spacing: -0.02em; }
+    /* 节点标题 */
 
     /* ── Tool / Stack ── */
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【技术栈工具卡片(Tool)】
+    
+    功能说明：
+    - .stack-grid: 4列等宽网格(技术栈展示)
+    - .tool: 工具卡片(padding:20px，min-height:170px)
+    - .tool-kicker: 工具分类标签(橙色小号)
+    - hover效果：上浮+边框橙+背景淡橙
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     .stack-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; }
+    /* 4列等宽网格 */
+    
     .tool {
       padding: 20px; min-height: 170px;
       transition: transform 300ms var(--ease), border-color 300ms var(--ease), background 300ms var(--ease);
+      /* hover 3个属性变化 */
     }
+    
     .tool:hover {
       transform: translateY(-4px); border-color: rgba(255,106,0,0.5);
       background: linear-gradient(180deg, rgba(255,106,0,0.06), rgba(255,255,255,0.015));
     }
+    
     .tool-kicker { color: var(--accent); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 12px; }
+    /* 工具分类标签：橙色上标 */
+    
     .tool h4 { margin: 0 0 10px; font-size: 18px; }
     .tool p { color: #c8c2b8; line-height: 1.75; font-size: 13.5px; }
 
@@ -410,32 +672,56 @@
       color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
     }
 
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【灯箱全屏图片查看器】
+    
+    功能说明：
+    - .lightbox: 全屏overlay(初始display:none，.active时显示)
+    - .lightbox-inner: 内容容器(flex竖排，带进入动画)
+    - .lightbox-img: 大图(<img>元素)
+    - .lightbox-caption: 图片描述区
+    - .lightbox-close: 关闭按钮(固定定位右上角)
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     /* ── Lightbox ── */
     .lightbox {
-      display: none; position: fixed; inset: 0; z-index: 99999;
-      background: rgba(0,0,0,0.92); backdrop-filter: blur(20px);
-      align-items: center; justify-content: center; padding: 40px;
-      cursor: zoom-out;
+      display: none;                        /* 初始隐藏 */
+      position: fixed; inset: 0; z-index: 99999;  /* 全屏覆盖 */
+      background: rgba(0,0,0,0.92);         /* 深黑色半透明背景 */
+      backdrop-filter: blur(20px);          /* 强模糊毛玻璃 */
+      align-items: center; justify-content: center; padding: 40px;  /* 居中+内边距 */
+      cursor: zoom-out;                     /* 缩放out光标(提示可点击关闭) */
     }
-    .lightbox.active { display: flex; }
+    
+    .lightbox.active { display: flex; }     /* .active类时显示 */
+    
     .lightbox-inner {
-      max-width: min(900px, 90vw); max-height: 90vh;
-      display: flex; flex-direction: column; gap: 16px;
-      animation: lb-in 320ms var(--ease) both;
+      max-width: min(900px, 90vw); max-height: 90vh;  /* 响应式最大尺寸 */
+      display: flex; flex-direction: column; gap: 16px;  /* 竖排布局 */
+      animation: lb-in 320ms var(--ease) both;  /* 进入动画 */
     }
+    
     @keyframes lb-in {
-      from { opacity: 0; transform: scale(0.94); }
-      to   { opacity: 1; transform: scale(1); }
+      /* 灯箱进入动画：缩放+淡入 */
+      from { opacity: 0; transform: scale(0.94); }  /* 初始：缩小6%+透明 */
+      to   { opacity: 1; transform: scale(1); }     /* 最终：正常大小+显示 */
     }
+    
     .lightbox-img {
       max-width: 100%; max-height: 75vh;
-      object-fit: contain; border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.10);
+      object-fit: contain;                  /* 等比缩放(不裁剪) */
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);  /* 淡边框 */
     }
+    
     .lightbox-caption {
       text-align: center; color: #c4beb5; font-size: 13px; line-height: 1.7;
     }
+    
     .lightbox-kicker { color: var(--accent); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 4px; }
+    
     .lightbox-close {
       position: fixed; top: 24px; right: 24px;
       width: 40px; height: 40px; border-radius: 50%;
@@ -443,46 +729,98 @@
       color: var(--text); font-size: 20px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; z-index: 100000; transition: background 200ms;
     }
-    .lightbox-close:hover { background: rgba(255,106,0,0.2); }
+    
+    .lightbox-close:hover { background: rgba(255,106,0,0.2); }  /* 悬停变橙 */
 
     /* ── Reveal ── */
     .reveal { opacity: 0; transform: translateY(20px); transition: opacity 800ms var(--ease), transform 800ms var(--ease); }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
+
     /* ── Responsive ── */
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【响应式设计断点】
+    
+    功能说明：
+    - @media (max-width: 1200px): 平板竖屏和桌面小屏
+      - 多列网格改为1列
+      - 英雄栈从2列改为1列
+    
+    - @media (max-width: 780px): 手机屏幕
+      - 隐藏自定义光标(cursor=auto系统光标)
+      - 减小padding和font-size
+      - 隐藏timeline的iter-name列
+      - 图片改为3:2宽高比
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     @media (max-width: 1200px) {
+      /* 所有多列网格改为单列 */
       .hero-grid, .hero-stack, .section-head, .stack-grid,
       .split, .contact-grid, .editorial-grid, .image-grid,
       .image-strip, .stat-grid, .svg-grid, .komorebi-grid,
       .iter-row { grid-template-columns: 1fr; }
-      .iter-row { grid-template-columns: 90px 1fr; }
-      .iter-name { display: none; }
-      .span-2c, .span-2r { grid-column: span 1; grid-row: span 1; }
-      .hero-media { min-height: auto; }
+      
+      .iter-row { grid-template-columns: 90px 1fr; }  /* iter-row保留两列 */
+      .iter-name { display: none; }                    /* 隐藏iter-name */
+      .span-2c, .span-2r { grid-column: span 1; grid-row: span 1; }  /* 取消合并 */
+      
+      .hero-media { min-height: auto; }               /* 英雄区媒体高度自动 */
       .image-card.tall, .image-card.medium, .image-card.short { min-height: auto; aspect-ratio: 4/3; }
+      /* 所有图片改为4:3宽高比 */
     }
+    
     @media (max-width: 780px) {
-      body { cursor: auto; }
-      .cursor, .cursor-dot, .page-frame { display: none; }
-      section { padding: 56px 18px; }
+      /* 手机设备 */
+      body { cursor: auto; }                          /* 使用系统光标 */
+      .cursor, .cursor-dot, .page-frame { display: none; }  /* 隐藏自定义光标和装饰框 */
+      
+      section { padding: 56px 18px; }                 /* 减小padding */
       .topbar-inner { padding: 14px 18px; }
-      .display { font-size: clamp(2.8rem, 14vw, 5rem); }
-      .hero-copy, .section-desc { font-size: 15px; }
-      .timeline-item { grid-template-columns: 1fr; gap: 6px; }
+      
+      .display { font-size: clamp(2.8rem, 14vw, 5rem); }  /* 减小标题 */
+      .hero-copy, .section-desc { font-size: 15px; }      /* 减小正文 */
+      
+      .timeline-item { grid-template-columns: 1fr; gap: 6px; }  /* timeline单列 */
       .iter-row { grid-template-columns: 1fr; }
       .iter-gen { margin-bottom: 2px; }
-      .nav { gap: 10px; }
+      
+      .nav { gap: 10px; }                             /* 导航间隔变小 */
       .image-card.tall, .image-card.medium, .image-card.short { aspect-ratio: 3/2; }
+      /* 手机上使用3:2宽高比 */
     }
   </style>
 </head>
 <body>
+  <!--
+  ═════════════════════════════════════════════════════════════════════════════
+  【自定义光标组件】
+  .cursor: 外环边框(22px，橙色，带蓝光特效)
+  .cursor-dot: 中心点(5px，发光橙色圆点)
+  isTouch=false时这些元素会被显示并驱动动画
+  ═════════════════════════════════════════════════════════════════════════════
+  -->
   <div class="cursor"></div>
   <div class="cursor-dot"></div>
+  
+  <!-- 页面装饰：固定页面边框(视觉引导线) -->
   <div class="page-frame"></div>
+  
+  <!-- 噪点纹理背景(增加质感，mix-blend-mode:soft-light混合) -->
   <div class="noise"></div>
 
-  <!-- Lightbox -->
+  <!--
+  ═════════════════════════════════════════════════════════════════════════════
+  【灯箱组件】全屏图片查看器
+  
+  结构：
+  .lightbox: 全屏半透明黑色背景(初始display:none，.active时显示)
+  .lightbox-inner: 内容容器(flex竖排，包含图片和描述)
+  .lightbox-img: 大图(<img>元素，max-height:75vh)
+  .lightbox-caption: 描述区域(包含kicker和文本)
+  .lightbox-close: 右上角关闭按钮(✕)
+  ═════════════════════════════════════════════════════════════════════════════
+  -->
   <div class="lightbox" id="lightbox">
     <button class="lightbox-close" id="lightbox-close">✕</button>
     <div class="lightbox-inner" id="lightbox-inner">
@@ -495,8 +833,23 @@
   </div>
 
   <header class="topbar">
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【顶部导航栏】
+    sticky定位：滚动时固定在顶部，与下方内容分离
+    
+    结构：
+    .topbar: 容器(sticky, z-index:10, 半透明背景带模糊)
+    .topbar-inner: 内容区(max-width:1440px居中，flex布局)
+    .brand: 品牌名("Meditation Tent"，字距宽，鼠标悬停触发磁吸)
+    .nav: 导航菜单(flex行布局，包含7个页面锚点)
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <div class="topbar-inner">
+      <!-- 品牌名 -->
       <a class="brand magnetic" href="#hero">Meditation Tent</a>
+      
+      <!-- 导航菜单 -->
       <nav class="nav">
         <a class="magnetic" href="#overview">Overview</a>
         <a class="magnetic" href="#gallery">Gallery</a>
@@ -510,41 +863,66 @@
   </header>
 
   <main>
-
-    <!-- ════ HERO ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【英雄区(Hero Section)】
+    首屏视觉展示，包含标题、副标题、CTA按钮和特征图像
+    
+    layout: .hero-grid分两列(1.2fr左侧内容 + 0.8fr右侧媒体)
+    .reveal类元素在滚入视口时触发淡入动画
+    .magnetic类元素有光标点击涂布效果
+    .lightbox-trigger类可点击放大
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section class="hero" id="hero">
       <div class="hero-grid">
+        <!-- 左侧：文字内容 -->
         <div>
+          <!-- 眉注(eyebrow)：小型标题提示 -->
           <span class="eyebrow reveal">Interactive Installation · Full-Stack Case Study</span>
+          
+          <!-- 主标题：大尺寸serif字体，强调"Meditation Tent"为橙色 -->
           <h1 class="display reveal">
             <span class="accent">Meditation<br/>Tent</span><br/>
             breath in,<br/>space responds.
           </h1>
+          
+          <!-- 副标题：项目长描述，小一号无serif体 -->
           <p class="hero-copy reveal">
             一套完整的交互装置系统——从呼吸与 HRV 生理数据采集，到嵌入式实时解算、蓝牙数据传输、TouchDesigner 视觉联动，到最终的空间沉浸体验与焦虑缓解效果验证。我在这个项目中同时承担系统架构、嵌入式开发、信号处理和视觉叙事。
           </p>
+          
+          <!-- CTA按钮行：两个按钮并排 -->
           <div class="cta-row reveal">
             <a class="btn primary magnetic" href="#gallery">Visual Narrative →</a>
             <a class="btn magnetic" href="#system">System Architecture →</a>
           </div>
         </div>
+        <!-- 右侧：媒体堆栈(图像卡片) -->
         <div class="hero-media reveal">
+          <!-- 大图卡片：目标渲染图 -->
           <div class="image-card tall magnetic lightbox-trigger"
                data-kicker="V2 Vision"
                data-caption="V2 阶段的目标渲染——非接触式呼吸感知与木漏日投影系统联动，使用者的每次呼吸都被转化为光温与影速的变化。">
             <img src="./assets/realistic-rendering.jpg" alt="Meditation Tent realistic rendering" />
+            <!-- 图像卡片底部渐变遮罩+文字 -->
             <div class="image-overlay">
               <div class="image-kicker">V2 Vision</div>
               <h3 class="image-title">呼吸驱动整个空间的光影。</h3>
               <p class="image-caption">V2 阶段的目标渲染——非接触式呼吸感知，空间以朝霞色温与树影节律响应每次呼吸。</p>
             </div>
           </div>
+          
+          <!-- 下方两列小卡片(meta-card + image-card) -->
           <div class="hero-stack">
+            <!-- 角色信息元信息卡片 -->
             <div class="meta-card magnetic">
               <div class="meta-label">Role</div>
               <div class="meta-value">系统架构 · 嵌入式原型 · 信号处理 · 视觉联动</div>
               <div class="meta-small">独立完成从传感采集到空间表达的全链路开发。</div>
             </div>
+            
+            <!-- 实时输出效果图 -->
             <div class="image-card short magnetic lightbox-trigger"
                  data-kicker="Realtime output"
                  data-caption="呼吸算法输出经 TouchDesigner 处理后的木漏日视觉形态——光温与影速实时随呼吸节律变化。">
@@ -559,8 +937,21 @@
       </div>
     </section>
 
-    <!-- ════ OVERVIEW ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【项目概览部分(Overview Section)】
+    
+    结构：
+    .section-head: 标题区(grid 2列：0.8fr左标题 + 1.2fr右描述)
+    .editorial-grid: 编辑栅栏布局(3列grid，卡片支持span-2r/span-2c合并)
+    
+    卡片类型：
+    - .big-number: 大号编号(用于强调顺序)
+    - .card: 通用内容卡片(含h3和p)
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section id="overview">
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Project overview</span>
@@ -571,25 +962,30 @@
         </div>
       </div>
 
+      <!-- 内容卡片栅栏：3列布局，部分卡片占用多行或多列 -->
       <div class="editorial-grid">
+        <!-- 卡片1：占用右下2行，展示大编号+标题+正文 -->
         <article class="card span-2r reveal magnetic">
           <div class="big-number">01</div>
           <h3>项目的核心判断</h3>
           <p>多数冥想类装置停留在视觉氛围层面，体验柔和，反馈却缺少个体化。真正能帮助使用者进入状态的，是"自身生理节律被准确感知并被即时回应"——所以整个项目围绕一个工程问题展开：如何把看不见的呼吸与自主神经状态，转成可被身体理解的空间反馈。</p>
         </article>
 
+        <!-- 卡片2：标准卡片尺寸 -->
         <article class="card reveal magnetic">
           <div class="meta-label">体验闭环</div>
           <h3>Experience Loop</h3>
           <p>进入装置 → 被感知 → 获得反馈 → 节律趋稳 → 状态改善 → 数据验证。一个完整闭环，每个环节对应明确的技术实现。</p>
         </article>
 
+        <!-- 卡片3：标准卡片尺寸 -->
         <article class="card reveal magnetic">
           <div class="meta-label">投影视觉</div>
           <h3>木漏日 · 朝霞映射</h3>
           <p>投影重现阳光穿透树叶的光影交织——使用者越平静，光色越趋近朝霞的暖红，树影的晃动也越轻缓。</p>
         </article>
 
+        <!-- 卡片4：跨越2列的宽卡片 -->
         <article class="card span-2c reveal magnetic">
           <div class="meta-label">系统定位</div>
           <h3>可测量的身心交互界面</h3>
@@ -598,8 +994,21 @@
       </div>
     </section>
 
-    <!-- ════ GALLERY ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【图库展览(Gallery Section)】
+    视觉故事讲述，展示空间、原型、测试与验证的照片
+    
+    结构：
+    .image-grid: 2列布局(1.15fr大图列 + 0.85fr图片条列)
+    .image-strip: 2列grid(用于右侧多张小图)
+    .image-card: 可点击放大的图片卡片(tall/medium/short高度变体)
+    .lightbox-trigger: 类名，点击时打开灯箱放大显示
+    data-kicker/caption: 传递给灯箱的标题和描述
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section id="gallery">
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Visual narrative</span>
@@ -610,7 +1019,9 @@
         </div>
       </div>
 
+      <!-- 图片栅栏：左大图 + 右4张小图 -->
       <div class="image-grid">
+        <!-- 左侧：高型图片卡片(tall占满左列高度) -->
         <div class="image-card tall reveal magnetic lightbox-trigger"
              data-kicker="实景搭建"
              data-caption="半围合白色空间、坐垫、植物与投影光影构成体验现场。项目已从概念推进到可感知的空间原型。">
@@ -621,7 +1032,10 @@
             <p class="image-caption">半围合白色空间、坐垫、植物与投影光影构成体验现场。项目已从概念推进到可感知的空间原型。</p>
           </div>
         </div>
+        
+        <!-- 右侧：2列图片条(4张medium尺寸图片) -->
         <div class="image-strip">
+          <!-- 图片1：场景渲染 -->
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="场景渲染"
                data-caption="产品放回自然环境，强调"庇护 / 隔离 / 沉静"的空间语义。">
@@ -631,6 +1045,8 @@
               <p class="image-caption">产品放回自然环境，强调"庇护 / 隔离 / 沉静"的空间语义。</p>
             </div>
           </div>
+          
+          <!-- 图片2：照明设计 -->
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="照明设计"
                data-caption="光线作为心理引导介质，体现"内向凝视"的体验目标。">
@@ -640,6 +1056,8 @@
               <p class="image-caption">光线作为心理引导介质，体现"内向凝视"的体验目标。</p>
             </div>
           </div>
+          
+          <!-- 图片3：早期Demo -->
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="早期 Demo"
                data-caption="装置在黑暗环境中完成的第一轮体验验证。">
@@ -649,6 +1067,8 @@
               <p class="image-caption">装置在黑暗环境中完成的第一轮体验验证。</p>
             </div>
           </div>
+          
+          <!-- 图片4：灵感参照 -->
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="灵感参照"
                data-caption="东方建筑白墙黑瓦的包裹感，转译为当代装置语言。">
@@ -662,8 +1082,19 @@
       </div>
     </section>
 
-    <!-- ════ KOMOREBI ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【木漏日视觉语言(Komorebi Section)】
+    解释投影系统的两条映射轨道：色温和影速
+    
+    结构：
+    .komorebi-grid: 2列布局展示两个映射卡片
+    .mapping-card: 映射说明卡片(左右对称，各自阐述一个映射维度)
+    .quote: 引语卡片(阐述信号处理的系统一致性)
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section id="komorebi">
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Visual language</span>
@@ -674,13 +1105,17 @@
         </div>
       </div>
 
+      <!-- 两个映射轨道的说明卡片 -->
       <div class="komorebi-grid">
+        <!-- 映射轨道一：色温 -->
         <div class="mapping-card reveal magnetic">
           <div class="mapping-index">映射轨道一 · 色温</div>
           <div class="mapping-title">呼吸越慢，光越暖。</div>
           <p class="mapping-desc">投影光色随呼吸频率实时迁移。呼吸趋缓，色温向朝霞与晚霞的橙红漂移；呼吸加快，光色回归冷白。使用者趋于安静的同时，空间进入黄金时分的光感。</p>
           <div class="mapping-detail">技术对位：呼吸率 BPM 值线性映射至 TouchDesigner 色温节点，低 BPM → 高暖色权重</div>
         </div>
+        
+        <!-- 映射轨道二：影速 -->
         <div class="mapping-card reveal magnetic">
           <div class="mapping-index">映射轨道二 · 影速</div>
           <div class="mapping-title">呼吸节律驱动树影漂移。</div>
@@ -689,14 +1124,28 @@
         </div>
       </div>
 
+      <!-- 系统一致性的引语卡片 -->
       <div class="quote reveal magnetic" style="margin-top: 20px;">
         <small>System coherence</small>
         <p>信号处理精度的意义在这里变得具体：读数偏差意味着投影的节律不属于你，体验的隐喻在那一刻断裂。ACF 延迟、谐波修正、Hilbert 置信过滤——每一步都在维护"空间响应的是你真实的节律"这一承诺。</p>
       </div>
     </section>
 
-    <!-- ════ SYSTEM ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【系统架构部分(System Section)】
+    展示5层技术栈和硬件拓扑
+    
+    结构：
+    .split: 2列布局(卡片列 + 架构流图列)
+    .arch-flow: 竖向架构图(层级堆栈，用connectors表示数据流)
+    .arch-layer: 单个架构层级(包含label和chips)
+    .arch-chip: 技术栈芯片(含highlight变体)
+    .svg-grid: 3列SVG图表展示(系统总览、信号算法、硬件拓扑)
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section id="system">
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">System architecture</span>
@@ -707,7 +1156,9 @@
         </div>
       </div>
 
+      <!-- 系统栈说明 + 架构流程图 -->
       <div class="split">
+        <!-- 左侧：5层栈的文字描述 -->
         <div class="card reveal magnetic">
           <div class="meta-label">Architecture</div>
           <h3>五层栈</h3>
@@ -720,8 +1171,10 @@
           </ul>
         </div>
 
+        <!-- 右侧：竖向架构流程图 -->
         <div class="arch-flow reveal">
           <div class="arch-row">
+            <!-- 感知层：3个选项(毫米波高亮) -->
             <div class="arch-layer">
               <div class="arch-layer-label">感知层 Sensing</div>
               <div class="arch-chips">
@@ -731,6 +1184,8 @@
               </div>
             </div>
             <div class="arch-connector">↓</div>
+            
+            <!-- 解算层：5个算法处理步骤 -->
             <div class="arch-layer">
               <div class="arch-layer-label">解算层 Processing</div>
               <div class="arch-chips">
@@ -742,6 +1197,8 @@
               </div>
             </div>
             <div class="arch-connector">↓</div>
+            
+            <!-- 通信层：ESP32 + JSON格式(高亮) -->
             <div class="arch-layer">
               <div class="arch-layer-label">通信层 Transport</div>
               <div class="arch-chips">
@@ -750,6 +1207,8 @@
               </div>
             </div>
             <div class="arch-connector">↓</div>
+            
+            <!-- 表现层：投影系统的4个维度 -->
             <div class="arch-layer">
               <div class="arch-layer-label">表现层 Output</div>
               <div class="arch-chips">
@@ -760,6 +1219,8 @@
               </div>
             </div>
             <div class="arch-connector">↓</div>
+            
+            <!-- 评估层：验证指标 -->
             <div class="arch-layer">
               <div class="arch-layer-label">评估层 Validation</div>
               <div class="arch-chips">
@@ -772,7 +1233,9 @@
         </div>
       </div>
 
+      <!-- 系统相关的图片和SVG图表 -->
       <div class="image-grid" style="margin-top: 22px;">
+        <!-- 产品流程图 -->
         <div class="image-card medium reveal magnetic lightbox-trigger"
              data-kicker="产品链路"
              data-caption="毫米波雷达、可穿戴设备、呼吸心率监测、环境声、灯光与冥想状态报告，串联在同一条产品链路中。">
@@ -783,7 +1246,10 @@
             <p class="image-caption">毫米波雷达、可穿戴设备、呼吸心率监测、环境声、灯光与冥想状态报告，串联在同一条产品链路中。</p>
           </div>
         </div>
+        
+        <!-- 右侧小图条 -->
         <div class="image-strip">
+          <!-- 装配爆炸图 -->
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="装配爆炸图"
                data-caption="篷布、碳纤维帐杆、风绳、地钉、音响与交互界面逐层展开。">
@@ -793,6 +1259,8 @@
               <p class="image-caption">篷布、碳纤维帐杆、风绳、地钉、音响与交互界面逐层展开。</p>
             </div>
           </div>
+          
+          <!-- 结构图 -->
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="结构工程"
                data-caption="可搭建的杆件系统，装置有明确的物理结构支撑。">
@@ -805,7 +1273,9 @@
         </div>
       </div>
 
+      <!-- SVG图表：3列展示系统、算法和硬件拓扑 -->
       <div class="svg-grid">
+        <!-- SVG卡片1：系统总览 -->
         <article class="svg-card reveal magnetic">
           <div class="svg-frame">
             <object data="./assets/svg_01_system_architecture.svg" type="image/svg+xml" aria-label="System architecture">
@@ -819,6 +1289,7 @@
           </div>
         </article>
 
+        <!-- SVG卡片2：信号算法 -->
         <article class="svg-card reveal magnetic">
           <div class="svg-frame">
             <object data="./assets/svg_02_signal_algorithm.svg" type="image/svg+xml" aria-label="Signal algorithm">
@@ -832,6 +1303,7 @@
           </div>
         </article>
 
+        <!-- SVG卡片3：硬件拓扑 -->
         <article class="svg-card reveal magnetic">
           <div class="svg-frame">
             <object data="./assets/svg_03_hardware_topology.svg" type="image/svg+xml" aria-label="Hardware topology">
@@ -847,8 +1319,18 @@
       </div>
     </section>
 
-    <!-- ════ THINKING ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【开发思考过程(Thinking/Process Section)】
+    展示关键设计决策和迭代推演路径
+    
+    结构：
+    .editorial-grid: 5张卡片展示核心决策(A-E)
+    .image-grid: 推演路径和早期测试的照片
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section id="thinking">
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Developer thinking</span>
@@ -859,31 +1341,37 @@
         </div>
       </div>
 
+      <!-- 5个核心决策卡片 -->
       <div class="editorial-grid">
+        <!-- 决策A：接触式 / 非接触式共存 -->
         <article class="card reveal magnetic">
           <div class="big-number">A</div>
           <h3>接触式 / 非接触式共存</h3>
           <p>毫米波雷达减少穿戴摩擦，让体验更自然——适合最终装置。HRV 手环回答另一个问题：体验是否有效。一个降低交互门槛，一个提高证据密度。</p>
         </article>
 
+        <!-- 决策B：量化疗愈感(跨2列) -->
         <article class="card span-2c reveal magnetic">
           <div class="big-number">B</div>
           <h3>把"疗愈感"翻译成工程指标</h3>
           <p>氛围、沉浸、放松——这些感性描述需要对应到可跟踪变量：呼吸频率是否趋于稳定、视觉响应延迟是否足够低、伪影是否会破坏体验连续性、HRV 是否出现副交感活跃度相关的积极变化。感性目标翻译成技术指标，项目才能被推进和迭代。</p>
         </article>
 
+        <!-- 决策C：空间反馈需要节律逻辑(占2行) -->
         <article class="card span-2r reveal magnetic">
           <div class="big-number">C</div>
           <h3>空间反馈需要节律逻辑</h3>
           <p>视觉系统对噪声、抖动和过度敏感做了抑制。反馈像呼吸一样有张有弛——视觉平滑度、灯光渐变曲线、数据置信度阈值，全部属于体验设计的工程表达。</p>
         </article>
 
+        <!-- 决策D：为什么是朝霞的颜色 -->
         <article class="card reveal magnetic">
           <div class="meta-label">视觉选择</div>
           <h3>为什么是朝霞的颜色</h3>
           <p>投影光温随呼吸放缓趋向橙红——这是映射逻辑的直接视觉结果，不是配色决定。朝霞与晚霞在跨文化语境中是具有高度共识的宁静时刻符码，与副交感激活状态在视觉层面自然对应。</p>
         </article>
 
+        <!-- 决策E：为什么是分层架构 -->
         <article class="card reveal magnetic">
           <div class="meta-label">工程选择</div>
           <h3>Why modular layers</h3>
@@ -891,7 +1379,9 @@
         </article>
       </div>
 
+      <!-- 推演路径和早期测试的图片 -->
       <div class="image-grid" style="margin-top: 22px;">
+        <!-- 大图：推演路径 -->
         <div class="image-card medium reveal magnetic lightbox-trigger"
              data-kicker="推演路径"
              data-caption="绘画实践、田野观察、原型制作、用户研究、呼吸灯实验与整合设计串成一条推理链。">
@@ -902,7 +1392,10 @@
             <p class="image-caption">绘画实践、田野观察、原型制作、用户研究、呼吸灯实验与整合设计串成一条推理链。</p>
           </div>
         </div>
+        
+        <!-- 右侧：2张小图 -->
         <div class="image-strip">
+          <!-- 最小可验证反馈：单LED呼吸灯 -->
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="最小可验证反馈"
                data-caption="单 LED 呼吸灯测试——从最小交互单元开始验证体验假设。">
@@ -912,6 +1405,8 @@
               <p class="image-caption">单 LED 呼吸灯测试——从最小交互单元开始验证体验假设。</p>
             </div>
           </div>
+          
+          <!-- 信号调试现场 -->
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="信号调试"
                data-caption="硬件原型、实时波形与 HRV 时域分析同框的开发现场。">
@@ -925,7 +1420,11 @@
       </div>
     </section>
 
-    <!-- ════ QUOTE ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【设计原则引语】
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section>
       <div class="quote reveal magnetic">
         <small>Design principle</small>
@@ -933,8 +1432,18 @@
       </div>
     </section>
 
-    <!-- ════ VALIDATION ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【效能验证部分(Validation Section)】
+    展示双层架构：体验层 + 验证层
+    
+    结构：
+    .stat-grid: 3列统计卡片(体验层、验证层、产品层)
+    .image-grid: 验证过程和输出效果的照片
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section>
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Validation</span>
@@ -945,17 +1454,23 @@
         </div>
       </div>
 
+      <!-- 3个验证维度的统计卡片 -->
       <div class="stat-grid">
+        <!-- 维度1：体验层 -->
         <div class="stat-card reveal magnetic">
           <div class="stat-num">01</div>
           <h4>Experience Layer</h4>
           <p>毫米波雷达与木漏日投影负责无负担的体验入口，降低穿戴摩擦，让使用者自然进入状态。</p>
         </div>
+        
+        <!-- 维度2：验证层 -->
         <div class="stat-card reveal magnetic">
           <div class="stat-num">02</div>
           <h4>Validation Layer</h4>
           <p>HRV 手环提供时域生理指标，检测副交感活跃度是否在体验过程中出现积极变化。</p>
         </div>
+        
+        <!-- 维度3：产品层 -->
         <div class="stat-card reveal magnetic">
           <div class="stat-num">03</div>
           <h4>Product Layer</h4>
@@ -963,7 +1478,9 @@
         </div>
       </div>
 
+      <!-- 验证过程的图片 -->
       <div class="image-grid" style="margin-top: 22px;">
+        <!-- 左侧大图：HRV检测有效性测试 -->
         <div class="image-card medium reveal magnetic lightbox-trigger"
              data-kicker="效能验证"
              data-caption="使用者在冥想垫上体验，旁边电脑显示实时生理曲线。手环用于检测装置对焦虑缓解和副交感神经活跃度的影响。">
@@ -974,6 +1491,8 @@
             <p class="image-caption">使用者在冥想垫上体验，旁边电脑显示实时生理曲线。手环用于检测装置对焦虑缓解和副交感神经活跃度的影响。</p>
           </div>
         </div>
+        
+        <!-- 右侧小图：输出效果 -->
         <div class="image-card medium reveal magnetic lightbox-trigger"
              data-kicker="输出层"
              data-caption="验证层回答"是否有效"，投影层回答"如何被感知"——两者通过呼吸率数据共享同一条输入轨道。">
@@ -986,8 +1505,18 @@
       </div>
     </section>
 
-    <!-- ════ TIMELINE ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【版本迭代时间线(Timeline Section)】
+    展示项目从V1到V2的演进过程
+    
+    结构：
+    .timeline: 竖向时间线
+    .timeline-item: 单个版本节点(grid 2列：year + content)
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section>
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Version evolution</span>
@@ -998,7 +1527,9 @@
         </div>
       </div>
 
+      <!-- 4个主要版本节点 -->
       <div class="timeline reveal">
+        <!-- V1 / Concept：概念和原型设计 -->
         <div class="timeline-item magnetic">
           <div class="timeline-year">V1 / Concept</div>
           <div>
@@ -1006,6 +1537,8 @@
             <div class="section-desc">结构设计、场景表达、交互路径与物理形态。核心叙事："身体进入一个被回应的空间"。</div>
           </div>
         </div>
+        
+        <!-- V1 / Sensing：传感器和HRV验证 -->
         <div class="timeline-item magnetic">
           <div class="timeline-year">V1 / Sensing</div>
           <div>
@@ -1013,6 +1546,8 @@
             <div class="section-desc">穿戴式输入探索呼吸与状态反馈的映射关系。同步引入 HRV 手环建立焦虑缓解和副交感活跃度的验证方向。</div>
           </div>
         </div>
+        
+        <!-- V2 / Radar：毫米波雷达系统 -->
         <div class="timeline-item magnetic">
           <div class="timeline-year">V2 / Radar</div>
           <div>
@@ -1020,6 +1555,8 @@
             <div class="section-desc">非接触式呼吸检测。嵌入式侧完成滤波、呼吸率估计、置信度与伪影处理，JSON 数据送往外部视觉系统。81 轮 AI 协作对话，Gen 1 至 Gen 11 迭代。</div>
           </div>
         </div>
+        
+        <!-- V2 / Spatial：空间投影联动 -->
         <div class="timeline-item magnetic">
           <div class="timeline-year">V2 / Spatial</div>
           <div>
@@ -1030,8 +1567,20 @@
       </div>
     </section>
 
-    <!-- ════ V2 ITERATION DATA ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【V2迭代数据展示(V2 Iteration Data Section)】
+    展示毫米波雷达系统的11代迭代过程和6份测试日志
+    
+    结构：
+    .split: 2列(左侧统计数据 + 右侧迭代日志表)
+    .stat-grid: 4个关键指标卡片
+    .iter-grid: 表格式的日志记录
+    .card: 下一阶段方案说明
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section>
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">V2 · Radar system iteration</span>
@@ -1042,59 +1591,84 @@
         </div>
       </div>
 
+      <!-- 迭代统计数据 + 日志表 -->
       <div class="split" style="margin-bottom: 22px;">
+        <!-- 左侧：4个关键指标 -->
         <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+          <!-- 指标1：AI协作轮次 -->
           <div class="stat-card reveal magnetic">
             <div class="stat-num">81</div>
             <h4>AI 协作轮次</h4>
             <p>覆盖硬件调试、通信协议、算法迭代与性能评估全流程。</p>
           </div>
+          
+          <!-- 指标2：迭代版本数 -->
           <div class="stat-card reveal magnetic">
             <div class="stat-num">11</div>
             <h4>迭代版本</h4>
             <p>Gen 1 WiFi TCP → Gen 11 完整信号链。每版本回答一个具体问题。</p>
           </div>
+          
+          <!-- 指标3：代码行数 -->
           <div class="stat-card reveal magnetic">
             <div class="stat-num">420</div>
             <h4>代码行数（C++）</h4>
             <p>8 个功能模块，含 Python 接口脚本约 40 行。</p>
           </div>
+          
+          <!-- 指标4：ACF有效延迟 -->
           <div class="stat-card reveal magnetic">
             <div class="stat-num">3.1s</div>
             <h4>ACF 有效延迟</h4>
             <p>20s 窗口 @10 Hz 采样。在艺术装置驱动场景中可接受。</p>
           </div>
         </div>
+        
+        <!-- 右侧：6轮测试日志 -->
         <div class="card reveal magnetic" style="padding: 0;">
+          <!-- 日志标题区 -->
           <div style="padding: 20px 24px 14px;">
             <div class="meta-label">6 轮测试日志 · 关键发现</div>
           </div>
+          
+          <!-- 日志表格：每行一条日志 -->
           <div class="iter-grid" style="padding: 0 24px 20px;">
+            <!-- 日志1：首次SPP连接 -->
             <div class="iter-row">
               <span class="iter-gen">Log 1</span>
               <span class="iter-name">首次 SPP 连接</span>
               <span class="iter-desc">Hilbert 分支条件判断错误，amp/cv 全为 0.000；置信度门槛过严导致 br 仅偶发输出。</span>
             </div>
+            
+            <!-- 日志2：按键标注引入 -->
             <div class="iter-row">
               <span class="iter-gen">Log 2</span>
               <span class="iter-name">按键标注引入</span>
               <span class="iter-desc">首次引入按键事件 JSON；br>0 输出率偏低（&lt;30%），conf/score 分布整体偏低。</span>
             </div>
+            
+            <!-- 日志3：静止vs晃动 -->
             <div class="iter-row">
               <span class="iter-gen">Log 3</span>
               <span class="iter-name">静止 vs 晃动</span>
               <span class="iter-desc">静止场景基本可用，晃动时 br 误差 &gt;50%；时间戳跳变点用于干扰段分段识别。</span>
             </div>
+            
+            <!-- 日志4：综合多段 -->
             <div class="iter-row">
               <span class="iter-gen">Log 4</span>
               <span class="iter-name">综合多段</span>
               <span class="iter-desc">谐波修正后频率准确率提升；大部分数据可靠，极端干扰场景仍有偏差。</span>
             </div>
+            
+            <!-- 日志5：快速呼吸验证 -->
             <div class="iter-row">
               <span class="iter-gen">Log 5</span>
               <span class="iter-name">快速呼吸验证</span>
               <span class="iter-desc">BR&gt;20 时出现严重偏差，ACF 窗口惯性导致估计值持续滞后。</span>
             </div>
+            
+            <!-- 日志6：变速呼吸测试 -->
             <div class="iter-row">
               <span class="iter-gen">Log 6</span>
               <span class="iter-name">变速呼吸测试</span>
@@ -1104,6 +1678,7 @@
         </div>
       </div>
 
+      <!-- 下一阶段方案说明 -->
       <div class="card reveal magnetic" style="padding: 26px;">
         <div class="meta-label">长期方案 · 下一阶段</div>
         <h3 style="margin-bottom: 14px;">1D-CNN + 注意力机制</h3>
@@ -1111,8 +1686,18 @@
       </div>
     </section>
 
-    <!-- ════ STACK ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【技术栈部分(Stack Section)】
+    展示项目中使用的工具和技术
+    
+    结构：
+    .stack-grid: 4列网格
+    .tool: 技术栈卡片(包含分类、名称、描述)
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section id="stack">
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Tooling &amp; Stack</span>
@@ -1123,22 +1708,30 @@
         </div>
       </div>
 
+      <!-- 4个技术模块 -->
       <div class="stack-grid">
+        <!-- 模块1：嵌入式开发 -->
         <article class="tool reveal magnetic">
           <div class="tool-kicker">Embedded</div>
           <h4>ESP32 / Arduino C++</h4>
           <p>传感器连接、串口数据读取、滤波与节律估计、蓝牙输出控制。保证实时性与数据稳定性。</p>
         </article>
+        
+        <!-- 模块2：信号处理 -->
         <article class="tool reveal magnetic">
           <div class="tool-kicker">Signal</div>
           <h4>Breath + HRV</h4>
           <p>呼吸率检测驱动体验，HRV 验证效果。装置从"有感觉"推进到"有证据"。</p>
         </article>
+        
+        <!-- 模块3：实时渲染 -->
         <article class="tool reveal magnetic">
           <div class="tool-kicker">Realtime</div>
           <h4>TouchDesigner</h4>
           <p>承接实时数据，生成木漏日投影，将身体节律翻译为光温与影速的双轨视觉语言。</p>
         </article>
+        
+        <!-- 模块4：交互设计 -->
         <article class="tool reveal magnetic">
           <div class="tool-kicker">Product</div>
           <h4>Interaction Design</h4>
@@ -1147,8 +1740,17 @@
       </div>
     </section>
 
-    <!-- ════ FRAMING ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【作品集定位部分(Framing Section)】
+    展示这个项目说明了什么，体现设计者的能力定位
+    
+    结构：
+    .editorial-grid: 3张卡片阐述核心能力
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section>
+      <!-- 标题和描述区 -->
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Portfolio framing</span>
@@ -1159,17 +1761,23 @@
         </div>
       </div>
 
+      <!-- 3个核心能力的阐述 -->
       <div class="editorial-grid">
+        <!-- 能力1：情感清晰度设计 -->
         <article class="card reveal magnetic">
           <div class="big-number">01</div>
           <h3>为情感清晰度设计</h3>
           <p>关心装置给人的第一感受。视觉、排版、节奏、材质语义——体验的每一层都需要被设计。</p>
         </article>
+        
+        <!-- 能力2：技术可信度构建 -->
         <article class="card reveal magnetic">
           <div class="big-number">02</div>
           <h3>为技术可信度构建</h3>
           <p>原型能跑、能连、能调、能解释、能继续迭代。工程可靠性是体验可信度的前提。</p>
         </article>
+        
+        <!-- 能力3：系统视角思考(跨2列) -->
         <article class="card span-2c reveal magnetic">
           <div class="big-number">03</div>
           <h3>以系统视角思考</h3>
@@ -1179,18 +1787,50 @@
     </section>
 
     <!-- ════ CONTACT ════ -->
+    <!--
+    ═════════════════════════════════════════════════════════════════════════════
+    【联系方式部分(Contact Section)】
+    最终转化区，邀请进一步合作
+    
+    结构：
+    .contact-grid: 2列布局(1.2fr左侧大卡 + 0.8fr右侧小卡)
+    .contact-card: 联系信息卡片(包含描述和链接列表)
+    .contact-list: 内链表(邮箱、作品集、返回顶部)
+    ═════════════════════════════════════════════════════════════════════════════
+    -->
     <section id="contact">
       <div class="contact-grid">
+        <!-- 左侧：主要联系卡片 -->
         <div class="contact-card reveal magnetic">
           <span class="eyebrow">Contact</span>
           <h3>聊聊下一个<br/>交互系统。</h3>
           <p>如果你在寻找一个能同时处理实时系统、组织视觉叙事、把产品验证纳入体验设计的人——这类项目正是我的工作语境。</p>
+          
+          <!-- 联系链接列表 -->
           <div class="contact-list">
-            <a href="/cdn-cgi/l/email-protection#e8808d848487a88d90898598848dc68b8785" class="contact-line magnetic"><span>Email</span><span><span class="__cf_email__" data-cfemail="5b333e3737341b3e233a362b373e75383436">[email&#160;protected]</span></span></a>
-            <a href="#" class="contact-line magnetic"><span>Portfolio</span><span>Available on request</span></a>
-            <a href="#hero" class="contact-line magnetic"><span>Back to top</span><span>↑</span></a>
+            <!-- 邮箱链接：使用受保护的邮箱格式(Cloudflare) -->
+            <a href="/cdn-cgi/l/email-protection#e8808d848487a88d90898598848dc68b8785" class="contact-line magnetic">
+              <span>Email</span>
+              <span>
+                <span class="__cf_email__" data-cfemail="5b333e3737341b3e233a362b373e75383436">[email&#160;protected]</span>
+              </span>
+            </a>
+            
+            <!-- 作品集链接 -->
+            <a href="#" class="contact-line magnetic">
+              <span>Portfolio</span>
+              <span>Available on request</span>
+            </a>
+            
+            <!-- 返回顶部锚点 -->
+            <a href="#hero" class="contact-line magnetic">
+              <span>Back to top</span>
+              <span>↑</span>
+            </a>
           </div>
         </div>
+        
+        <!-- 右侧：关键词定位卡片 -->
         <div class="contact-card reveal magnetic">
           <span class="eyebrow">Keywords</span>
           <h3>Interactive Systems ·<br/>Biosensing · Spatial Media</h3>
@@ -1201,71 +1841,205 @@
 
   </main>
 
+  <!-- 
+  ═════════════════════════════════════════════════════════════════════════════
+  【页脚说明】
+  简洁的页脚标注，展示项目名称和类型
+  ═════════════════════════════════════════════════════════════════════════════
+  -->
   <div class="footer-note">Meditation Tent — Interactive Installation Portfolio</div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-    /* ── Custom cursor ── */
-    const cursor    = document.querySelector('.cursor');
-    const cursorDot = document.querySelector('.cursor-dot');
-    const isTouch   = matchMedia('(pointer: coarse)').matches;
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【自定义光标系统】
+    功能说明：
+    - 创建自定义光标，隐藏系统光标，实现品牌化的交互反馈
+    - 光标包含两部分：边框环（cursor）和中心点（cursor-dot）
+    - 支持磁吸效应和涟漪动画，营造沉浸感
+    
+    核心逻辑：
+    1. 监听鼠标移动事件，获取实时位置(mouseX, mouseY)
+    2. 用缓动函数平滑光标位置(cursorX/cursorY延迟跟随，dotX/dotY更敏捷)
+    3. 中心点(dotX, dotY)每隔110ms+22px距离创建一次涟漪
+    4. 检测触屏设备，移动设备上禁用自定义光标
+    ═════════════════════════════════════════════════════════════════════════════
+    */
+    const cursor    = document.querySelector('.cursor');      /* 外环：1px橙色边框圆环 */
+    const cursorDot = document.querySelector('.cursor-dot');  /* 中心点：5px发光橙色圆点 */
+    const isTouch   = matchMedia('(pointer: coarse)').matches;  /* 检测设备是否为触屏(true) 或鼠标(false) */
 
-    let mouseX = innerWidth / 2, mouseY = innerHeight / 2;
-    let cursorX = mouseX, cursorY = mouseY;
-    let dotX = mouseX, dotY = mouseY;
-    let lastRippleTime = 0, lastRippleDotX = mouseX, lastRippleDotY = mouseY;
+
+    let mouseX = innerWidth / 2, mouseY = innerHeight / 2;  /* 实时鼠标位置：屏幕中心为初值 */
+    let cursorX = mouseX, cursorY = mouseY;                 /* 光标外环的当前位置，缓动跟随鼠标 */
+    let dotX = mouseX, dotY = mouseY;                       /* 光标中心点的当前位置，更快速地跟随鼠标 */
+    let lastRippleTime = 0, lastRippleDotX = mouseX, lastRippleDotY = mouseY;  /* 涟漪节流控制：最后一次涟漪的时间和位置 */
+    let disableRipple = false;                              /* 【新增】禁用涟漪标志：光标进入交互区时为true */
+    let currentHeartbeatElement = null;                     /* 【新增】当前正在进行心跳动效的元素 */
 
     function createRipple(x, y) {
-      const r = document.createElement('div');
-      r.className = 'cursor-ripple';
-      r.style.left = x + 'px';
-      r.style.top  = y + 'px';
-      document.body.appendChild(r);
-      r.addEventListener('animationend', () => r.remove(), { once: true });
+      /* ─── 涟漪动画生成函数 ─── */
+      const r = document.createElement('div');     /* 创建涟漪的DOM元素 */
+      r.className = 'cursor-ripple';               /* 应用CSS动画样式(ripple-out @1200ms) */
+      r.style.left = x + 'px';                     /* 涟漪起始位置X坐标 */
+      r.style.top  = y + 'px';                     /* 涟漪起始位置Y坐标 */
+      document.body.appendChild(r);                /* 挂载到页面 */
+      r.addEventListener('animationend', () => r.remove(), { once: true });  /* 动画完成后清理DOM */
     }
 
+
     if (!isTouch) {
+      /*
+      ─────────────────────────────────────────────────────────────────────
+      【鼠标设备的光标动画框架】
+      仅在非触屏设备上执行，触屏设备则使用默认光标
+      ─────────────────────────────────────────────────────────────────────
+      */
       addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+      /* 
+      监听全局鼠标移动事件，持续更新mouseX和mouseY
+      e.clientX/clientY是鼠标在视口中的相对坐标
+      */
 
       (function tick() {
-        cursorX += (mouseX - cursorX) * 0.13;
+        /*
+        ═════════════════════════════════════════════════════════════════
+        【动画帧循环】约60fps执行，驱动整个光标动画系统
+        ═════════════════════════════════════════════════════════════════
+        */
+        
+        /* 用缓动函数(easing)平滑更新光标和中心点位置 */
+        cursorX += (mouseX - cursorX) * 0.13;    /* 光标外环：缓动系数0.13，平滑且有延迟感 */
         cursorY += (mouseY - cursorY) * 0.13;
-        dotX    += (mouseX - dotX)    * 0.28;
+        dotX    += (mouseX - dotX)    * 0.28;    /* 中心点：缓动系数0.28，比外环更敏捷 */
         dotY    += (mouseY - dotY)    * 0.28;
+        
+        /* 通过CSS transform应用新位置(translate使用GPU加速，性能最优) */
         cursor.style.transform    = `translate(${cursorX}px,${cursorY}px) translate(-50%,-50%)`;
         cursorDot.style.transform = `translate(${dotX}px,${dotY}px) translate(-50%,-50%)`;
 
-        /* ripples follow the dot's lagged position */
-        const now  = Date.now();
-        const dist = Math.hypot(dotX - lastRippleDotX, dotY - lastRippleDotY);
-        if (now - lastRippleTime > 110 && dist > 22) {
+        /*
+        ─────────────────────────────────────────────────────────────────
+        【涟漪节流逻辑】
+        控制涟漪生成频率：最多110ms间隔 + 至少移动22px距离才生成新涟漪
+        防止过度绘制DOM，保证帧率流畅
+        ─────────────────────────────────────────────────────────────────
+        */
+        const now  = Date.now();                    /* 当前时间戳(毫秒) */
+        const dist = Math.hypot(dotX - lastRippleDotX, dotY - lastRippleDotY);  /* 中心点与上次涟漪位置的距离 */
+        if (!disableRipple && now - lastRippleTime > 110 && dist > 22) {
+          /* 
+          【修改】同时满足三个条件才生成涟漪：
+          1. disableRipple 为 false（未禁用涟漪）
+          2. 距上次涟漪超过110ms
+          3. 中心点移动了至少22px(避免静止或缓慢移动时频繁生成)
+          */
           createRipple(dotX, dotY);
-          lastRippleTime = now; lastRippleDotX = dotX; lastRippleDotY = dotY;
+          lastRippleTime = now;                   /* 更新涟漪时间记录 */
+          lastRippleDotX = dotX;                  /* 更新涟漪位置记录，下次比对用 */
+          lastRippleDotY = dotY;
         }
 
-        requestAnimationFrame(tick);
+        requestAnimationFrame(tick);              /* 递归调用，下一帧继续执行 */
       })();
     }
 
-    /* ── Spread border effect ── */
-    const SPREAD_DUR = '620ms cubic-bezier(.19,1,.22,1)';
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【点击涂布效果(Spread Border Effect)】
+    功能说明：
+    - 鼠标进入卡片时，从光标位置向外扩散一条橙色边框
+    - 创建沉浸感强、交互反馈明确的视觉效果
+    
+    核心逻辑：
+    1. 为每个卡片元素创建.spread-overlay遮罩层
+    2. mouseenter时计算光标在卡片内的相对位置(百分比)
+    3. 使用clip-path圆形mask从该点向外扩张(160%半径)
+    4. mouseleave时淡出遮罩
+    ═════════════════════════════════════════════════════════════════════════════
+    */
+    const SPREAD_DUR = '1500ms cubic-bezier(.19,1,.22,1)';  /* 【边线动画速度控制】扩散动画时长 1500ms，缓动函数：快进-慢出 */
+    
     function setupSpread(el) {
-      const overlay = document.createElement('div');
-      overlay.className = 'spread-overlay';
-      el.appendChild(overlay);
+      /* ─── 为单个元素配置点击涂布效果 ─── */
+      const overlay = document.createElement('div');   /* 创建覆盖层DOM元素 */
+      overlay.className = 'spread-overlay';            /* 应用预定义CSS样式(1.5px橙色边框) */
+      el.appendChild(overlay);                         /* 将覆盖层添加到卡片内部，z-index:2确保可见 */
+
+      /* 【新增】心跳动效相关变量 */
+      let heartbeatAnimationId = null;              /* 存储心跳动画的requestAnimationFrame ID */
+      const BPM = 90;                               /* 每分钟拍数：90 BPM */
+      const beatDuration = (60 / BPM) * 1000;       /* 一个拍子的时长(毫秒)：666.67ms */
+      const expandDuration = beatDuration * 0.3;    /* 快速变大阶段：占30% ≈ 200ms */
+      const shrinkDuration = beatDuration * 0.7;    /* 慢速缩小阶段：占70% ≈ 466.67ms */
+
+      function startHeartbeat() {
+        /* 【新增】启动心跳动效 */
+        disableRipple = true;                       /* 禁用涟漪 */
+        currentHeartbeatElement = el;               /* 记录当前心跳元素 */
+        if (heartbeatAnimationId) cancelAnimationFrame(heartbeatAnimationId);
+        
+        const startTime = Date.now();
+        const initialScale = 1;
+        const maxScale = 2;                       /* 心跳最大放大倍数 */
+        
+        function animateHeartbeat() {
+          const elapsed = (Date.now() - startTime) % beatDuration;
+          let scale;
+          
+          if (elapsed < expandDuration) {
+            /* 【快速变大】线性从1扩大到1.4 */
+            scale = initialScale + (maxScale - initialScale) * (elapsed / expandDuration);
+          } else {
+            /* 【慢速缩小】三次方缓动回到1 */
+            const shrinkProgress = (elapsed - expandDuration) / shrinkDuration;
+            const easeOutCubic = 1 - Math.pow(1 - shrinkProgress, 3);
+            scale = maxScale - (maxScale - initialScale) * easeOutCubic;
+          }
+          
+          /* 应用缩放到全局光标圆心点 */
+          cursorDot.style.transform = `translate(${dotX}px,${dotY}px) translate(-50%,-50%) scale(${scale})`;
+          
+          heartbeatAnimationId = requestAnimationFrame(animateHeartbeat);
+        }
+        
+        animateHeartbeat();
+      }
+      
+      function stopHeartbeat() {
+        /* 【新增】停止心跳动效 */
+        if (currentHeartbeatElement === el) {
+          disableRipple = false;                    /* 重新启用涟漪 */
+          currentHeartbeatElement = null;
+        }
+        if (heartbeatAnimationId) {
+          cancelAnimationFrame(heartbeatAnimationId);
+          heartbeatAnimationId = null;
+        }
+        /* 重置光标圆心点的缩放 */
+        cursorDot.style.transform = `translate(${dotX}px,${dotY}px) translate(-50%,-50%)`;
+      }
 
       el.addEventListener('mouseenter', e => {
         if (isTouch) return;
+        
         const rect = el.getBoundingClientRect();
         const mx = ((e.clientX - rect.left) / rect.width  * 100).toFixed(1) + '%';
         const my = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1) + '%';
 
-        /* kill transition, snap to origin point */
+        /* 禁用过渡，立即显示原始状态 */
         overlay.style.transition = 'none';
         overlay.style.opacity    = '1';
         overlay.style.clipPath   = `circle(0% at ${mx} ${my})`;
-        /* force reflow so browser registers the reset */
+        
+        /* 强制浏览器重排 */
         overlay.getBoundingClientRect();
-        /* now animate outward */
+        
+        /* 【修改】启动心跳动效（内部禁用涟漪） */
+        startHeartbeat();
+        
+        /* 重新启用过渡，执行外扩动画 */
         overlay.style.transition = `clip-path ${SPREAD_DUR}`;
         overlay.style.clipPath   = `circle(160% at ${mx} ${my})`;
 
@@ -1276,71 +2050,186 @@
         overlay.style.transition = 'opacity 280ms ease';
         overlay.style.opacity    = '0';
         document.body.classList.remove('cursor-hover');
+        
+        /* 【修改】停止心跳动效（内部重启涟漪） */
+        stopHeartbeat();
       });
     }
 
     document.querySelectorAll('.card, .image-card, .stat-card, .tool, .contact-card, .quote, .svg-card, .mapping-card, .arch-flow, .meta-card, .btn').forEach(setupSpread);
+    /* 
+    为所有交互卡片应用点击涂布效果
+    包含的卡片类型：
+    - .card: 内容卡片
+    - .image-card: 图像卡片(可放大)
+    - .stat-card: 统计卡片
+    - .tool: 技术栈工具卡片
+    - .contact-card: 联系方式卡片
+    - .quote: 引语/引用卡片
+    - .svg-card: SVG图表卡片
+    - .mapping-card: 映射关系卡片(木漏日部分)
+    - .arch-flow: 系统架构图
+    - .meta-card: 元信息卡片
+    - .btn: 按钮
+    */
 
-    /* ── Scroll reveal ── */
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【滚动内容显示(Scroll Reveal)】
+    功能说明：
+    - 使用Intersection Observer API检测元素进入视口
+    - 元素进入视口时添加.visible类，触发淡入动画
+    - 支持级联延迟效果：多个元素依次淡入
+    
+    核心逻辑：
+    1. 为每个.reveal元素计算独立的过渡延迟时间
+    2. 使用IntersectionObserver监听元素何时进入视口
+    3. 元素可见时添加.visible类，CSS transition执行淡入动画
+    4. 动画完成后unobserve该元素，不再监听(性能优化)
+    ═════════════════════════════════════════════════════════════════════════════
+    */
     const obs = new IntersectionObserver(entries => {
+      /* 
+      IntersectionObserver参数说明：
+      - entries: 所有监听元素的交集变化信息数组
+      - 每个entry包含：target(元素), isIntersecting(是否在视口), boundingClientRect(位置信息)等
+      */
       entries.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+        if (e.isIntersecting) {
+          /* 
+          当元素进入视口(isIntersecting=true)：
+          1. 添加.visible类，触发CSS中的opacity和transform动画
+          2. unobserve该元素，停止继续监听(一次性效果，提高性能)
+          */
+          e.target.classList.add('visible');
+          obs.unobserve(e.target);
+        }
       });
-    }, { threshold: 0.08, rootMargin: '0px 0px -4% 0px' });
+    }, {
+      threshold: 0.08,        /* 元素至少有8%的面积进入视口时触发 */
+      rootMargin: '0px 0px -4% 0px'  /* 向下偏移4%的视口高度作为触发点(元素更靠近底部才触发) */
+    });
+    /* 
+    rootMargin: '0px 0px -4% 0px' 的含义：
+    上 右 下 左 (CSS margin风格)
+    "0px 0px -4% 0px" = 从底部向上缩进4%视口高度
+    效果：让元素在真正显示前4%的视口高度就开始触发，实现平滑的预加载感
+    */
 
     document.querySelectorAll('.reveal').forEach((el, i) => {
+      /*
+      为每个.reveal元素配置级联延迟
+      */
       el.style.transitionDelay = `${Math.min(i * 35, 260)}ms`;
-      obs.observe(el);
+      /*
+      transitionDelay = 第几个元素 * 35毫秒，最多延迟260毫秒
+      i = 0 → delay = 0ms    (第一个元素立即开始)
+      i = 1 → delay = 35ms   (第二个元素晚35ms)
+      i = 2 → delay = 70ms   (第三个元素晚70ms)
+      ...
+      i ≥ 8 → delay = 260ms  (之后都是260ms，避免延迟过长)
+      
+      视觉效果：多个元素像多米诺骨牌一样依次淡入，营造动态感
+      */
+      obs.observe(el);        /* 开始监听该元素 */
     });
 
-    /* ── Lightbox ── */
-    const lightbox = document.getElementById('lightbox');
-    const lbImg    = document.getElementById('lightbox-img');
-    const lbKicker = document.getElementById('lightbox-kicker');
-    const lbText   = document.getElementById('lightbox-text');
-    const lbClose  = document.getElementById('lightbox-close');
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【灯箱(Lightbox)放大图片系统】
+    功能说明：
+    - 点击可点击图片时打开全屏灯箱显示大图
+    - 支持图片卡片(.lightbox-trigger)和SVG图表卡片(.svg-card)
+    - 显示图片标签(kicker)和描述文字(caption)
+    - 支持多种关闭方式：按钮、背景点击、ESC键
+    
+    核心逻辑：
+    1. 初始化灯箱DOM元素(lightbox容器和关键部分)
+    2. 为图片卡片和SVG卡片绑定点击事件
+    3. 点击时调用openLightbox()显示大图
+    4. 通过closeLightbox()关闭灯箱，支持多种触发方式
+    ═════════════════════════════════════════════════════════════════════════════
+    */
+    const lightbox      = document.getElementById('lightbox');              /* 灯箱容器(全屏overlay) */
+    const lbImg         = document.getElementById('lightbox-img');          /* 灯箱内的<img>元素 */
+    const lbKicker      = document.getElementById('lightbox-kicker');       /* 图片标签(如"实景搭建") */
+    const lbText        = document.getElementById('lightbox-text');         /* 图片描述文字 */
+    const lbClose       = document.getElementById('lightbox-close');        /* 关闭按钮(✕) */
 
     function openLightbox(src, kicker, caption, alt) {
-      lbImg.src = src; lbImg.alt = alt || '';
-      lbKicker.textContent = kicker || '';
-      lbText.textContent   = caption || '';
-      lightbox.classList.add('active');
-      document.body.style.overflow = 'hidden';
+      /* ─── 打开灯箱并显示图片 ─── */
+      lbImg.src           = src;              /* 设置<img>的src属性，加载大图 */
+      lbImg.alt           = alt || '';        /* 设置无障碍属性(alt文本) */
+      lbKicker.textContent = kicker || '';    /* 设置图片标签(如果有的话) */
+      lbText.textContent   = caption || '';    /* 设置描述文字 */
+      lightbox.classList.add('active');       /* 添加.active类，CSS中对应display:flex、opacity:1等 */
+      document.body.style.overflow = 'hidden';  /* 禁用页面滚动，防止灯箱打开时背景页面动 */
     }
 
-    /* image cards */
+    /* ─── 为图片卡片绑定灯箱点击事件 ─── */
     document.querySelectorAll('.lightbox-trigger').forEach(card => {
-      card.style.cursor = 'zoom-in';
+      card.style.cursor = 'none';  /* 鼠标悬停时显示放大镜光标，提示可点击（禁用默认光标） */
       card.addEventListener('click', () => {
+        /*
+        点击卡片时：
+        1. 获取卡片内的<img>元素
+        2. 从data-*属性中读取kicker和caption
+        3. 调用openLightbox()打开灯箱
+        */
         const img = card.querySelector('img');
-        if (!img) return;
-        openLightbox(img.src, card.dataset.kicker, card.dataset.caption, img.alt);
+        if (!img) return;  /* 如果卡片内没有图片就不处理 */
+        openLightbox(
+          img.src,                    /* 使用图片的真实src */
+          card.dataset.kicker,        /* data-kicker属性值(如"实景搭建") */
+          card.dataset.caption,       /* data-caption属性值(详细描述) */
+          img.alt                     /* 图片的alt文本 */
+        );
       });
     });
 
-    /* SVG diagram cards */
+    /* ─── 为SVG图表卡片绑定灯箱点击事件 ─── */
     document.querySelectorAll('.svg-card').forEach(card => {
-      card.style.cursor = 'zoom-in';
+      card.style.cursor = 'none';  /* 放大镜光标提示（禁用默认光标） */
       card.addEventListener('click', () => {
-        const obj     = card.querySelector('object');
-        const kicker  = card.querySelector('.image-kicker')?.textContent || '';
-        const caption = card.querySelector('.image-caption')?.textContent || '';
-        const title   = card.querySelector('.image-title')?.textContent || '';
-        if (obj) openLightbox(obj.data, kicker, caption, title);
+        /*
+        SVG图表卡片的处理逻辑：
+        1. 获取<object>元素和其data属性(SVG文件路径)
+        2. 从卡片内的文本元素中提取kicker、title、caption
+        */
+        const obj     = card.querySelector('object');  /* <object>标签用于嵌入SVG */
+        const kicker  = card.querySelector('.image-kicker')?.textContent || '';    /* 标签文本 */
+        const caption = card.querySelector('.image-caption')?.textContent || '';   /* 描述文本 */
+        const title   = card.querySelector('.image-title')?.textContent || '';     /* 标题文本 */
+        if (obj) openLightbox(obj.data, kicker, caption, title);  /* obj.data是SVG文件的src */
       });
     });
 
     function closeLightbox() {
-      lightbox.classList.remove('active');
-      document.body.style.overflow = '';
-      lbImg.src = '';
+      /*
+      ─────────────────────────────────────────────────────────
+      【关闭灯箱】清理状态并隐藏大图显示
+      ─────────────────────────────────────────────────────────
+      */
+      lightbox.classList.remove('active');      /* 移除.active类，CSS中对应隐藏display、淡出等 */
+      document.body.style.overflow = '';         /* 恢复页面滚动 */
+      lbImg.src = '';                            /* 清空<img>的src，释放加载的图片资源 */
     }
 
+    /* ─── 灯箱关闭事件监听 ─── */
     lbClose.addEventListener('click', closeLightbox);
+    /* 点击关闭按钮(✕)时关闭灯箱 */
+
     lightbox.addEventListener('click', e => {
-      if (e.target === lightbox) closeLightbox();
+      /* 点击灯箱背景(黑色overlay)时关闭灯箱，但不关闭灯箱内容区域 */
+      if (e.target === lightbox) closeLightbox();  /* 确保点击的是灯箱本身，不是内部内容 */
     });
-    addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    addEventListener('keydown', e => {
+      /* ESC键关闭灯箱 */
+      if (e.key === 'Escape') closeLightbox();
+    });
   </script>
 </body>
 </html>
