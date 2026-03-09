@@ -35,11 +35,7 @@
       line-height: 1.6;
     }
 
-    ::selection {
-      background: rgba(255,106,0,0.30);
-      color: white;
-    }
-
+    ::selection { background: rgba(255,106,0,0.30); color: white; }
     a { color: inherit; text-decoration: none; }
 
     /* ── Custom cursor ── */
@@ -47,27 +43,28 @@
       position: fixed; top: 0; left: 0;
       pointer-events: none; z-index: 9999; border-radius: 999px;
       transform: translate(-50%, -50%);
-      transition: width 220ms var(--ease), height 220ms var(--ease), opacity 220ms var(--ease), border-radius 220ms var(--ease), background 220ms var(--ease), border-color 220ms var(--ease);
     }
     .cursor {
-      width: 32px; height: 32px;
-      border: 1px solid rgba(255,106,0,0.7);
-      background: rgba(255,106,0,0.06);
-      backdrop-filter: blur(4px);
+      width: 22px; height: 22px;
+      border: 1px solid rgba(255,106,0,0.6);
+      background: rgba(255,106,0,0.04);
+      backdrop-filter: blur(6px);
       mix-blend-mode: screen;
+      transition: width 300ms var(--ease), height 300ms var(--ease),
+                  opacity 300ms var(--ease), border-color 300ms var(--ease);
     }
     .cursor-dot {
-      width: 7px; height: 7px;
+      width: 5px; height: 5px;
       background: var(--accent);
-      box-shadow: 0 0 18px rgba(255,106,0,0.8);
+      box-shadow: 0 0 14px rgba(255,106,0,0.9);
+      transition: transform 80ms linear;
     }
     body.cursor-hover .cursor {
-      width: 68px; height: 68px; border-radius: 20px;
-      background: rgba(255,106,0,0.12);
+      width: 52px; height: 52px;
+      opacity: 0;
       border-color: var(--accent);
     }
 
-<<<<<<< HEAD
     /* ── Cursor ripple ── */
     .cursor-ripple {
       position: fixed; pointer-events: none; z-index: 9997;
@@ -91,14 +88,11 @@
       clip-path: circle(0% at 50% 50%);
     }
 
-=======
->>>>>>> parent of 77913da (Update index.html)
     .page-frame {
       position: fixed; inset: 16px;
       border: 1px solid rgba(255,255,255,0.05);
       pointer-events: none; z-index: 4;
     }
-
     .noise {
       position: fixed; inset: 0;
       pointer-events: none; z-index: 1; opacity: 0.045;
@@ -119,10 +113,7 @@
       padding: 16px 28px;
       display: flex; align-items: center; justify-content: space-between; gap: 20px;
     }
-    .brand {
-      font-size: 13px; letter-spacing: 0.22em;
-      text-transform: uppercase; color: var(--muted);
-    }
+    .brand { font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
     .nav { display: flex; gap: 18px; flex-wrap: wrap; }
     .nav a {
       font-size: 12px; letter-spacing: 0.14em;
@@ -133,12 +124,7 @@
 
     /* ── Sections ── */
     main { position: relative; z-index: 2; }
-
-    section {
-      max-width: var(--max); margin: 0 auto;
-      padding: 80px 28px;
-    }
-
+    section { max-width: var(--max); margin: 0 auto; padding: 80px 28px; }
     .eyebrow {
       display: inline-block; color: var(--accent);
       font-size: 11px; letter-spacing: 0.22em;
@@ -146,137 +132,92 @@
     }
 
     /* ── Hero ── */
-    .hero {
-      min-height: 100vh;
-      display: grid; align-items: end;
-      padding-top: 100px;
-    }
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 32px; align-items: end;
-    }
+    .hero { min-height: 100vh; display: grid; align-items: end; padding-top: 100px; }
+    .hero-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; align-items: end; }
     .display {
       font-family: Georgia, "Noto Serif SC", serif;
       font-weight: 700;
       font-size: clamp(3.8rem, 9vw, 8.5rem);
-      line-height: 0.88;
-      letter-spacing: -0.05em;
+      line-height: 0.88; letter-spacing: -0.05em;
     }
-    .display .accent {
-      color: var(--accent);
-      text-shadow: 0 0 40px rgba(255,106,0,0.18);
-    }
-    .hero-copy {
-      max-width: 560px; margin-top: 24px;
-      color: #c8c2b9; font-size: 17px; line-height: 1.8;
-    }
-    .hero-media {
-      position: relative; min-height: 660px;
-      display: grid; gap: 16px; align-content: end;
-    }
-    .hero-stack {
-      display: grid;
-      grid-template-columns: 0.6fr 0.4fr;
-      gap: 16px; align-items: end;
-    }
+    .display .accent { color: var(--accent); text-shadow: 0 0 40px rgba(255,106,0,0.18); }
+    .hero-copy { max-width: 560px; margin-top: 24px; color: #c8c2b9; font-size: 17px; line-height: 1.8; }
+    .hero-media { position: relative; min-height: 660px; display: grid; gap: 16px; align-content: end; }
+    .hero-stack { display: grid; grid-template-columns: 0.6fr 0.4fr; gap: 16px; align-items: end; }
 
     .cta-row { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
     .btn {
       display: inline-flex; align-items: center; gap: 10px;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 999px; padding: 13px 22px;
-      font-size: 12px; letter-spacing: 0.16em;
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 999px;
+      padding: 13px 22px; font-size: 12px; letter-spacing: 0.16em;
       text-transform: uppercase; color: var(--text);
       background: rgba(255,255,255,0.02);
-      transition: transform 280ms var(--ease), border-color 280ms var(--ease), background 280ms var(--ease), box-shadow 280ms var(--ease);
+      transition: transform 280ms var(--ease), border-color 280ms var(--ease),
+                  background 280ms var(--ease), box-shadow 280ms var(--ease);
     }
     .btn:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255,106,0,0.8);
-      background: rgba(255,106,0,0.08);
-      box-shadow: 0 16px 48px rgba(255,106,0,0.10);
+      transform: translateY(-2px); border-color: rgba(255,106,0,0.8);
+      background: rgba(255,106,0,0.08); box-shadow: 0 16px 48px rgba(255,106,0,0.10);
     }
-    .btn.primary {
-      background: var(--accent); color: #0a0a0a;
-      border-color: var(--accent); font-weight: 700;
-    }
+    .btn.primary { background: var(--accent); color: #0a0a0a; border-color: var(--accent); font-weight: 700; }
 
     /* ── Cards & Shared ── */
     .meta-card, .card, .quote, .contact-card, .tool, .image-card, .stat-card {
       background: linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0.012));
       border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
+      border-radius: 24px; box-shadow: var(--shadow);
     }
 
-    .meta-card {
-      padding: 20px; min-height: 150px;
+    /* All interactive containers need relative positioning for spread overlay */
+    .card, .image-card, .stat-card, .tool, .contact-card, .quote, .svg-card, .meta-card {
       position: relative; overflow: hidden;
     }
+
+    .meta-card { padding: 20px; min-height: 150px; }
     .meta-card::after {
-      content: ""; position: absolute;
-      inset: auto -40px -40px auto;
+      content: ""; position: absolute; inset: auto -40px -40px auto;
       width: 140px; height: 140px;
       background: radial-gradient(circle, rgba(255,106,0,0.20), transparent 60%);
-      filter: blur(10px);
+      filter: blur(10px); pointer-events: none;
     }
-    .meta-label {
-      font-size: 11px; letter-spacing: 0.18em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
-    }
+    .meta-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
     .meta-value { font-size: 24px; line-height: 1.2; max-width: 300px; }
     .meta-small { margin-top: 12px; color: var(--muted); line-height: 1.65; font-size: 13px; }
 
     /* ── Section layout ── */
-    .section-head {
-      display: grid;
-      grid-template-columns: 0.8fr 1.2fr;
-      gap: 32px; align-items: start; margin-bottom: 40px;
-    }
+    .section-head { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 32px; align-items: start; margin-bottom: 40px; }
     .section-title {
       font-size: clamp(2rem, 3.8vw, 4.2rem);
       line-height: 0.95; letter-spacing: -0.04em;
       font-family: Georgia, "Noto Serif SC", serif;
     }
-    .section-desc {
-      color: #c4beb5; font-size: 16px; line-height: 1.85;
-      max-width: 720px;
-    }
+    .section-desc { color: #c4beb5; font-size: 16px; line-height: 1.85; max-width: 720px; }
 
     /* ── Editorial grid ── */
-    .editorial-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr 1.2fr;
-      gap: 18px; grid-auto-rows: minmax(150px, auto);
-    }
+    .editorial-grid { display: grid; grid-template-columns: 1.1fr 0.9fr 1.2fr; gap: 18px; grid-auto-rows: minmax(150px, auto); }
     .card {
-      padding: 24px; position: relative; overflow: hidden;
+      padding: 24px;
       transition: transform 300ms var(--ease), border-color 300ms var(--ease), background 300ms var(--ease);
     }
     .card:hover, .image-card:hover, .stat-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(255,106,0,0.45);
+      transform: translateY(-4px); border-color: rgba(255,106,0,0.45);
       background: linear-gradient(180deg, rgba(255,106,0,0.06), rgba(255,255,255,0.015));
     }
     .span-2r { grid-row: span 2; }
     .span-2c { grid-column: span 2; }
-
     .card h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.1; letter-spacing: -0.02em; }
     .card p, .card li { color: #ccc7be; line-height: 1.78; font-size: 14.5px; }
     .card ul { padding-left: 18px; }
     .big-number {
-      font-size: clamp(2.8rem, 5vw, 5.5rem);
-      line-height: 0.85; font-family: Georgia, serif;
-      color: var(--accent); margin-bottom: 12px;
+      font-size: clamp(2.8rem, 5vw, 5.5rem); line-height: 0.85;
+      font-family: Georgia, serif; color: var(--accent); margin-bottom: 12px;
     }
 
     /* ── Quote ── */
     .quote { padding: 30px; display: grid; gap: 16px; }
     .quote p {
-      font-size: clamp(1.4rem, 2.4vw, 2.6rem);
-      line-height: 1.15; letter-spacing: -0.03em;
-      font-family: Georgia, "Noto Serif SC", serif;
+      font-size: clamp(1.4rem, 2.4vw, 2.6rem); line-height: 1.15;
+      letter-spacing: -0.03em; font-family: Georgia, "Noto Serif SC", serif;
     }
     .quote small { color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; font-size: 11px; }
 
@@ -284,47 +225,95 @@
     .timeline { display: grid; gap: 0; }
     .timeline-item {
       display: grid; grid-template-columns: 110px 1fr;
-      gap: 20px; padding: 20px 0;
-      border-top: 1px solid rgba(255,255,255,0.07);
+      gap: 20px; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.07);
     }
     .timeline-item:first-child { border-top: none; }
-    .timeline-year {
-      color: var(--accent); font-size: 11px;
-      letter-spacing: 0.2em; text-transform: uppercase; padding-top: 4px;
-    }
+    .timeline-year { color: var(--accent); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; padding-top: 4px; }
     .timeline-title { font-size: 22px; margin-bottom: 8px; letter-spacing: -0.02em; }
 
     /* ── Tool / Stack ── */
-    .stack-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 16px;
-    }
+    .stack-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; }
     .tool {
       padding: 20px; min-height: 170px;
       transition: transform 300ms var(--ease), border-color 300ms var(--ease), background 300ms var(--ease);
     }
     .tool:hover {
-      transform: translateY(-4px);
-      border-color: rgba(255,106,0,0.5);
+      transform: translateY(-4px); border-color: rgba(255,106,0,0.5);
       background: linear-gradient(180deg, rgba(255,106,0,0.06), rgba(255,255,255,0.015));
     }
-    .tool-kicker {
-      color: var(--accent); font-size: 10px;
-      letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 12px;
-    }
+    .tool-kicker { color: var(--accent); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 12px; }
     .tool h4 { margin: 0 0 10px; font-size: 18px; }
     .tool p { color: #c8c2b8; line-height: 1.75; font-size: 13.5px; }
 
-    /* ── Code block ── */
-    .code-block {
-      background: #0c0c0c;
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 20px; padding: 22px; overflow: auto;
-      font-family: "SF Mono", "Fira Code", Consolas, monospace;
-      font-size: 12.5px; line-height: 1.85; color: #f0d4bb;
-      box-shadow: var(--shadow);
+    /* ── Architecture flow visual ── */
+    .arch-flow {
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 24px;
+      padding: 28px; box-shadow: var(--shadow);
     }
+    .arch-row { display: flex; flex-direction: column; gap: 0; }
+    .arch-layer { padding: 16px 0; }
+    .arch-layer + .arch-layer { border-top: 1px solid rgba(255,255,255,0.06); }
+    .arch-layer-label {
+      font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 10px;
+    }
+    .arch-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .arch-chip {
+      display: inline-block; padding: 5px 13px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 999px; font-size: 12.5px; color: #d8d2ca;
+      letter-spacing: 0.02em;
+    }
+    .arch-chip.highlight {
+      background: rgba(255,106,0,0.12);
+      border-color: rgba(255,106,0,0.4);
+      color: var(--accent);
+    }
+    .arch-connector {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; color: rgba(255,106,0,0.4);
+      font-size: 12px; letter-spacing: 0.08em;
+    }
+    .arch-connector::before { content: ''; flex: 1; height: 1px; background: rgba(255,106,0,0.15); }
+    .arch-connector::after  { content: ''; flex: 1; height: 1px; background: rgba(255,106,0,0.15); }
+
+    /* ── Komorebi section ── */
+    .komorebi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 32px; }
+    .mapping-card {
+      background: linear-gradient(135deg, rgba(255,106,0,0.06), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,106,0,0.20); border-radius: 24px;
+      padding: 28px; position: relative; overflow: hidden;
+      transition: transform 300ms var(--ease), border-color 300ms var(--ease);
+    }
+    .mapping-card:hover { transform: translateY(-3px); border-color: rgba(255,106,0,0.5); }
+    .mapping-card::after {
+      content: ""; position: absolute; inset: auto -30px -30px auto;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(255,106,0,0.15), transparent 65%);
+      filter: blur(8px); pointer-events: none;
+    }
+    .mapping-index { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    .mapping-title { font-size: 22px; letter-spacing: -0.02em; margin-bottom: 10px; font-family: Georgia, "Noto Serif SC", serif; }
+    .mapping-desc { color: #c8c2b8; line-height: 1.8; font-size: 14px; }
+    .mapping-detail {
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid rgba(255,106,0,0.15);
+      font-size: 12.5px; color: var(--muted); letter-spacing: 0.04em;
+    }
+
+    /* ── Iteration table ── */
+    .iter-grid { display: grid; gap: 0; }
+    .iter-row {
+      display: grid; grid-template-columns: 90px 180px 1fr;
+      gap: 16px; padding: 16px 0;
+      border-top: 1px solid rgba(255,255,255,0.07); align-items: start;
+    }
+    .iter-row:first-child { border-top: none; }
+    .iter-gen { color: var(--accent); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; padding-top: 3px; }
+    .iter-name { font-size: 15px; letter-spacing: -0.01em; color: var(--text); }
+    .iter-desc { color: #c4beb5; font-size: 13.5px; line-height: 1.72; }
 
     /* ── Grids ── */
     .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -332,7 +321,6 @@
     .image-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 
     .image-card {
-      overflow: hidden; position: relative;
       transition: transform 320ms var(--ease), border-color 320ms var(--ease), background 320ms var(--ease);
     }
     .image-card.tall { min-height: 600px; }
@@ -344,30 +332,27 @@
       object-fit: cover;
       filter: saturate(0.90) contrast(1.02);
       transition: transform 600ms var(--ease), filter 400ms var(--ease);
+      pointer-events: none;
     }
-    .image-card:hover img {
-      transform: scale(1.03);
-      filter: saturate(1) contrast(1.04);
-    }
+    .image-card:hover img { transform: scale(1.03); filter: saturate(1) contrast(1.04); }
     .image-overlay {
-      position: absolute; inset: auto 0 0 0;
-      padding: 20px;
+      position: absolute; inset: auto 0 0 0; padding: 20px;
       background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.85) 100%);
+      pointer-events: none;
     }
-    .image-kicker {
-      font-size: 10px; letter-spacing: 0.16em;
-      text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
-    }
+    .image-kicker { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
     .image-title { font-size: 20px; margin: 0 0 6px; letter-spacing: -0.02em; }
     .image-caption { color: #d8d2ca; line-height: 1.7; font-size: 13px; max-width: 68ch; }
 
     /* ── SVG diagrams ── */
-    .svg-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px; margin-top: 22px;
+    .svg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 22px; }
+    .svg-card {
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+      box-shadow: var(--shadow);
+      transition: transform 300ms var(--ease), border-color 300ms var(--ease);
     }
-    .svg-card { overflow: hidden; position: relative; }
+    .svg-card:hover { transform: translateY(-4px); border-color: rgba(255,106,0,0.45); }
     .svg-frame {
       padding: 16px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
@@ -376,22 +361,22 @@
     .svg-frame object, .svg-frame img {
       display: block; width: 100%; height: auto;
       border-radius: 14px; background: #0a0a0a;
+      pointer-events: none;
     }
 
     /* ── Stats ── */
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 16px;
-    }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
     .stat-card {
       padding: 22px;
       transition: transform 320ms var(--ease), border-color 320ms var(--ease), background 320ms var(--ease);
     }
+    .stat-card:hover {
+      transform: translateY(-4px); border-color: rgba(255,106,0,0.45);
+      background: linear-gradient(180deg, rgba(255,106,0,0.06), rgba(255,255,255,0.015));
+    }
     .stat-num {
-      font-size: clamp(2.4rem, 3.5vw, 3.6rem);
-      line-height: 0.9; font-family: Georgia, serif;
-      color: var(--accent); margin-bottom: 10px;
+      font-size: clamp(2.4rem, 3.5vw, 3.6rem); line-height: 0.9;
+      font-family: Georgia, serif; color: var(--accent); margin-bottom: 10px;
     }
     .stat-card h4 { margin: 0 0 8px; font-size: 18px; }
     .stat-card p { color: #c8c2b8; line-height: 1.75; font-size: 13.5px; }
@@ -400,62 +385,82 @@
     .contact-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
     .contact-card {
       padding: 26px; min-height: 240px;
-      position: relative; overflow: hidden;
       transition: transform 320ms var(--ease), border-color 320ms var(--ease);
     }
-    .contact-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(255,106,0,0.6);
-    }
+    .contact-card:hover { transform: translateY(-4px); border-color: rgba(255,106,0,0.6); }
     .contact-card::before {
-      content: ""; position: absolute;
-      inset: auto -50px -50px auto;
+      content: ""; position: absolute; inset: auto -50px -50px auto;
       width: 160px; height: 160px;
       background: radial-gradient(circle, rgba(255,106,0,0.20), transparent 64%);
-      filter: blur(10px);
+      filter: blur(10px); pointer-events: none;
     }
-    .contact-card h3 {
-      margin: 0 0 12px;
-      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-      letter-spacing: -0.03em; line-height: 0.95;
-    }
+    .contact-card h3 { margin: 0 0 12px; font-size: clamp(1.8rem, 3.5vw, 2.8rem); letter-spacing: -0.03em; line-height: 0.95; }
     .contact-card p { max-width: 520px; color: #ccc7be; line-height: 1.8; font-size: 15px; }
     .contact-list { display: grid; gap: 10px; margin-top: 20px; }
     .contact-line {
       display: flex; align-items: center; justify-content: space-between;
       gap: 16px; padding: 12px 0;
       border-top: 1px solid rgba(255,255,255,0.07);
-      color: #e8e2da;
-      transition: transform 200ms var(--ease), color 200ms var(--ease);
+      color: #e8e2da; transition: transform 200ms var(--ease), color 200ms var(--ease);
     }
     .contact-line:hover { transform: translateX(3px); color: var(--accent); }
 
     .footer-note {
-      padding: 0 28px 36px;
-      max-width: var(--max); margin: 0 auto;
-      color: var(--muted); font-size: 12px;
-      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0 28px 36px; max-width: var(--max); margin: 0 auto;
+      color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
     }
 
-    /* ── Reveal ── */
-    .reveal {
-      opacity: 0; transform: translateY(20px);
-      transition: opacity 800ms var(--ease), transform 800ms var(--ease);
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none; position: fixed; inset: 0; z-index: 99999;
+      background: rgba(0,0,0,0.92); backdrop-filter: blur(20px);
+      align-items: center; justify-content: center; padding: 40px;
+      cursor: zoom-out;
     }
+    .lightbox.active { display: flex; }
+    .lightbox-inner {
+      max-width: min(900px, 90vw); max-height: 90vh;
+      display: flex; flex-direction: column; gap: 16px;
+      animation: lb-in 320ms var(--ease) both;
+    }
+    @keyframes lb-in {
+      from { opacity: 0; transform: scale(0.94); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .lightbox-img {
+      max-width: 100%; max-height: 75vh;
+      object-fit: contain; border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    .lightbox-caption {
+      text-align: center; color: #c4beb5; font-size: 13px; line-height: 1.7;
+    }
+    .lightbox-kicker { color: var(--accent); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 4px; }
+    .lightbox-close {
+      position: fixed; top: 24px; right: 24px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: var(--text); font-size: 20px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 100000; transition: background 200ms;
+    }
+    .lightbox-close:hover { background: rgba(255,106,0,0.2); }
+
+    /* ── Reveal ── */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 800ms var(--ease), transform 800ms var(--ease); }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* ── Responsive ── */
     @media (max-width: 1200px) {
       .hero-grid, .hero-stack, .section-head, .stack-grid,
       .split, .contact-grid, .editorial-grid, .image-grid,
-      .image-strip, .stat-grid, .svg-grid {
-        grid-template-columns: 1fr;
-      }
+      .image-strip, .stat-grid, .svg-grid, .komorebi-grid,
+      .iter-row { grid-template-columns: 1fr; }
+      .iter-row { grid-template-columns: 90px 1fr; }
+      .iter-name { display: none; }
       .span-2c, .span-2r { grid-column: span 1; grid-row: span 1; }
       .hero-media { min-height: auto; }
       .image-card.tall, .image-card.medium, .image-card.short { min-height: auto; aspect-ratio: 4/3; }
     }
-
     @media (max-width: 780px) {
       body { cursor: auto; }
       .cursor, .cursor-dot, .page-frame { display: none; }
@@ -464,6 +469,8 @@
       .display { font-size: clamp(2.8rem, 14vw, 5rem); }
       .hero-copy, .section-desc { font-size: 15px; }
       .timeline-item { grid-template-columns: 1fr; gap: 6px; }
+      .iter-row { grid-template-columns: 1fr; }
+      .iter-gen { margin-bottom: 2px; }
       .nav { gap: 10px; }
       .image-card.tall, .image-card.medium, .image-card.short { aspect-ratio: 3/2; }
     }
@@ -475,12 +482,25 @@
   <div class="page-frame"></div>
   <div class="noise"></div>
 
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightbox-close">✕</button>
+    <div class="lightbox-inner" id="lightbox-inner">
+      <img class="lightbox-img" id="lightbox-img" src="" alt="" />
+      <div class="lightbox-caption">
+        <div class="lightbox-kicker" id="lightbox-kicker"></div>
+        <div id="lightbox-text"></div>
+      </div>
+    </div>
+  </div>
+
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand magnetic" href="#hero">Meditation Tent</a>
       <nav class="nav">
         <a class="magnetic" href="#overview">Overview</a>
         <a class="magnetic" href="#gallery">Gallery</a>
+        <a class="magnetic" href="#komorebi">木漏日</a>
         <a class="magnetic" href="#system">System</a>
         <a class="magnetic" href="#thinking">Process</a>
         <a class="magnetic" href="#stack">Stack</a>
@@ -509,12 +529,14 @@
           </div>
         </div>
         <div class="hero-media reveal">
-          <div class="image-card tall magnetic">
+          <div class="image-card tall magnetic lightbox-trigger"
+               data-kicker="V2 Vision"
+               data-caption="V2 阶段的目标渲染——非接触式呼吸感知与木漏日投影系统联动，使用者的每次呼吸都被转化为光温与影速的变化。">
             <img src="./assets/realistic-rendering.jpg" alt="Meditation Tent realistic rendering" />
             <div class="image-overlay">
               <div class="image-kicker">V2 Vision</div>
               <h3 class="image-title">呼吸驱动整个空间的光影。</h3>
-              <p class="image-caption">V2 阶段的目标渲染——非接触式呼吸感知与空间灯光系统联动，使用者的每次呼吸都被转化为环境反馈。</p>
+              <p class="image-caption">V2 阶段的目标渲染——非接触式呼吸感知，空间以朝霞色温与树影节律响应每次呼吸。</p>
             </div>
           </div>
           <div class="hero-stack">
@@ -523,11 +545,13 @@
               <div class="meta-value">系统架构 · 嵌入式原型 · 信号处理 · 视觉联动</div>
               <div class="meta-small">独立完成从传感采集到空间表达的全链路开发。</div>
             </div>
-            <div class="image-card short magnetic">
+            <div class="image-card short magnetic lightbox-trigger"
+                 data-kicker="Realtime output"
+                 data-caption="呼吸算法输出经 TouchDesigner 处理后的木漏日视觉形态——光温与影速实时随呼吸节律变化。">
               <img src="./assets/main-visualization.png" alt="Main visualization output" />
               <div class="image-overlay">
                 <div class="image-kicker">Realtime output</div>
-                <p class="image-caption">呼吸算法输出经纹理化处理后的视觉形态。</p>
+                <p class="image-caption">呼吸算法输出驱动的投影光影实时形态。</p>
               </div>
             </div>
           </div>
@@ -543,7 +567,7 @@
           <h2 class="section-title">给神经系统<br/>一个安静的接口。</h2>
         </div>
         <div class="section-desc">
-          Meditation Tent 是一套交互装置系统。早期版本通过腰带压力传感和 HRV 手环探索生理输入与反馈映射，后期引入毫米波雷达做非接触呼吸检测，最终通过灯光与实时视觉构建空间级反馈。HRV 手环始终保留——它的角色是效能验证：评估装置是否帮助使用者降低焦虑、提升副交感神经活跃度，形成"体验层 + 验证层"的双层架构。
+          Meditation Tent 是一套交互装置系统。早期版本通过腰带压力传感和 HRV 手环探索生理输入与反馈映射，后期引入毫米波雷达做非接触呼吸检测，最终通过木漏日投影构建空间级反馈。HRV 手环始终保留——它的角色是效能验证：评估装置是否帮助使用者降低焦虑、提升副交感神经活跃度，形成"体验层 + 验证层"的双层架构。
         </div>
       </div>
 
@@ -561,16 +585,15 @@
         </article>
 
         <article class="card reveal magnetic">
-          <div class="meta-label">视觉语言</div>
-          <h3>Dark + Signal Orange</h3>
-          <p>黑色承接空间沉浸感，橙色作为生理信号流动的视觉隐喻——同时带有仪器感和情绪温度。</p>
+          <div class="meta-label">投影视觉</div>
+          <h3>木漏日 · 朝霞映射</h3>
+          <p>投影重现阳光穿透树叶的光影交织——使用者越平静，光色越趋近朝霞的暖红，树影的晃动也越轻缓。</p>
         </article>
 
         <article class="card span-2c reveal magnetic">
           <div class="meta-label">系统定位</div>
           <h3>可测量的身心交互界面</h3>
-          <p>同时关心量的身心交互界面</h3>
-          <p>同时关心两件事：它是否足够打动人，它是否真的产生了生理层面的积极效果。前者需要空间设计与视觉表达，标闭环。两条线始终同步推进。</p>
+          <p>同时关心两件事：它是否足够打动人，它是否真的产生了生理层面的积极效果。前者需要空间设计与视觉表达，后者需要可量化的验证指标。两条线始终同步推进。</p>
         </article>
       </div>
     </section>
@@ -588,7 +611,9 @@
       </div>
 
       <div class="image-grid">
-        <div class="image-card tall reveal magnetic">
+        <div class="image-card tall reveal magnetic lightbox-trigger"
+             data-kicker="实景搭建"
+             data-caption="半围合白色空间、坐垫、植物与投影光影构成体验现场。项目已从概念推进到可感知的空间原型。">
           <img src="./assets/live-action.jpg" alt="Live-action meditation tent setup" />
           <div class="image-overlay">
             <div class="image-kicker">实景搭建</div>
@@ -597,28 +622,36 @@
           </div>
         </div>
         <div class="image-strip">
-          <div class="image-card medium reveal magnetic">
+          <div class="image-card medium reveal magnetic lightbox-trigger"
+               data-kicker="场景渲染"
+               data-caption="产品放回自然环境，强调"庇护 / 隔离 / 沉静"的空间语义。">
             <img src="./assets/场景图.png" alt="Scene rendering" />
             <div class="image-overlay">
               <div class="image-kicker">场景渲染</div>
               <p class="image-caption">产品放回自然环境，强调"庇护 / 隔离 / 沉静"的空间语义。</p>
             </div>
           </div>
-          <div class="image-card medium reveal magnetic">
+          <div class="image-card medium reveal magnetic lightbox-trigger"
+               data-kicker="照明设计"
+               data-caption="光线作为心理引导介质，体现"内向凝视"的体验目标。">
             <img src="./assets/照明设计.png" alt="Lighting design" />
             <div class="image-overlay">
               <div class="image-kicker">照明设计</div>
               <p class="image-caption">光线作为心理引导介质，体现"内向凝视"的体验目标。</p>
             </div>
           </div>
-          <div class="image-card medium reveal magnetic">
+          <div class="image-card medium reveal magnetic lightbox-trigger"
+               data-kicker="早期 Demo"
+               data-caption="装置在黑暗环境中完成的第一轮体验验证。">
             <img src="./assets/demo实景用户体验测试.png" alt="Demo user testing" />
             <div class="image-overlay">
               <div class="image-kicker">早期 Demo</div>
               <p class="image-caption">装置在黑暗环境中完成的第一轮体验验证。</p>
             </div>
           </div>
-          <div class="image-card medium reveal magnetic">
+          <div class="image-card medium reveal magnetic lightbox-trigger"
+               data-kicker="灵感参照"
+               data-caption="东方建筑白墙黑瓦的包裹感，转译为当代装置语言。">
             <img src="./assets/灵感来源.png" alt="Inspiration" />
             <div class="image-overlay">
               <div class="image-kicker">灵感参照</div>
@@ -629,7 +662,6 @@
       </div>
     </section>
 
-<<<<<<< HEAD
     <!-- ════ KOMOREBI ════ -->
     <section id="komorebi">
       <div class="section-head reveal">
@@ -663,8 +695,6 @@
       </div>
     </section>
 
-=======
->>>>>>> parent of 77913da (Update index.html)
     <!-- ════ SYSTEM ════ -->
     <section id="system">
       <div class="section-head reveal">
@@ -685,30 +715,67 @@
             <li><strong>感知层</strong> — 腰带压力传感 / HRV 手环 / 毫米波雷达</li>
             <li><strong>解算层</strong> — 低通滤波 / ACF / Hilbert / 置信度 / 伪影复位</li>
             <li><strong>通信层</strong> — ESP32 蓝牙串口 JSON 数据流</li>
-            <li><strong>表现层</strong> — 灯光映射 / TouchDesigner 视觉联动 / 空间渲染</li>
+            <li><strong>表现层</strong> — 木漏日投影 / 色温映射 / 影速映射 / 空间环境光</li>
             <li><strong>评估层</strong> — HRV 时域指标 · 焦虑缓解 · 副交感活跃度验证</li>
           </ul>
         </div>
-        <div class="code-block reveal">
-[SENSING]
-waist pressure / HRV wristband / mmWave radar
-      ↓
-[SIGNAL PROCESSING]
-low-pass → ACF → Hilbert → confidence → artifact reset
-      ↓
-[TRANSPORT]
-ESP32 + Bluetooth Serial → JSON stream
-      ↓
-[EXPERIENCE OUTPUT]
-LED mapping / generative visual / spatial ambient
-      ↓
-[EVALUATION]
-HRV validation / anxiety relief evidence
+
+        <div class="arch-flow reveal">
+          <div class="arch-row">
+            <div class="arch-layer">
+              <div class="arch-layer-label">感知层 Sensing</div>
+              <div class="arch-chips">
+                <span class="arch-chip">腰带压力传感</span>
+                <span class="arch-chip">HRV 手环</span>
+                <span class="arch-chip highlight">60 GHz 毫米波雷达</span>
+              </div>
+            </div>
+            <div class="arch-connector">↓</div>
+            <div class="arch-layer">
+              <div class="arch-layer-label">解算层 Processing</div>
+              <div class="arch-chips">
+                <span class="arch-chip">IIR 低通滤波</span>
+                <span class="arch-chip">差分自相关 Rdd</span>
+                <span class="arch-chip">Hilbert 置信度</span>
+                <span class="arch-chip">谐波修正</span>
+                <span class="arch-chip">伪影复位</span>
+              </div>
+            </div>
+            <div class="arch-connector">↓</div>
+            <div class="arch-layer">
+              <div class="arch-layer-label">通信层 Transport</div>
+              <div class="arch-chips">
+                <span class="arch-chip highlight">ESP32 经典蓝牙 SPP</span>
+                <span class="arch-chip">JSON 数据流 @10 Hz</span>
+              </div>
+            </div>
+            <div class="arch-connector">↓</div>
+            <div class="arch-layer">
+              <div class="arch-layer-label">表现层 Output</div>
+              <div class="arch-chips">
+                <span class="arch-chip highlight">木漏日投影</span>
+                <span class="arch-chip">色温映射</span>
+                <span class="arch-chip">影速映射</span>
+                <span class="arch-chip">空间环境光</span>
+              </div>
+            </div>
+            <div class="arch-connector">↓</div>
+            <div class="arch-layer">
+              <div class="arch-layer-label">评估层 Validation</div>
+              <div class="arch-chips">
+                <span class="arch-chip">HRV 时域指标</span>
+                <span class="arch-chip">副交感活跃度</span>
+                <span class="arch-chip">焦虑缓解验证</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="image-grid" style="margin-top: 22px;">
-        <div class="image-card medium reveal magnetic">
+        <div class="image-card medium reveal magnetic lightbox-trigger"
+             data-kicker="产品链路"
+             data-caption="毫米波雷达、可穿戴设备、呼吸心率监测、环境声、灯光与冥想状态报告，串联在同一条产品链路中。">
           <img src="./assets/产品流程图.png" alt="Product flow diagram" />
           <div class="image-overlay">
             <div class="image-kicker">产品链路</div>
@@ -717,14 +784,18 @@ HRV validation / anxiety relief evidence
           </div>
         </div>
         <div class="image-strip">
-          <div class="image-card medium reveal magnetic">
+          <div class="image-card medium reveal magnetic lightbox-trigger"
+               data-kicker="装配爆炸图"
+               data-caption="篷布、碳纤维帐杆、风绳、地钉、音响与交互界面逐层展开。">
             <img src="./assets/爆炸图带说明.png" alt="Exploded view" />
             <div class="image-overlay">
               <div class="image-kicker">装配爆炸图</div>
               <p class="image-caption">篷布、碳纤维帐杆、风绳、地钉、音响与交互界面逐层展开。</p>
             </div>
           </div>
-          <div class="image-card medium reveal magnetic">
+          <div class="image-card medium reveal magnetic lightbox-trigger"
+               data-kicker="结构工程"
+               data-caption="可搭建的杆件系统，装置有明确的物理结构支撑。">
             <img src="./assets/结构图.png" alt="Structural diagram" />
             <div class="image-overlay">
               <div class="image-kicker">结构工程</div>
@@ -735,7 +806,7 @@ HRV validation / anxiety relief evidence
       </div>
 
       <div class="svg-grid">
-        <article class="svg-card card reveal magnetic">
+        <article class="svg-card reveal magnetic">
           <div class="svg-frame">
             <object data="./assets/svg_01_system_architecture.svg" type="image/svg+xml" aria-label="System architecture">
               <img src="./assets/svg_01_system_architecture.svg" alt="System architecture diagram" />
@@ -748,7 +819,7 @@ HRV validation / anxiety relief evidence
           </div>
         </article>
 
-        <article class="svg-card card reveal magnetic">
+        <article class="svg-card reveal magnetic">
           <div class="svg-frame">
             <object data="./assets/svg_02_signal_algorithm.svg" type="image/svg+xml" aria-label="Signal algorithm">
               <img src="./assets/svg_02_signal_algorithm.svg" alt="Signal algorithm diagram" />
@@ -761,7 +832,7 @@ HRV validation / anxiety relief evidence
           </div>
         </article>
 
-        <article class="svg-card card reveal magnetic">
+        <article class="svg-card reveal magnetic">
           <div class="svg-frame">
             <object data="./assets/svg_03_hardware_topology.svg" type="image/svg+xml" aria-label="Hardware topology">
               <img src="./assets/svg_03_hardware_topology.svg" alt="Hardware topology diagram" />
@@ -784,7 +855,7 @@ HRV validation / anxiety relief evidence
           <h2 class="section-title">关键判断，<br/>公开展示。</h2>
         </div>
         <div class="section-desc">
-          展示结果，也展示决策。交互装置里真正有价值的，是为什么在某个阶段选择某种方案、为什么保留某条支线、为什么把美学判断和工程约束放在一起权衡。
+          展示结果，也展示决策。交互装置里真正有价值的，是为什么在某个阶段选择某种方案、为什么保留某条支线、为什么把视觉判断和工程约束放在一起权衡。
         </div>
       </div>
 
@@ -808,15 +879,9 @@ HRV validation / anxiety relief evidence
         </article>
 
         <article class="card reveal magnetic">
-<<<<<<< HEAD
           <div class="meta-label">视觉选择</div>
           <h3>为什么是朝霞的颜色</h3>
           <p>投影光温随呼吸放缓趋向橙红——这是映射逻辑的直接视觉结果，不是配色决定。朝霞与晚霞在跨文化语境中是具有高度共识的宁静时刻符码，与副交感激活状态在视觉层面自然对应。</p>
-=======
-          <div class="meta-label">美学选择</div>
-          <h3>Why orange on black</h3>
-          <p>黑色承载安静，橙色像热量、脉搏和被点亮的神经信号。同时具有仪器感和情绪温度。</p>
->>>>>>> parent of 77913da (Update index.html)
         </article>
 
         <article class="card reveal magnetic">
@@ -827,7 +892,9 @@ HRV validation / anxiety relief evidence
       </div>
 
       <div class="image-grid" style="margin-top: 22px;">
-        <div class="image-card medium reveal magnetic">
+        <div class="image-card medium reveal magnetic lightbox-trigger"
+             data-kicker="推演路径"
+             data-caption="绘画实践、田野观察、原型制作、用户研究、呼吸灯实验与整合设计串成一条推理链。">
           <img src="./assets/设计推演路径2.png" alt="Design iteration path" />
           <div class="image-overlay">
             <div class="image-kicker">推演路径</div>
@@ -836,20 +903,18 @@ HRV validation / anxiety relief evidence
           </div>
         </div>
         <div class="image-strip">
-          <div class="image-card medium reveal magnetic">
+          <div class="image-card medium reveal magnetic lightbox-trigger"
+               data-kicker="最小可验证反馈"
+               data-caption="单 LED 呼吸灯测试——从最小交互单元开始验证体验假设。">
             <img src="./assets/早期单LED呼吸灯用户体验测试.png" alt="Early LED breathing light test" />
             <div class="image-overlay">
               <div class="image-kicker">最小可验证反馈</div>
               <p class="image-caption">单 LED 呼吸灯测试——从最小交互单元开始验证体验假设。</p>
             </div>
           </div>
-<<<<<<< HEAD
           <div class="image-card medium reveal magnetic lightbox-trigger"
                data-kicker="信号调试"
                data-caption="硬件原型、实时波形与 HRV 时域分析同框的开发现场。">
-=======
-          <div class="image-card medium reveal magnetic">
->>>>>>> parent of 77913da (Update index.html)
             <img src="./assets/HRV手环滤波解析算法调试（仅用于档案查看）.jpg" alt="HRV wristband signal debugging" />
             <div class="image-overlay">
               <div class="image-kicker">信号调试</div>
@@ -884,7 +949,7 @@ HRV validation / anxiety relief evidence
         <div class="stat-card reveal magnetic">
           <div class="stat-num">01</div>
           <h4>Experience Layer</h4>
-          <p>毫米波雷达与空间视觉负责无负担的体验入口，降低穿戴摩擦，让使用者自然进入状态。</p>
+          <p>毫米波雷达与木漏日投影负责无负担的体验入口，降低穿戴摩擦，让使用者自然进入状态。</p>
         </div>
         <div class="stat-card reveal magnetic">
           <div class="stat-num">02</div>
@@ -899,7 +964,9 @@ HRV validation / anxiety relief evidence
       </div>
 
       <div class="image-grid" style="margin-top: 22px;">
-        <div class="image-card medium reveal magnetic">
+        <div class="image-card medium reveal magnetic lightbox-trigger"
+             data-kicker="效能验证"
+             data-caption="使用者在冥想垫上体验，旁边电脑显示实时生理曲线。手环用于检测装置对焦虑缓解和副交感神经活跃度的影响。">
           <img src="./assets/HRV检测有效性测试.jpeg" alt="HRV effectiveness test" />
           <div class="image-overlay">
             <div class="image-kicker">效能验证</div>
@@ -907,11 +974,13 @@ HRV validation / anxiety relief evidence
             <p class="image-caption">使用者在冥想垫上体验，旁边电脑显示实时生理曲线。手环用于检测装置对焦虑缓解和副交感神经活跃度的影响。</p>
           </div>
         </div>
-        <div class="image-card medium reveal magnetic">
+        <div class="image-card medium reveal magnetic lightbox-trigger"
+             data-kicker="输出层"
+             data-caption="验证层回答"是否有效"，投影层回答"如何被感知"——两者通过呼吸率数据共享同一条输入轨道。">
           <img src="./assets/main-visualization.png" alt="Main visualization" />
           <div class="image-overlay">
             <div class="image-kicker">输出层</div>
-            <p class="image-caption">验证层回答"是否有效"，视觉层回答"如何被感知"。</p>
+            <p class="image-caption">验证层与表现层共享同一条呼吸数据输入，互不干扰，各自回答不同问题。</p>
           </div>
         </div>
       </div>
@@ -925,7 +994,7 @@ HRV validation / anxiety relief evidence
           <h2 class="section-title">从原型到系统。</h2>
         </div>
         <div class="section-desc">
-          项目经历了产品概念设计、硬件验证、呼吸灯体验测试、HRV 有效性探索，再到毫米波雷达与 TouchDesigner 视觉联动。每个版本回答更具体的问题。
+          项目经历了产品概念设计、硬件验证、呼吸灯体验测试、HRV 有效性探索，再到毫米波雷达与 TouchDesigner 木漏日视觉联动。每个版本回答更具体的问题。
         </div>
       </div>
 
@@ -948,16 +1017,97 @@ HRV validation / anxiety relief evidence
           <div class="timeline-year">V2 / Radar</div>
           <div>
             <div class="timeline-title">毫米波雷达 + ESP32 + 蓝牙数据流</div>
-            <div class="section-desc">非接触式呼吸检测。嵌入式侧完成滤波、呼吸率估计、置信度与伪影处理，JSON 数据送往外部视觉系统。</div>
+            <div class="section-desc">非接触式呼吸检测。嵌入式侧完成滤波、呼吸率估计、置信度与伪影处理，JSON 数据送往外部视觉系统。81 轮 AI 协作对话，Gen 1 至 Gen 11 迭代。</div>
           </div>
         </div>
         <div class="timeline-item magnetic">
           <div class="timeline-year">V2 / Spatial</div>
           <div>
-            <div class="timeline-title">TouchDesigner 视觉联动 + 空间沉浸</div>
-            <div class="section-desc">感知数据扩展为环境反馈——改变整个空间的呼吸节律，使用者与装置形成共振。</div>
+            <div class="timeline-title">TouchDesigner 木漏日联动 + 空间沉浸</div>
+            <div class="section-desc">感知数据扩展为环境反馈——呼吸节律改变整个空间的光温与影速，使用者与装置形成共振。</div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ════ V2 ITERATION DATA ════ -->
+    <section>
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">V2 · Radar system iteration</span>
+          <h2 class="section-title">算法迭代，<br/>数据说话。</h2>
+        </div>
+        <div class="section-desc">
+          毫米波雷达呼吸解算系统从 Gen 1 到 Gen 11 经历了完整的工程迭代——通信方案推翻重做，信号算法主动转向，6 份串口测试日志揭示了固定窗口 ACF 的能力边界。
+        </div>
+      </div>
+
+      <div class="split" style="margin-bottom: 22px;">
+        <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+          <div class="stat-card reveal magnetic">
+            <div class="stat-num">81</div>
+            <h4>AI 协作轮次</h4>
+            <p>覆盖硬件调试、通信协议、算法迭代与性能评估全流程。</p>
+          </div>
+          <div class="stat-card reveal magnetic">
+            <div class="stat-num">11</div>
+            <h4>迭代版本</h4>
+            <p>Gen 1 WiFi TCP → Gen 11 完整信号链。每版本回答一个具体问题。</p>
+          </div>
+          <div class="stat-card reveal magnetic">
+            <div class="stat-num">420</div>
+            <h4>代码行数（C++）</h4>
+            <p>8 个功能模块，含 Python 接口脚本约 40 行。</p>
+          </div>
+          <div class="stat-card reveal magnetic">
+            <div class="stat-num">3.1s</div>
+            <h4>ACF 有效延迟</h4>
+            <p>20s 窗口 @10 Hz 采样。在艺术装置驱动场景中可接受。</p>
+          </div>
+        </div>
+        <div class="card reveal magnetic" style="padding: 0;">
+          <div style="padding: 20px 24px 14px;">
+            <div class="meta-label">6 轮测试日志 · 关键发现</div>
+          </div>
+          <div class="iter-grid" style="padding: 0 24px 20px;">
+            <div class="iter-row">
+              <span class="iter-gen">Log 1</span>
+              <span class="iter-name">首次 SPP 连接</span>
+              <span class="iter-desc">Hilbert 分支条件判断错误，amp/cv 全为 0.000；置信度门槛过严导致 br 仅偶发输出。</span>
+            </div>
+            <div class="iter-row">
+              <span class="iter-gen">Log 2</span>
+              <span class="iter-name">按键标注引入</span>
+              <span class="iter-desc">首次引入按键事件 JSON；br>0 输出率偏低（&lt;30%），conf/score 分布整体偏低。</span>
+            </div>
+            <div class="iter-row">
+              <span class="iter-gen">Log 3</span>
+              <span class="iter-name">静止 vs 晃动</span>
+              <span class="iter-desc">静止场景基本可用，晃动时 br 误差 &gt;50%；时间戳跳变点用于干扰段分段识别。</span>
+            </div>
+            <div class="iter-row">
+              <span class="iter-gen">Log 4</span>
+              <span class="iter-name">综合多段</span>
+              <span class="iter-desc">谐波修正后频率准确率提升；大部分数据可靠，极端干扰场景仍有偏差。</span>
+            </div>
+            <div class="iter-row">
+              <span class="iter-gen">Log 5</span>
+              <span class="iter-name">快速呼吸验证</span>
+              <span class="iter-desc">BR&gt;20 时出现严重偏差，ACF 窗口惯性导致估计值持续滞后。</span>
+            </div>
+            <div class="iter-row">
+              <span class="iter-gen">Log 6</span>
+              <span class="iter-name">变速呼吸测试</span>
+              <span class="iter-desc">慢→快时 br 断档；快→慢时长时间维持高值不下降。揭示固定窗口 ACF 的结构性局限。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal magnetic" style="padding: 26px;">
+        <div class="meta-label">长期方案 · 下一阶段</div>
+        <h3 style="margin-bottom: 14px;">1D-CNN + 注意力机制</h3>
+        <p style="color: #c4beb5; line-height: 1.8; max-width: 720px;">固定窗口 ACF 在呼吸频率快速变化时的惯性问题是结构性约束，难以通过参数调整根本解决。1D-CNN 的感受野可自适应呼吸周期长短，与传统 ACF 形成互补。目标：MAE &lt; 1.5 BPM，TFLite Micro 量化后部署至 ESP32 Flash（&lt;100 KB），完全离线推理。</p>
       </div>
     </section>
 
@@ -987,7 +1137,7 @@ HRV validation / anxiety relief evidence
         <article class="tool reveal magnetic">
           <div class="tool-kicker">Realtime</div>
           <h4>TouchDesigner</h4>
-          <p>承接实时数据，生成空间视觉反馈，将身体节律放大为环境节律。</p>
+          <p>承接实时数据，生成木漏日投影，将身体节律翻译为光温与影速的双轨视觉语言。</p>
         </article>
         <article class="tool reveal magnetic">
           <div class="tool-kicker">Product</div>
@@ -1055,13 +1205,13 @@ HRV validation / anxiety relief evidence
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     /* ── Custom cursor ── */
-    const cursor = document.querySelector('.cursor');
+    const cursor    = document.querySelector('.cursor');
     const cursorDot = document.querySelector('.cursor-dot');
-    const hoverTargets = document.querySelectorAll('a, .magnetic');
+    const isTouch   = matchMedia('(pointer: coarse)').matches;
+
     let mouseX = innerWidth / 2, mouseY = innerHeight / 2;
     let cursorX = mouseX, cursorY = mouseY;
     let dotX = mouseX, dotY = mouseY;
-<<<<<<< HEAD
     let lastRippleTime = 0, lastRippleDotX = mouseX, lastRippleDotY = mouseY;
 
     function createRipple(x, y) {
@@ -1076,21 +1226,12 @@ HRV validation / anxiety relief evidence
     if (!isTouch) {
       addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
 
-=======
-
-    if (!matchMedia('(pointer: coarse)').matches) {
-      addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
-      hoverTargets.forEach(el => {
-        el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-        el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
-      });
->>>>>>> parent of 77913da (Update index.html)
       (function tick() {
         cursorX += (mouseX - cursorX) * 0.13;
         cursorY += (mouseY - cursorY) * 0.13;
-        dotX += (mouseX - dotX) * 0.26;
-        dotY += (mouseY - dotY) * 0.26;
-        cursor.style.transform = `translate(${cursorX}px,${cursorY}px) translate(-50%,-50%)`;
+        dotX    += (mouseX - dotX)    * 0.28;
+        dotY    += (mouseY - dotY)    * 0.28;
+        cursor.style.transform    = `translate(${cursorX}px,${cursorY}px) translate(-50%,-50%)`;
         cursorDot.style.transform = `translate(${dotX}px,${dotY}px) translate(-50%,-50%)`;
 
         /* ripples follow the dot's lagged position */
@@ -1105,7 +1246,6 @@ HRV validation / anxiety relief evidence
       })();
     }
 
-<<<<<<< HEAD
     /* ── Spread border effect ── */
     const SPREAD_DUR = '620ms cubic-bezier(.19,1,.22,1)';
     function setupSpread(el) {
@@ -1141,20 +1281,17 @@ HRV validation / anxiety relief evidence
 
     document.querySelectorAll('.card, .image-card, .stat-card, .tool, .contact-card, .quote, .svg-card, .mapping-card, .arch-flow, .meta-card, .btn').forEach(setupSpread);
 
-=======
->>>>>>> parent of 77913da (Update index.html)
     /* ── Scroll reveal ── */
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
       });
-    }, { threshold: 0.1, rootMargin: '0px 0px -4% 0px' });
+    }, { threshold: 0.08, rootMargin: '0px 0px -4% 0px' });
 
     document.querySelectorAll('.reveal').forEach((el, i) => {
-      el.style.transitionDelay = `${Math.min(i * 40, 300)}ms`;
+      el.style.transitionDelay = `${Math.min(i * 35, 260)}ms`;
       obs.observe(el);
     });
-<<<<<<< HEAD
 
     /* ── Lightbox ── */
     const lightbox     = document.getElementById('lightbox');
@@ -1214,9 +1351,3 @@ HRV validation / anxiety relief evidence
   </script>
 </body>
 </html>
-=======
-  </script>
-</body>
-</html>
-
->>>>>>> parent of 77913da (Update index.html)
