@@ -1543,6 +1543,13 @@
       const file = input.files[0];
       if (!file) return;
 
+      const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+      if (file.size > MAX_SIZE) {
+        显示Toast(`图片超过 20MB 限制（当前 ${(file.size / 1024 / 1024).toFixed(1)} MB），请压缩后重新选择`, '✗');
+        input.value = '';
+        return;
+      }
+
       if (type === 'artwork') 状态.作品图文件 = file;
       else 状态.空间图文件 = file;
 
