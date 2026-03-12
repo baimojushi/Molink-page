@@ -16,7 +16,7 @@ async function 文字渲染为图片(text, outputPath, options = {}) {
     行高倍数 = 1.6,
     文字颜色 = '#3a2a1a',
     背景颜色 = '#faf6f0',
-    字体 = 'sans-serif'
+    字体 = 'Noto Sans CJK SC, Noto Sans SC, sans-serif'
   } = options;
 
   const 行高 = Math.round(字体大小 * 行高倍数);
