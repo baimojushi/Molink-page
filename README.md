@@ -1,189 +1,162 @@
-# Snaptoshine 部署指南
+# Mo:link Design
+
+艺术空间匹配服务——上传作品或空间照片，生成艺术悬挂效果图。
+
+## 服务类型
+
+- **A 作品挂进家**：上传作品图和空间图，将作品挂在空间最合适的位置，同时推荐两幅风格相近的作品并呈现效果
+- **B 根据空间推荐作品**：上传空间图，推荐三幅适合的作品并呈现悬挂效果
+- **C 根据作品推荐空间**：上传作品图，生成三份最适合悬挂的室内设计参考
+
+## 技术栈
+
+Node.js + Express，部署在 Railway。前端三个 HTML 页面（index / delivery / admin），采用 Glassmorphism 玻璃态 UI 设计，含视差滚动和 iOS 风格磨砂玻璃效果。
 
 ## 项目结构
 
 ```
-snaptoshine/
-├── server.js                 # 主服务器入口
-├── database.js               # SQLite 数据库定义
-├── package.json              # 依赖配置
-├── .env                      # 环境变量（需自行配置）
-├── .gitignore
-├── routes/
-│   ├── client.js             # 用户端 API（提交订单）
-│   ├── admin.js              # 管理后台 API（查看/交付订单）
-│   └── delivery.js           # 交付页面路由
-├── services/
-│   ├── email.js              # 邮件发送（Nodemailer + SMTP）
-│   ├── sms.js                # 短信发送（阿里云/占位）
-│   └── textToImage.js        # 文字渲染为图片（node-canvas）
+├── server.js                 # Express 主服务
+├── nixpacks.toml             # Railway 构建配置（CJK 字体）
+├── package.json
+├── .env.example              # 环境变量模板
+│
 ├── middleware/
-│   └── upload.js             # 图片上传中间件（Multer）
+│   └── upload.js             # multer 文件上传（用户端 20MB / 管理端 50MB）
+│
+├── services/
+│   ├── email.js              # 腾讯云 SES 邮件通知
+│   ├── sms.js                # 阿里云短信通知
+│   └── textToImage.js        # 文字渲染为图片（sharp + SVG）
+│
 ├── public/
-│   ├── index.html            # 用户端提交表单页面
-│   ├── admin.html            # 目标机管理后台页面
-│   └── delivery.html         # 交付结果查看页面
-├── uploads/                  # 用户上传的原图（自动创建）
-├── deliveries/               # 目标机交付的图片（自动创建）
-└── data/                     # SQLite 数据库文件（自动创建）
+│   ├── index.html            # 用户表单页
+│   ├── delivery.html         # 交付结果页
+│   ├── admin.html            # 管理后台
+│   └── images/
+│       ├── background.jpg        # PC 端背景
+│       └── background-mobile.jpg # 移动端背景
+│
+└── data/
+    ├── uploads/              # 用户上传图片
+    └── deliveries/           # 交付图片
 ```
 
-## 部署方式一：Railway（推荐）
+## 环境变量
 
-### 第1步：准备代码仓库
+### 腾讯云邮件（SES）
 
-```bash
-cd D:\项目\交互艺术\中华珍宝馆\AI Agent\网站\files\mo_link-project\mo_link
-git init
-git add .
-git commit -m "初始化 墨林 项目"
+```env
+TENCENTCLOUD_SECRET_ID=       # API 密钥 ID
+TENCENTCLOUD_SECRET_KEY=      # API 密钥 Key
+SES_REGION=ap-guangzhou       # 地域
+SES_FROM_EMAIL=notice@mail.molink.art
+SES_FROM_NAME=Molink
+SES_ORDER_TEMPLATE_ID=        # 订单通知模板 ID
+SES_DELIVERY_TEMPLATE_ID=     # 交付通知模板 ID
+ADMIN_EMAIL=                  # 目标机操作者邮箱，逗号分隔
+BASE_URL=https://molink.art
 ```
 
-在 GitHub 上创建一个仓库（如 `snaptoshine`），然后：
+### 阿里云短信
 
-```bash
-git remote add origin https://github.com/你的用户名/snaptoshine.git
-git push -u origin main
+```env
+ALIYUN_ACCESS_KEY_ID=         # AccessKey ID
+ALIYUN_ACCESS_KEY_SECRET=     # AccessKey Secret
+ALIYUN_SMS_SIGN_NAME=         # 短信签名
+ALIYUN_SMS_TEMPLATE_CODE=     # 短信模板 CODE
 ```
 
-### 第2步：Railway 部署
+短信模板示例：`您的${service}已完成，请查看：https://molinkdesign.up.railway.app/delivery/${url}`
 
-1. 访问 https://railway.app，使用 GitHub 账号登录
-2. 点击 **New Project → Deploy from GitHub repo**
-3. 选择 `snaptoshine` 仓库
-4. Railway 自动检测到 Node.js 项目并开始构建
+阿里云模板变量只能用于链接路径参数，域名部分需在模板中硬编码。
 
-### 第3步：配置环境变量
+### 其他
 
-在 Railway 项目面板中，进入 **Variables** 标签，添加以下环境变量：
-
-| 变量名 | 示例值 | 说明 |
-|--------|--------|------|
-| `PORT` | `3000` | Railway 会自动设置，可不填 |
-| `BASE_URL` | `molinkdesign.up.railway.app` | 部署后 Railway 分配的域名 |
-| `SMTP_HOST` | `smtp.qq.com` | SMTP 服务器地址 |
-| `SMTP_PORT` | `465` | SMTP 端口 |
-| `SMTP_SECURE` | `true` | 是否启用 SSL |
-| `SMTP_USER` | `molink_notice@foxmail.com` | 发件邮箱 |
-| `SMTP_PASS` | `nxletvvzzlsyecbg` | 邮箱授权码 |
-| `SMTP_FROM_NAME` | `MolinkStudio` | 发件人名称 |
-| `ADMIN_EMAIL` | `1216993885@qq.com,molink_notice@foxmail.com` | 目标机通知邮箱 |
-| `ADMIN_SECRET` | `12345678` | 管理后台密钥 |
-
-### 第4步：配置持久化存储
-
-Railway 默认每次部署会重置文件系统。需要挂载持久卷：
-
-1. 在项目中点击 **+ New → Volume**
-2. Mount Path 设为 `/app/data`（数据库文件）
-3. 再挂载一个卷到 `/app/uploads`（用户上传图片）
-4. 再挂载一个卷到 `/app/deliveries`（交付图片）
-
-### 第5步：绑定自定义域名（可选）
-
-1. 在 **Settings → Networking** 中添加自定义域名
-2. 按提示配置 DNS 的 CNAME 记录
-3. 更新 `BASE_URL` 环境变量为你的自定义域名
-
-### 第6步：验证部署
-
-- 用户端：访问 `https://你的域名/`
-- 管理后台：访问 `https://你的域名/admin`
-
----
-
-## 部署方式二：自有服务器（腾讯云/阿里云 + 宝塔）
-
-### 第1步：服务器准备
-
-```bash
-# 安装 Node.js 18+
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# 安装 canvas 依赖（用于文字转图片）
-sudo apt install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+```env
+ADMIN_SECRET=                 # 管理后台密钥
+DATA_DIR=./data               # 持久化数据目录
 ```
 
-### 第2步：上传代码并安装依赖
+## 部署
+
+### Railway 部署
+
+1. 推送代码到 GitHub
+2. Railway 连接仓库，自动检测 Node.js 项目
+3. 在 Variables 中配置上述环境变量
+4. `nixpacks.toml` 会自动安装 CJK 字体（解决文字渲染为方块的问题）
+
+### 本地开发
 
 ```bash
-cd /www/snaptoshine       # 或你选择的目录
 npm install
+cp .env.example .env    # 填写环境变量
+npm run dev
 ```
 
-### 第3步：配置 .env
+依赖安装：
 
 ```bash
-cp .env .env.backup       # 备份模板
-nano .env                 # 编辑并填写所有配置项
+npm install express multer uuid sharp dotenv
+npm install tencentcloud-sdk-nodejs-ses    # 邮件服务
+npm install @alicloud/pop-core             # 短信服务
 ```
 
-### 第4步：使用 PM2 持久化运行
+## 前端设计
 
-```bash
-npm install -g pm2
-pm2 start server.js --name snaptoshine
-pm2 save
-pm2 startup              # 开机自启
-```
+### 视觉系统
 
-### 第5步：Nginx 反向代理
+CSS 变量控制全局风格。玻璃青色调通过 `--glass-cyan-percent` 调节（推荐 0–20，数值越大青色越明显）：
 
-在宝塔面板中添加站点，Nginx 配置：
-
-```nginx
-server {
-    listen 80;
-    server_name 你的域名.com;
-
-    client_max_body_size 50M;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+```css
+:root {
+  --glass-cyan-percent: 16;
 }
 ```
 
-配置 SSL 证书后启用 HTTPS。
+品牌主色 `--color-primary: #917355`，提交按钮采用褐色半透明高硼硅玻璃质感。
 
----
+### 移动端适配
 
-## 邮箱配置指南（QQ邮箱示例）
+针对 Chrome 移动端的字体缩放和 viewport 问题做了专项优化：输入框字号设为 `max(16px, 1em)` 以避免自动缩放，viewport 配置 `maximum-scale=1.0, user-scalable=no`。视差背景使用百分比高度继承，避免移动端浏览器地址栏收起时的背景抖动。
 
-1. 登录 QQ 邮箱 → 设置 → 账户
-2. 找到「POP3/IMAP/SMTP/Exchange/CardDAV/CalDAV 服务」
-3. 开启「IMAP/SMTP 服务」
-4. 按提示发送短信验证，获取**授权码**
-5. 将授权码填入 `.env` 的 `SMTP_PASS`
+### 上传限制
 
----
+用户端单张图片最大 20MB（支持 JPG / PNG / WebP / BMP / TIFF），前端选择文件时即时校验尺寸并弹窗提示，服务端通过 multer 做二次拦截。管理端上传限制为 50MB。
 
-## 短信服务配置指南（阿里云示例）
+## 通知服务
 
-1. 登录阿里云控制台 → 短信服务
-2. 添加短信签名（需审核，约1个工作日）
-3. 添加短信模板，内容示例：`您的「${service}」已完成，查看链接：${url}`
-4. 获取 AccessKey ID 和 Secret
-5. 安装依赖：`npm install @alicloud/dysmsapi20170525 @alicloud/openapi-client`
-6. 取消 `services/sms.js` 中阿里云部分的注释
+### 邮件
 
----
+通过腾讯云 SES 发送模板邮件。`extractPath` 函数从完整 URL 中提取不含域名和开头斜杠的路径，以适配邮件模板中硬编码域名的拼接格式。
 
-## 后续接入 Nano Banana API
+### 短信
 
-在 `routes/client.js` 的订单提交流程中，预留了中间件扩展点。当 API 结构确认后：
+通过阿里云 SMS 发送模板短信。模板变量只支持路径参数（阿里云限制），域名需在模板内写死。
 
-1. 在 `services/` 下新增 `nanoBanana.js`
-2. 封装登录、上传图片、获取结果的流程
-3. 在 `routes/admin.js` 或直接在订单创建后自动调用
-4. 将 API 返回的图片存入 `deliveries/` 目录并自动交付
+## 文字渲染
 
----
+`textToImage.js` 使用 sharp 的 SVG 渲染能力将文字内容生成为 PNG 图片。Railway 环境需通过 `nixpacks.toml` 安装 `noto-fonts-cjk-sans` 和 `fontconfig`，SVG 中字体指定为 `Noto Sans CJK SC`。
 
-## 迭代更新
+```toml
+[phases.setup]
+nixPkgs = ["noto-fonts-cjk-sans", "fontconfig"]
 
-Railway 部署：`git push` 即自动重新部署。
-自有服务器：`git pull && pm2 restart snaptoshine`。
+[phases.build]
+cmds = ["fc-cache -fv"]
+```
+
+## 迭代记录
+
+- 视觉系统重构：Glassmorphism 玻璃态 + iOS 风格边缘高光 + 视差滚动
+- 单变量青色调控制（`--glass-cyan-percent`），提交按钮改为褐色透明高硼硅玻璃质感
+- 修复 Chrome 移动端 UI 拥挤（`text-size-adjust`、输入框字号 ≥ 16px）
+- 修复移动端浏览器上滑时背景异常放大（背景高度从 `100vh` 改为百分比继承）
+- 接收方式输入框全设备换行布局，修复叠边问题
+- 背景图取消灰度调色，使用原图
+- PC 端和移动端均添加滚动与 resize 防抖
+- 集成阿里云短信服务，适配模板变量只能用于路径参数的限制
+- 邮件路径变量去除开头斜杠，适配模板拼接格式
+- 前端上传增加 20MB 即时校验与 Toast 弹窗提示
+- 修复 Railway 环境中文字渲染为方块（安装 CJK 字体）
+- 三个 HTML 页面统一色调系统
