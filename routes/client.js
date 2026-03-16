@@ -14,6 +14,23 @@ const 服务类型映射 = {
 };
 
 // ==========================================
+// 小程序单图上传接口（微信小程序每次只能传一张图）
+// POST /api/client/upload-image
+// ==========================================
+router.post('/upload-image',
+  clientUpload.single('image'),
+  (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: '未收到图片文件' });
+    }
+    res.json({
+      success: true,
+      filename: req.file.filename
+    });
+  }
+);
+
+// ==========================================
 // 提交服务请求
 // POST /api/client/submit
 // ==========================================
@@ -35,16 +52,19 @@ router.post('/submit',
       }
 
       // 根据服务类型验证图片上传
-      const artworkFile = req.files['artwork'] ? req.files['artwork'][0] : null;
-      const spaceFile = req.files['space'] ? req.files['space'][0] : null;
+      // 支持直接上传文件，或传入已上传的文件名（小程序分两步上传时使用）
+      const artworkFile = req.files && req.files['artwork'] ? req.files['artwork'][0] : null;
+      const spaceFile = req.files && req.files['space'] ? req.files['space'][0] : null;
+      const artworkFilename = artworkFile ? artworkFile.filename : (req.body.artwork_filename || null);
+      const spaceFilename = spaceFile ? spaceFile.filename : (req.body.space_filename || null);
 
-      if (service_type === 'hang_in_home' && (!artworkFile || !spaceFile)) {
+      if (service_type === 'hang_in_home' && (!artworkFilename || !spaceFilename)) {
         return res.status(400).json({ error: '「作品挂进家」需同时上传作品图和空间图' });
       }
-      if (service_type === 'recommend_work' && !spaceFile) {
+      if (service_type === 'recommend_work' && !spaceFilename) {
         return res.status(400).json({ error: '「根据空间推荐作品」需上传空间图' });
       }
-      if (service_type === 'recommend_space' && !artworkFile) {
+      if (service_type === 'recommend_space' && !artworkFilename) {
         return res.status(400).json({ error: '「根据作品推荐空间」需上传作品图' });
       }
 
@@ -66,8 +86,8 @@ router.post('/submit',
         'email',
         receive_target.trim(),
         extra_service === 'true' || extra_service === '1' ? 1 : 0,
-        artworkFile ? artworkFile.filename : null,
-        spaceFile ? spaceFile.filename : null,
+        artworkFilename,
+        spaceFilename,
         deliveryToken
       );
 
