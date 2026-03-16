@@ -80,9 +80,17 @@ router.post('/deliver/:id',
       }
 
       // 支持直接上传文件，或传入已上传的文件名数组（小程序分步上传时使用）
-      let deliveryImages = req.files && req.files.length > 0
-        ? req.files.map(f => f.filename)
-        : (req.body.filenames ? JSON.parse(req.body.filenames) : []);
+      let deliveryImages;
+      if (req.files && req.files.length > 0) {
+        deliveryImages = req.files.map(f => f.filename);
+      } else if (req.body.filenames) {
+        // 小程序发来 JSON 时已是数组，网页端发来 form 时是字符串
+        deliveryImages = Array.isArray(req.body.filenames)
+          ? req.body.filenames
+          : JSON.parse(req.body.filenames);
+      } else {
+        deliveryImages = [];
+      }
       const deliveryText = req.body.text || '';
 
       // 如果有文字，渲染为图片
