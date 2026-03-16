@@ -53,6 +53,20 @@ router.get('/orders/:id', (req, res) => {
 });
 
 // ==========================================
+// 小程序单图上传接口（工作人员端）
+// POST /api/admin/delivery/upload
+// ==========================================
+router.post('/delivery/upload',
+  adminUpload.single('file'),
+  (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: '未收到图片文件' });
+    }
+    res.json({ success: true, filename: req.file.filename });
+  }
+);
+
+// ==========================================
 // 交付订单：上传处理后的图片和文字
 // POST /api/admin/deliver/:id
 // ==========================================
@@ -65,7 +79,10 @@ router.post('/deliver/:id',
         return res.status(404).json({ error: '订单不存在' });
       }
 
-      const deliveryImages = req.files.map(f => f.filename);
+      // 支持直接上传文件，或传入已上传的文件名数组（小程序分步上传时使用）
+      let deliveryImages = req.files && req.files.length > 0
+        ? req.files.map(f => f.filename)
+        : (req.body.filenames ? JSON.parse(req.body.filenames) : []);
       const deliveryText = req.body.text || '';
 
       // 如果有文字，渲染为图片
