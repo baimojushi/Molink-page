@@ -70,26 +70,20 @@ router.post('/delivery/upload',
 // 交付订单：上传处理后的图片和文字
 // POST /api/admin/deliver/:id
 // ==========================================
-router.post('/deliver/:id',
-  adminUpload.array('images', 10),
-  async (req, res) => {
+router.post('/deliver/:id', async (req, res) => {
     try {
       const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
       if (!order) {
         return res.status(404).json({ error: '订单不存在' });
       }
 
-      // 支持直接上传文件，或传入已上传的文件名数组（小程序分步上传时使用）
-      let deliveryImages;
-      if (req.files && req.files.length > 0) {
-        deliveryImages = req.files.map(f => f.filename);
-      } else if (req.body.filenames) {
-        // 小程序发来 JSON 时已是数组，网页端发来 form 时是字符串
-        deliveryImages = Array.isArray(req.body.filenames)
-          ? req.body.filenames
-          : JSON.parse(req.body.filenames);
-      } else {
-        deliveryImages = [];
+      // 从请求体中获取已上传的文件名数组（小程序两步上传）
+      let deliveryImages = [];
+      const bodyFilenames = req.body && req.body.filenames;
+      if (bodyFilenames) {
+        deliveryImages = Array.isArray(bodyFilenames)
+          ? bodyFilenames
+          : JSON.parse(bodyFilenames);
       }
       const deliveryText = req.body.text || '';
 
@@ -141,8 +135,7 @@ router.post('/deliver/:id',
       console.error('❌ 交付处理失败:', error);
       res.status(500).json({ error: '交付处理异常' });
     }
-  }
-);
+});
 
 // ==========================================
 // 删除订单：删除订单记录及相关图片文件
