@@ -40,6 +40,16 @@ app.use('/api/client', clientRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/d', deliveryRoutes);
 
+// 隐私政策页面
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+});
+
+// 用户协议页面
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
+
 // 用户端首页
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

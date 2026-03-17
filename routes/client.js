@@ -35,10 +35,6 @@ router.post('/upload-image',
 // POST /api/client/submit
 // ==========================================
 router.post('/submit',
-  clientUpload.fields([
-    { name: 'artwork', maxCount: 1 },
-    { name: 'space', maxCount: 1 }
-  ]),
   async (req, res) => {
     try {
       const { service_type, receive_target, extra_service, device_uuid } = req.body;
