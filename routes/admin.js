@@ -14,6 +14,13 @@ const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, '..', 'data
 const UPLOADS_DIR = path.join(PERSISTENT_ROOT, 'uploads');
 
 // ==========================================
+// "已交付"状态集合
+// delivered → 刚交付；viewed → 用户已查收；downloaded → 用户已下载
+// 三种状态都属于"已完成交付"，重新交付必须允许全部三种
+// ==========================================
+const DELIVERED_STATUSES = ['delivered', 'viewed', 'downloaded'];
+
+// ==========================================
 // 管理端鉴权中间件
 // ==========================================
 function 验证管理权限(req, res, next) {
@@ -114,13 +121,17 @@ router.post('/deliver/:id',
       }
 
       const isRedeliver = req.body.redeliver === '1';
+      const alreadyDelivered = DELIVERED_STATUSES.includes(order.status);
 
       // 状态校验
-      if (!isRedeliver && order.status === 'delivered') {
+      // 修复根因：旧版只判断 status === 'delivered'，导致 viewed / downloaded 状态的
+      // 订单无法重新交付（报"订单尚未交付"），也无法被普通交付拦截（报400）。
+      // 正确逻辑：delivered / viewed / downloaded 三者均视为"已交付"。
+      if (!isRedeliver && alreadyDelivered) {
         (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
         return res.status(400).json({ error: '订单已交付，如需更新请使用重新交付（redeliver=1）' });
       }
-      if (isRedeliver && order.status !== 'delivered') {
+      if (isRedeliver && !alreadyDelivered) {
         (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
         return res.status(400).json({ error: '订单尚未交付，请使用普通交付' });
       }

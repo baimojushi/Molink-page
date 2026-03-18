@@ -291,6 +291,16 @@
 
     function 生成交付链接(token) { return `https://www.molink.art/d/${token}`; }
 
+    // HTML 属性安全转义（防止服务名含引号破坏 onclick）
+    function escAttr(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
     // ══════════════════════════════════════
     // 渲染
     // ══════════════════════════════════════
@@ -313,6 +323,7 @@
     }
 
     function 渲染订单卡片(order) {
+      // 已交付：delivered / viewed / downloaded 三种状态均属于"已交付"
       const 已交付 = ['delivered', 'viewed', 'downloaded'].includes(order.status);
       // ⚠ 后端 GET /api/admin/orders 已将 delivery_images 解析为数组，直接使用，不再 JSON.parse
       const 交付图片 = Array.isArray(order.delivery_images) ? order.delivery_images : [];
@@ -322,6 +333,10 @@
 
       // 接收方式标签
       const 接收标签 = order.receive_method === 'sms' ? '短信' : '邮箱';
+
+      // Bug修复3：服务名含单引号时旧版 onclick 字符串拼接会报 JS 语法错误。
+      // 改用 data-* 属性传参，JS 里通过 dataset 读取，彻底规避转义问题。
+      const safeLabel = escAttr(order.service_type_label || order.service_type || '');
 
       return `
       <div class="order-card" id="card-${order.id}">
@@ -404,8 +419,9 @@
             <button class="deliver-btn" onclick="执行重新交付('${order.id}')">覆盖交付</button>
           </div>` : ''}
 
-          <!-- 待处理：首次交付操作 -->
-          ${order.status === 'pending' ? `
+          <!-- Bug修复2：pending / processing 均显示首次交付操作区。
+               旧版只判断 pending，processing 状态的订单无法完成交付。 -->
+          ${['pending', 'processing'].includes(order.status) ? `
           <div class="deliver-section">
             <h4>交付操作</h4>
             <div class="drop-zone" id="drop-${order.id}"
@@ -420,9 +436,12 @@
             <button class="deliver-btn" onclick="执行交付('${order.id}')">交付</button>
           </div>` : ''}
 
-          <!-- 删除订单 -->
+          <!-- Bug修复3：删除按钮改用 data-* 传参，彻底规避服务名含引号时 onclick 报错。 -->
           <div class="delete-section">
-            <button class="delete-btn" onclick="删除订单('${order.id}', '${(order.service_type_label || order.service_type || '').replace(/'/g, "\\'")}')">
+            <button class="delete-btn"
+              data-order-id="${order.id}"
+              data-label="${safeLabel}"
+              onclick="删除订单(this.dataset.orderId, this.dataset.label)">
               🗑 删除订单
             </button>
           </div>
@@ -578,10 +597,9 @@
       } else {
         重交付激活.add(orderId);
       }
+      // Bug修复1：切换面板前先将该订单加入展开状态，防止重渲染后面板所在卡片折叠不可见。
+      展开状态.add(orderId);
       渲染订单列表();
-      // 确保该订单在重渲染后保持展开
-      const body = document.getElementById(`body-${orderId}`);
-      if (body && 展开状态.has(orderId)) body.classList.add('open');
     }
 
     async function 执行重新交付(orderId) {
