@@ -1,12 +1,21 @@
 // middleware/upload.js —— 文件上传配置
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
 // 持久化数据根目录
 const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const UPLOADS_DIR = path.join(PERSISTENT_ROOT, 'uploads');
 const DELIVERIES_DIR = path.join(PERSISTENT_ROOT, 'deliveries');
+
+// ==========================================
+// 根因修复：模块加载时确保目录存在
+// multer diskStorage 不会自动创建目录；
+// Railway 每次重新部署都是新容器，目录若不存在会直接 ENOENT 导致上传失败
+// ==========================================
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(DELIVERIES_DIR, { recursive: true });
 
 // ==========================================
 // 用户端图片上传配置
@@ -46,7 +55,7 @@ const adminStorage = multer.diskStorage({
     cb(null, DELIVERIES_DIR);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname) || '.jpg';
     cb(null, `delivery_${uuidv4()}${ext}`);
   }
 });
@@ -55,8 +64,9 @@ const adminUpload = multer({
   storage: adminStorage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 管理端最大50MB
   fileFilter: (req, file, cb) => {
-    const allowed = /\.(jpg|jpeg|png|webp|bmp|tiff)$/i;
-    if (allowed.test(path.extname(file.originalname))) {
+    const allowedExt = /\.(jpg|jpeg|png|webp|bmp|tiff)$/i;
+    const allowedMime = /^image\/(jpeg|png|webp|bmp|tiff)$/i;
+    if (allowedExt.test(path.extname(file.originalname)) || allowedMime.test(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error('仅支持图片格式'));
@@ -64,4 +74,4 @@ const adminUpload = multer({
   }
 });
 
-module.exports = { clientUpload, adminUpload };
+module.exports = { clientUpload, adminUpload, DELIVERIES_DIR };
