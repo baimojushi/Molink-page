@@ -2,15 +2,16 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
-const { adminUpload } = require('../middleware/upload');
+const { adminUpload, DELIVERIES_DIR } = require('../middleware/upload');
 const { 发送交付通知到用户邮箱 } = require('../services/email');
 const { 文字渲染为图片 } = require('../services/textToImage');
 
-// 持久化目录
+// uploads 目录（用于删除订单时清理用户上传图片）
 const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
-const DELIVERIES_DIR = path.join(PERSISTENT_ROOT, 'deliveries');
+const UPLOADS_DIR = path.join(PERSISTENT_ROOT, 'uploads');
 
 // ==========================================
 // 管理端鉴权中间件
@@ -37,6 +38,11 @@ router.get('/orders', (req, res) => {
   } else {
     orders = db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all();
   }
+  // delivery_images 从 JSON 字符串解析为数组，方便前端直接使用
+  orders = orders.map(o => {
+    try { o.delivery_images = o.delivery_images ? JSON.parse(o.delivery_images) : []; } catch { o.delivery_images = []; }
+    return o;
+  });
   res.json({ orders });
 });
 
@@ -49,11 +55,12 @@ router.get('/orders/:id', (req, res) => {
   if (!order) {
     return res.status(404).json({ error: '订单不存在' });
   }
+  try { order.delivery_images = order.delivery_images ? JSON.parse(order.delivery_images) : []; } catch { order.delivery_images = []; }
   res.json({ order });
 });
 
 // ==========================================
-// 小程序单图上传接口（工作人员端）
+// 小程序单图上传接口（工作人员端两步上传）
 // POST /api/admin/delivery/upload
 // ==========================================
 router.post('/delivery/upload',
@@ -67,36 +74,98 @@ router.post('/delivery/upload',
 );
 
 // ==========================================
-// 交付订单：上传处理后的图片和文字
-// POST /api/admin/deliver/:id
+// 工具：删除旧交付图片文件（静默，不阻断流程）
 // ==========================================
-router.post('/deliver/:id', async (req, res) => {
+function 删除旧交付文件(imageList) {
+  if (!Array.isArray(imageList)) return;
+  imageList.forEach(filename => {
+    if (!filename) return;
+    const fullPath = path.join(DELIVERIES_DIR, filename);
+    fs.unlink(fullPath, err => {
+      if (err && err.code !== 'ENOENT') {
+        console.warn('⚠️ 删除旧交付文件失败:', filename, err.message);
+      }
+    });
+  });
+}
+
+// ==========================================
+// 交付 / 重新交付订单
+// POST /api/admin/deliver/:id
+//
+// 支持两种上传方式（可混用）：
+//   1. 直接 multipart 上传：字段名 images（可多张）
+//   2. 两步上传（小程序）：先调 /delivery/upload，再传 filenames JSON 数组
+//
+// body 字段：
+//   images     - 直接上传的图片文件
+//   filenames  - 两步上传已保存的文件名数组（JSON 字符串或数组）
+//   text       - 可选文字，渲染为图片追加到交付列表
+//   redeliver  - '1' 表示重新交付，覆盖旧内容；delivery_token 不变，不重发通知
+// ==========================================
+router.post('/deliver/:id',
+  adminUpload.array('images', 20),
+  async (req, res) => {
     try {
       const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
       if (!order) {
+        (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
         return res.status(404).json({ error: '订单不存在' });
       }
 
-      // 从请求体中获取已上传的文件名数组（小程序两步上传）
-      let deliveryImages = [];
-      const bodyFilenames = req.body && req.body.filenames;
+      const isRedeliver = req.body.redeliver === '1';
+
+      // 状态校验
+      if (!isRedeliver && order.status === 'delivered') {
+        (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
+        return res.status(400).json({ error: '订单已交付，如需更新请使用重新交付（redeliver=1）' });
+      }
+      if (isRedeliver && order.status !== 'delivered') {
+        (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
+        return res.status(400).json({ error: '订单尚未交付，请使用普通交付' });
+      }
+
+      // 收集交付图片文件名
+      // 方式1：直接上传的文件
+      const directFilenames = (req.files || []).map(f => f.filename);
+
+      // 方式2：两步上传已保存的文件名
+      let stepFilenames = [];
+      const bodyFilenames = req.body.filenames;
       if (bodyFilenames) {
-        deliveryImages = Array.isArray(bodyFilenames)
+        stepFilenames = Array.isArray(bodyFilenames)
           ? bodyFilenames
           : JSON.parse(bodyFilenames);
       }
-      const deliveryText = req.body.text || '';
 
-      // 如果有文字，渲染为图片
-      let textImageFilename = null;
-      if (deliveryText.trim()) {
-        textImageFilename = `text_${uuidv4()}.png`;
+      let deliveryImages = [...directFilenames, ...stepFilenames];
+      const deliveryText = (req.body.text || '').trim();
+
+      // 至少需要图片或文字
+      if (deliveryImages.length === 0 && !deliveryText) {
+        (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
+        return res.status(400).json({ error: '请至少上传一张图片或输入文字' });
+      }
+
+      // 文字渲染为图片（可选）
+      if (deliveryText) {
+        const textImageFilename = `text_${uuidv4()}.png`;
         const textImagePath = path.join(DELIVERIES_DIR, textImageFilename);
         await 文字渲染为图片(deliveryText, textImagePath);
         deliveryImages.push(textImageFilename);
       }
 
-      // 更新订单状态
+      // 重新交付：先删除旧文件，delivery_token 不变
+      if (isRedeliver) {
+        try {
+          const oldImages = JSON.parse(order.delivery_images || '[]');
+          删除旧交付文件(oldImages);
+        } catch (e) {
+          console.warn('解析旧交付图片列表失败，跳过删除:', e.message);
+        }
+      }
+
+      // 更新数据库
       db.prepare(`
         UPDATE orders
         SET status = 'delivered',
@@ -110,32 +179,38 @@ router.post('/deliver/:id', async (req, res) => {
         req.params.id
       );
 
-      // 生成交付页面链接（使用 molink.art 域名）
       const deliveryUrl = `https://www.molink.art/d/${order.delivery_token}`;
 
-      // 发送邮箱通知
+      // 发送通知（仅首次交付；重新交付不重复打扰用户）
       let emailSent = false;
-      try {
-        emailSent = await 发送交付通知到用户邮箱(order, deliveryUrl);
-      } catch (e) {
-        console.error('邮件发送失败:', e);
+      if (!isRedeliver) {
+        try {
+          emailSent = await 发送交付通知到用户邮箱(order, deliveryUrl);
+        } catch (e) {
+          console.error('邮件发送失败:', e);
+        }
+        db.prepare('UPDATE orders SET email_sent = ? WHERE id = ?').run(emailSent ? 1 : 0, req.params.id);
       }
 
-      // 记录邮件发送结果
-      db.prepare('UPDATE orders SET email_sent = ? WHERE id = ?').run(emailSent ? 1 : 0, req.params.id);
+      console.log(`✅ ${isRedeliver ? '重新' : ''}交付完成: ${req.params.id} -> ${deliveryUrl}`);
 
       res.json({
         success: true,
         emailSent,
-        message: emailSent ? '交付成功，通知已发送' : '交付成功，邮件发送失败（请手动通知用户）',
+        isRedeliver,
+        message: isRedeliver
+          ? '已覆盖交付内容，链接不变'
+          : (emailSent ? '交付成功，通知已发送' : '交付成功，邮件发送失败（请手动通知用户）'),
         deliveryUrl
       });
 
     } catch (error) {
       console.error('❌ 交付处理失败:', error);
+      (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
       res.status(500).json({ error: '交付处理异常' });
     }
-});
+  }
+);
 
 // ==========================================
 // 删除订单：删除订单记录及相关图片文件
@@ -147,9 +222,6 @@ router.delete('/orders/:id', (req, res) => {
     if (!order) {
       return res.status(404).json({ error: '订单不存在' });
     }
-
-    const fs = require('fs');
-    const UPLOADS_DIR = path.join(PERSISTENT_ROOT, 'uploads');
 
     // 删除用户上传的图片
     const 待删除文件 = [];
