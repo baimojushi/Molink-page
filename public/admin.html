@@ -2,40 +2,38 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mo:link Design · 管理后台</title>
   <style>
     :root {
-      --color-primary: #917355;
+      --color-primary: #9B8370;
       --color-primary-light: #B5A091;
       --color-primary-dark: #806A54;
       --color-accent: #7a9e7e;
       --color-accent-dark: #5a7e5e;
+      --color-bg: #F5F0EB;
+      --color-card: #ffffff;
+      --color-border: #E5DDD5;
       --color-text-primary: #2a2a2a;
       --color-text-secondary: #5a5a5a;
       --color-text-tertiary: #8a8a8a;
-      --color-bg: #f5f0eb;
-      --color-card: #ffffff;
-      --color-border: #e5ddd5;
       --color-danger: #c45c4a;
-      --color-warning-bg: #fff8f0;
-      --color-warning-border: #f0d8b8;
+      --color-pending: #d4a843;
+      --color-delivered: #7a9e7e;
+      --color-viewed: #5b8abf;
+      --color-downloaded: #8b6eb5;
       --radius: 10px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
       background: var(--color-bg);
       color: var(--color-text-primary);
       min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
     }
 
-    /* ==========================================
-       头部
-       ========================================== */
+    /* ── 头部 ── */
     .header {
       background: var(--color-primary-dark);
       color: #fff;
@@ -43,405 +41,201 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
     }
-    .header h1 { font-size: 17px; font-weight: 600; }
+    .header h1 { font-size: 18px; font-weight: 600; }
 
-    /* ==========================================
-       验证栏
-       ========================================== */
+    /* ── 验证栏 ── */
     .auth-bar {
       background: var(--color-card);
-      padding: 14px 24px;
+      padding: 16px 24px;
       border-bottom: 1px solid var(--color-border);
-      display: flex;
-      gap: 10px;
-      align-items: center;
+      display: flex; gap: 12px; align-items: center;
     }
     .auth-bar input {
-      flex: 1;
-      max-width: 280px;
-      padding: 9px 13px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      font-size: 14px;
-      font-family: inherit;
-      outline: none;
+      flex: 1; max-width: 300px; padding: 10px 14px;
+      border: 1px solid var(--color-border); border-radius: var(--radius);
+      font-size: 14px; outline: none; font-family: inherit;
     }
     .auth-bar input:focus { border-color: var(--color-primary); }
     .auth-bar button {
-      padding: 9px 18px;
-      background: var(--color-primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      cursor: pointer;
-      font-size: 14px;
+      padding: 10px 20px; background: var(--color-primary); color: #fff;
+      border: none; border-radius: var(--radius); cursor: pointer; font-size: 14px;
       font-family: inherit;
     }
     .auth-bar button:hover { background: var(--color-primary-dark); }
 
-    /* ==========================================
-       筛选栏
-       ========================================== */
-    .filter-bar {
-      padding: 14px 24px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    /* ── 筛选栏 ── */
+    .filter-bar { padding: 16px 24px; display: flex; gap: 8px; flex-wrap: wrap; }
     .filter-btn {
-      padding: 7px 16px;
-      border: 1px solid var(--color-border);
-      border-radius: 20px;
-      background: var(--color-card);
-      font-size: 13px;
-      cursor: pointer;
-      color: var(--color-text-secondary);
-      font-family: inherit;
-      transition: all 0.15s ease;
+      padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 20px;
+      background: var(--color-card); font-size: 13px; cursor: pointer;
+      color: var(--color-text-secondary); font-family: inherit;
     }
-    .filter-btn.active {
-      background: var(--color-primary);
-      color: #fff;
-      border-color: var(--color-primary);
-    }
-    .filter-btn:hover:not(.active) { border-color: var(--color-primary-light); }
+    .filter-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 
-    /* ==========================================
-       订单容器
-       ========================================== */
-    .orders-container { padding: 0 24px 48px; }
+    /* ── 订单容器 ── */
+    .orders-container { padding: 0 24px 40px; }
 
-    /* ==========================================
-       订单卡片
-       ========================================== */
+    /* ── 订单卡片 ── */
     .order-card {
-      background: var(--color-card);
-      border-radius: var(--radius);
-      margin-bottom: 14px;
-      border: 1px solid var(--color-border);
-      overflow: hidden;
+      background: var(--color-card); border-radius: var(--radius);
+      margin-bottom: 16px; border: 1px solid var(--color-border); overflow: hidden;
     }
     .order-header {
-      padding: 15px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      user-select: none;
-      gap: 12px;
+      padding: 16px 20px; display: flex; align-items: center;
+      justify-content: space-between; cursor: pointer;
+      border-bottom: 1px solid var(--color-border);
     }
-    .order-header:hover { background: #fafaf8; }
-    .order-info { flex: 1; min-width: 0; }
-    .order-service { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .order-meta { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .order-header:hover { background: #fafafa; }
+    .order-info { display: flex; flex-direction: column; gap: 4px; }
+    .order-service { font-size: 15px; font-weight: 600; }
+    .order-meta { font-size: 12px; color: var(--color-text-secondary); }
+    .order-status { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .status-pending    { background: #fef3cd; color: #856404; }
+    .status-delivered  { background: #d4edda; color: #155724; }
+    .status-viewed     { background: #cce5ff; color: #004085; }
+    .status-downloaded { background: #e2d9f3; color: #4a306d; }
 
-    .order-status {
-      padding: 4px 11px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .status-pending { background: #fef3cd; color: #856404; }
-    .status-delivered { background: #d4edda; color: #155724; }
-
-    /* ==========================================
-       订单详情体
-       ========================================== */
+    /* ── 订单详情体 ── */
     .order-body {
-      padding: 0 20px;
-      max-height: 0;
-      overflow: hidden;
+      padding: 0 20px; max-height: 0; overflow: hidden;
       transition: max-height 0.4s ease, padding 0.3s ease;
     }
-    .order-body.open {
-      max-height: 3000px;
-      padding: 20px;
-      border-top: 1px solid var(--color-border);
-    }
+    .order-body.open { max-height: 6000px; padding: 20px; }
 
-    .detail-row {
-      display: flex;
-      padding: 5px 0;
-      font-size: 13px;
-      gap: 8px;
-    }
-    .detail-row .label {
-      width: 72px;
-      color: var(--color-text-secondary);
-      flex-shrink: 0;
-    }
+    /* ── 图片区 ── */
+    .images-section { margin-bottom: 16px; }
+    .images-section h4 { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 8px; font-weight: 600; }
+    .images-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .img-wrap { text-align: center; }
+    .img-wrap img { max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid var(--color-border); cursor: pointer; }
+    .img-wrap .img-label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
 
-    /* 原始图片 */
-    .original-images {
-      display: flex;
-      gap: 12px;
-      margin: 14px 0;
+    /* ── 交付链接行 ── */
+    .delivery-link-row {
+      display: flex; align-items: center; gap: 10px; margin: 12px 0;
+      padding: 10px 14px; background: #f9f7f5; border-radius: var(--radius); font-size: 13px;
     }
-    .original-images .img-wrap { flex: 1; text-align: center; }
-    .original-images img {
-      max-width: 100%;
-      max-height: 200px;
-      border-radius: 8px;
-      border: 1px solid var(--color-border);
-      object-fit: cover;
+    .delivery-link-row a { color: var(--color-primary-dark); word-break: break-all; }
+    .copy-btn {
+      padding: 4px 12px; background: var(--color-primary); color: #fff; border: none;
+      border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap; font-family: inherit;
     }
-    .original-images .img-label {
-      font-size: 12px;
-      color: var(--color-text-secondary);
-      margin-top: 4px;
-    }
+    .copy-btn:hover { background: var(--color-primary-dark); }
 
-    /* ==========================================
-       交付区（pending 和 redeliver 共用）
-       ========================================== */
-    .deliver-section { margin-top: 14px; }
-    .deliver-section-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-text-secondary);
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    /* ── 邮件失败提示框 ── */
+    .email-fail-box {
+      margin: 12px 0; padding: 14px; background: #fff5f5;
+      border: 1px solid #f5c6cb; border-radius: var(--radius); font-size: 13px; color: #721c24;
     }
+    .email-fail-box .fail-title { font-weight: 600; margin-bottom: 8px; }
+    .email-fail-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .email-fail-actions .copy-btn { background: var(--color-danger); }
+    .email-fail-actions .copy-btn:hover { background: #a94442; }
 
-    /* 重新交付警告提示 */
-    .redeliver-warning {
-      padding: 10px 14px;
-      background: var(--color-warning-bg);
-      border: 1px solid var(--color-warning-border);
-      border-radius: var(--radius);
-      font-size: 13px;
-      color: #8a6020;
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
+    /* ── 交付/重交付 公共区块 ── */
+    .deliver-section { margin-top: 16px; }
+    .deliver-section h4 { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 10px; font-weight: 600; }
 
     .drop-zone {
-      border: 2px dashed var(--color-border);
-      border-radius: var(--radius);
-      padding: 22px;
-      text-align: center;
-      color: var(--color-text-tertiary);
-      font-size: 14px;
-      cursor: pointer;
-      margin-bottom: 10px;
-      position: relative;
-      transition: border-color 0.15s, background 0.15s;
+      border: 2px dashed var(--color-border); border-radius: var(--radius);
+      padding: 24px; text-align: center; color: var(--color-text-tertiary);
+      font-size: 14px; cursor: pointer; margin-bottom: 12px; position: relative;
     }
-    .drop-zone.dragover {
-      border-color: var(--color-accent);
-      background: rgba(122,158,126,0.04);
-    }
-    .drop-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .drop-previews {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .drop-preview-item {
-      position: relative;
-    }
-    .drop-preview-item img {
-      width: 72px;
-      height: 72px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid var(--color-border);
-      display: block;
-    }
-    .drop-preview-item .remove-preview {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      width: 18px;
-      height: 18px;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      border-radius: 50%;
-      font-size: 11px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      line-height: 1;
-    }
-    .drop-preview-item .remove-preview:hover { background: var(--color-danger); }
-
+    .drop-zone.dragover { border-color: var(--color-accent); background: rgba(122,158,126,0.05); }
+    .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .drop-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .drop-previews img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--color-border); }
     .deliver-text {
-      width: 100%;
-      min-height: 72px;
-      padding: 10px 12px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      font-size: 14px;
-      resize: vertical;
-      outline: none;
-      font-family: inherit;
-      margin-bottom: 12px;
-      color: var(--color-text-primary);
+      width: 100%; min-height: 80px; padding: 12px;
+      border: 1px solid var(--color-border); border-radius: var(--radius);
+      font-size: 14px; resize: vertical; outline: none; font-family: inherit; margin-bottom: 12px;
     }
     .deliver-text:focus { border-color: var(--color-primary); }
-
-    .deliver-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
     .deliver-btn {
-      padding: 10px 24px;
-      background: var(--color-accent);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.15s;
+      padding: 12px 28px; background: var(--color-accent); color: #fff;
+      border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
     }
     .deliver-btn:hover { background: var(--color-accent-dark); }
-    .deliver-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .deliver-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* 重新交付按钮 */
+    /* ── 重新交付专属样式 ── */
+    .redeliver-section {
+      margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--color-border);
+    }
+    .redeliver-section h4 { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 8px; font-weight: 600; }
+    .redeliver-warning {
+      margin-bottom: 12px; padding: 10px 14px;
+      background: #fff8f0; border: 1px solid #f0d8b8;
+      border-radius: var(--radius); font-size: 13px; color: #8a6020; line-height: 1.5;
+    }
     .redeliver-toggle-btn {
-      padding: 8px 18px;
-      background: transparent;
-      border: 1px solid var(--color-primary-light);
-      border-radius: var(--radius);
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--color-primary);
-      cursor: pointer;
-      font-family: inherit;
+      padding: 5px 14px; background: transparent;
+      border: 1px solid var(--color-primary-light); border-radius: 6px;
+      font-size: 12px; color: var(--color-primary); cursor: pointer; font-family: inherit;
       transition: all 0.15s;
     }
-    .redeliver-toggle-btn:hover {
-      background: rgba(145, 115, 85, 0.06);
-      border-color: var(--color-primary);
-    }
+    .redeliver-toggle-btn:hover { background: rgba(155,131,112,0.07); border-color: var(--color-primary); }
+    .redeliver-toggle-btn.active { background: rgba(155,131,112,0.1); border-color: var(--color-primary); }
 
-    /* 已交付信息栏 */
-    .delivered-info {
-      padding: 12px 0 4px;
-      font-size: 13px;
-      color: var(--color-text-secondary);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
+    /* ── 已交付状态行 ── */
+    .delivered-status-row {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 8px 0; color: var(--color-delivered); font-size: 13px;
     }
-    .delivered-time { color: var(--color-accent-dark); font-weight: 500; }
+    .delivered-status-row .redeliver-toggle-btn { margin-left: auto; }
 
-    /* 已交付图片预览 */
-    .delivered-images {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 10px 0 14px;
-    }
-    .delivered-images img {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid var(--color-border);
-    }
+    /* ── 空状态 ── */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--color-text-tertiary); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
 
-    /* 空状态 */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--color-text-tertiary);
-    }
-    .empty-state .icon { font-size: 40px; margin-bottom: 14px; }
-    .empty-state p { font-size: 15px; }
+    .detail-row { display: flex; padding: 6px 0; font-size: 13px; }
+    .detail-row .label { width: 80px; color: var(--color-text-secondary); flex-shrink: 0; }
 
-    /* 加载状态 */
-    .loading-spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      vertical-align: middle;
-      margin-right: 6px;
+    /* ── 图片放大遮罩 ── */
+    .lightbox-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease; cursor: pointer;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .lightbox-overlay.active { opacity: 1; pointer-events: auto; }
+    .lightbox-overlay img { max-width: 92vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }
 
-    /* Toast */
-    .toast-container {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: none;
+    /* ── 删除区域 ── */
+    .delete-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border); }
+    .delete-btn {
+      padding: 8px 20px; background: var(--color-danger); color: #fff;
+      border: none; border-radius: var(--radius); font-size: 13px; cursor: pointer;
+      font-family: inherit; transition: all 0.2s ease;
     }
-    .toast {
-      background: rgba(0,0,0,0.88);
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      pointer-events: auto;
-      animation: toastIn 0.3s ease;
-      opacity: 1;
-      transition: opacity 0.25s;
-      white-space: nowrap;
-    }
-    .toast.fade-out { opacity: 0; }
-    @keyframes toastIn {
-      from { opacity: 0; transform: translateY(-12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .delete-btn:hover { background: #a94442; transform: translateY(-1px); }
   </style>
 </head>
 <body>
 
-  <div class="toast-container" id="toast-container"></div>
-
-  <div class="header">
-    <h1>Mo:link Design 管理后台</h1>
+  <div class="lightbox-overlay" id="lightbox" onclick="this.classList.remove('active')">
+    <img id="lightbox-img" src="" alt="">
   </div>
 
+  <div class="header"><h1>Mo:link Design 管理后台</h1></div>
+
   <div class="auth-bar">
-    <input type="password" id="admin-secret" placeholder="管理密钥">
+    <input type="password" id="admin-secret" placeholder="请输入管理密钥">
     <button onclick="加载订单()">进入</button>
   </div>
 
   <div class="filter-bar">
-    <div class="filter-btn active" data-status="" onclick="筛选订单(this, '')">全部</div>
-    <div class="filter-btn" data-status="pending" onclick="筛选订单(this, 'pending')">待处理</div>
-    <div class="filter-btn" data-status="delivered" onclick="筛选订单(this, 'delivered')">已交付</div>
+    <div class="filter-btn active" onclick="筛选订单(this, '')">全部</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'pending')">待处理</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'delivered')">已交付</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'viewed')">已查收</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'downloaded')">已下载</div>
   </div>
 
   <div class="orders-container" id="orders-container">
-    <div class="empty-state">
-      <div class="icon">○</div>
-      <p>请输入管理密钥后进入</p>
-    </div>
+    <div class="empty-state"><div class="icon">○</div><p>请输入管理密钥后进入</p></div>
   </div>
 
   <script>
@@ -449,55 +243,33 @@
     let 全部订单 = [];
     let 当前筛选 = '';
 
-    // 每个订单的待交付文件缓存 { orderId: File[] }
-    const 文件缓存 = {};
-    // 已展开的订单
+    // 待交付文件缓存（首次交付）：{ orderId: File[] }
+    const 交付文件缓存 = {};
+    // 重新交付文件缓存：{ orderId: File[] }
+    const 重交付文件缓存 = {};
+    // 已展开的订单 ID 集合（跨重渲染保持展开状态）
     const 展开状态 = new Set();
-    // 重新交付面板是否激活
+    // 已激活重新交付面板的订单 ID 集合
     const 重交付激活 = new Set();
 
-    // ==========================================
-    // Toast
-    // ==========================================
-    function 显示Toast(msg, icon = '✓') {
-      const c = document.getElementById('toast-container');
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
-      c.appendChild(t);
-      const dismiss = () => {
-        if (!t.parentNode) return;
-        t.classList.add('fade-out');
-        setTimeout(() => t.remove(), 280);
-      };
-      setTimeout(dismiss, 5000);
-      t.onclick = dismiss;
-    }
-
-    // ==========================================
-    // 获取密钥 & 加载订单
-    // ==========================================
+    // ══════════════════════════════════════
+    // 加载 & 筛选
+    // ══════════════════════════════════════
     function 获取密钥() { return document.getElementById('admin-secret').value.trim(); }
 
     async function 加载订单() {
       管理密钥 = 获取密钥();
-      if (!管理密钥) return;
+      if (!管理密钥) return alert('请输入管理密钥');
       try {
-        const resp = await fetch('/api/admin/orders', {
-          headers: { 'x-admin-secret': 管理密钥 }
-        });
-        if (resp.status === 403) { 显示Toast('密钥错误', '✗'); return; }
+        const resp = await fetch('/api/admin/orders', { headers: { 'x-admin-secret': 管理密钥 } });
+        if (resp.status === 403) return alert('密钥错误');
         const data = await resp.json();
-        全部订单 = data.orders || [];
+        // 后端已将 delivery_images 解析为数组，直接使用
+        全部订单 = data.orders;
         渲染订单列表();
-      } catch (err) {
-        显示Toast('加载失败: ' + err.message, '✗');
-      }
+      } catch (err) { alert('加载失败: ' + err.message); }
     }
 
-    // ==========================================
-    // 筛选
-    // ==========================================
     function 筛选订单(btn, status) {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -505,117 +277,162 @@
       渲染订单列表();
     }
 
-    // ==========================================
-    // 渲染列表
-    // ==========================================
+    // ══════════════════════════════════════
+    // 辅助函数
+    // ══════════════════════════════════════
+    function 状态文本(status) {
+      const m = { pending: '待处理', delivered: '已交付', viewed: '已查收', downloaded: '已下载', processing: '处理中' };
+      return m[status] || status;
+    }
+    function 状态CSS(status) {
+      const m = { pending: 'status-pending', delivered: 'status-delivered', viewed: 'status-viewed', downloaded: 'status-downloaded' };
+      return m[status] || 'status-pending';
+    }
+
+    function 生成交付链接(token) { return `https://www.molink.art/d/${token}`; }
+
+    // ══════════════════════════════════════
+    // 渲染
+    // ══════════════════════════════════════
     function 渲染订单列表() {
       const container = document.getElementById('orders-container');
       let orders = 全部订单;
       if (当前筛选) orders = orders.filter(o => o.status === 当前筛选);
-
       if (orders.length === 0) {
         container.innerHTML = `<div class="empty-state"><div class="icon">○</div><p>暂无订单</p></div>`;
         return;
       }
+
       container.innerHTML = orders.map(渲染订单卡片).join('');
+
+      // 重渲染后恢复展开状态
+      展开状态.forEach(id => {
+        const body = document.getElementById(`body-${id}`);
+        if (body) body.classList.add('open');
+      });
     }
 
     function 渲染订单卡片(order) {
-      const isOpen = 展开状态.has(order.id);
-      const isDelivered = order.status === 'delivered';
-      const isRedeliverActive = 重交付激活.has(order.id);
+      const 已交付 = ['delivered', 'viewed', 'downloaded'].includes(order.status);
+      // ⚠ 后端 GET /api/admin/orders 已将 delivery_images 解析为数组，直接使用，不再 JSON.parse
+      const 交付图片 = Array.isArray(order.delivery_images) ? order.delivery_images : [];
+      const deliveryUrl = 生成交付链接(order.delivery_token);
+      const emailFailed = 已交付 && !order.email_sent;
+      const 重交付面板显示 = 重交付激活.has(order.id);
 
-      // 已交付的图片列表
-      const deliveredImgs = (order.delivery_images || []).map(img =>
-        `<img src="/deliveries/${img}" alt="交付图片" onerror="this.style.opacity='0.3'">`
-      ).join('');
-
-      // 重新交付区域（仅已交付订单展开时显示）
-      const redeliverSection = isDelivered && isRedeliverActive ? `
-        <div class="deliver-section" id="redeliver-${order.id}">
-          <div class="deliver-section-title">↻ 重新交付</div>
-          <div class="redeliver-warning">
-            重新提交将覆盖当前已交付的内容（图片和文字），交付链接保持不变。
-          </div>
-          ${构建交付上传区(order.id, true)}
-        </div>
-      ` : '';
-
-      // 已交付状态展示
-      const deliveredBlock = isDelivered ? `
-        <div class="delivered-info">
-          <span>已于 <span class="delivered-time">${order.delivered_at || ''}</span> 交付</span>
-          <button class="redeliver-toggle-btn" onclick="切换重交付面板('${order.id}')">
-            ${isRedeliverActive ? '取消重新交付' : '重新交付'}
-          </button>
-        </div>
-        ${deliveredImgs ? `<div class="delivered-images">${deliveredImgs}</div>` : ''}
-        ${redeliverSection}
-      ` : '';
-
-      // 待处理状态
-      const pendingBlock = !isDelivered ? `
-        <div class="deliver-section">
-          <div class="deliver-section-title">交付操作</div>
-          ${构建交付上传区(order.id, false)}
-        </div>
-      ` : '';
+      // 接收方式标签
+      const 接收标签 = order.receive_method === 'sms' ? '短信' : '邮箱';
 
       return `
-        <div class="order-card" id="card-${order.id}">
-          <div class="order-header" onclick="展开订单('${order.id}')">
-            <div class="order-info">
-              <div class="order-service">${order.service_type_label || order.service_type}</div>
-              <div class="order-meta">
-                ${order.receive_method === 'email' ? '邮箱' : '短信'} ${order.receive_target}
-                · ${order.created_at}
-                ${order.extra_service ? ' · 附加服务' : ''}
-              </div>
-            </div>
-            <span class="order-status ${isDelivered ? 'status-delivered' : 'status-pending'}">
-              ${isDelivered ? '已交付' : '待处理'}
-            </span>
+      <div class="order-card" id="card-${order.id}">
+        <div class="order-header" onclick="展开订单('${order.id}')">
+          <div class="order-info">
+            <div class="order-service">${order.service_type_label || order.service_type}</div>
+            <div class="order-meta">${接收标签} ${order.receive_target} · ${order.created_at}${order.extra_service ? ' · 附加服务' : ''}</div>
           </div>
-          <div class="order-body ${isOpen ? 'open' : ''}" id="body-${order.id}">
-            <div class="detail-row"><span class="label">订单 ID</span><span style="font-size:12px;color:var(--color-text-tertiary)">${order.id}</span></div>
-            <div class="detail-row"><span class="label">接收方式</span><span>${order.receive_method === 'email' ? '邮箱' : '短信'}：${order.receive_target}</span></div>
-            <div class="detail-row"><span class="label">附加服务</span><span>${order.extra_service ? '是' : '否'}</span></div>
+          <span class="order-status ${状态CSS(order.status)}">${状态文本(order.status)}</span>
+        </div>
+        <div class="order-body" id="body-${order.id}">
+          <div class="detail-row"><span class="label">订单编号</span><span>${order.id.substring(0,8)}…</span></div>
+          <div class="detail-row"><span class="label">接收${接收标签}</span><span>${order.receive_target}</span></div>
+          <div class="detail-row"><span class="label">附加服务</span><span>${order.extra_service ? '是' : '否'}</span></div>
 
-            <div class="original-images">
-              ${order.artwork_image ? `<div class="img-wrap"><img src="/uploads/${order.artwork_image}" alt="作品图"><div class="img-label">作品图</div></div>` : ''}
-              ${order.space_image ? `<div class="img-wrap"><img src="/uploads/${order.space_image}" alt="空间图"><div class="img-label">空间图</div></div>` : ''}
+          <!-- 用户上传图 -->
+          ${(order.artwork_image || order.space_image) ? `
+          <div class="images-section">
+            <h4>用户上传</h4>
+            <div class="images-row">
+              ${order.artwork_image ? `<div class="img-wrap"><img src="/uploads/${order.artwork_image}" alt="作品图" onclick="放大图片(this.src)"><div class="img-label">作品图</div></div>` : ''}
+              ${order.space_image    ? `<div class="img-wrap"><img src="/uploads/${order.space_image}"   alt="空间图" onclick="放大图片(this.src)"><div class="img-label">空间图</div></div>` : ''}
             </div>
+          </div>` : ''}
 
-            ${deliveredBlock}
-            ${pendingBlock}
+          <!-- 交付图片预览 -->
+          ${交付图片.length > 0 ? `
+          <div class="images-section">
+            <h4>交付图片</h4>
+            <div class="images-row">
+              ${交付图片.map((img, i) => `<div class="img-wrap"><img src="/deliveries/${img}" alt="交付图${i+1}" onclick="放大图片(this.src)"><div class="img-label">交付${i+1}</div></div>`).join('')}
+            </div>
+          </div>` : ''}
+
+          <!-- 交付链接 -->
+          ${已交付 ? `
+          <div class="delivery-link-row">
+            <span style="color:var(--color-text-secondary)">交付链接：</span>
+            <a href="${deliveryUrl}" target="_blank">${deliveryUrl}</a>
+            <button class="copy-btn" onclick="复制文本('${deliveryUrl}', this)">复制</button>
+          </div>` : ''}
+
+          <!-- 邮件发送失败提示 -->
+          ${emailFailed ? `
+          <div class="email-fail-box">
+            <div class="fail-title">⚠ 邮件通知发送失败，请手动联系用户</div>
+            <div>用户${接收标签}：${order.receive_target}</div>
+            <div class="email-fail-actions">
+              <button class="copy-btn" onclick="复制文本('${order.receive_target}', this)">复制${接收标签}</button>
+              <button class="copy-btn" onclick="复制邮件模板('${order.id}')">复制邮件内容</button>
+            </div>
+          </div>` : ''}
+
+          <!-- 已交付状态行 + 重新交付入口 -->
+          ${已交付 ? `
+          <div class="delivered-status-row">
+            <span>交付于 ${order.delivered_at || ''}${order.viewed_at ? ` · 查收于 ${order.viewed_at}` : ''}${order.downloaded_at ? ` · 下载于 ${order.downloaded_at}` : ''}</span>
+            <button class="redeliver-toggle-btn ${重交付面板显示 ? 'active' : ''}"
+              onclick="切换重交付面板('${order.id}')">
+              ${重交付面板显示 ? '取消重新交付' : '重新交付'}
+            </button>
+          </div>` : ''}
+
+          <!-- 重新交付面板（激活时显示） -->
+          ${已交付 && 重交付面板显示 ? `
+          <div class="redeliver-section" id="redeliver-${order.id}">
+            <h4>↻ 重新交付</h4>
+            <div class="redeliver-warning">
+              重新提交将覆盖当前已交付的图片和文字，交付链接保持不变，不会重复发送通知。
+            </div>
+            <div class="drop-zone" id="rdrop-${order.id}"
+              ondragover="event.preventDefault(); this.classList.add('dragover')"
+              ondragleave="this.classList.remove('dragover')"
+              ondrop="处理重交付拖放(event, '${order.id}')">
+              拖入或点击上传处理后的图片（可多张）
+              <input type="file" multiple accept="image/*" onchange="处理重交付选择文件(this, '${order.id}')">
+            </div>
+            <div class="drop-previews" id="rpreviews-${order.id}"></div>
+            <textarea class="deliver-text" id="rtext-${order.id}" placeholder="输入回传文字（可选，将渲染为图片）"></textarea>
+            <button class="deliver-btn" onclick="执行重新交付('${order.id}')">覆盖交付</button>
+          </div>` : ''}
+
+          <!-- 待处理：首次交付操作 -->
+          ${order.status === 'pending' ? `
+          <div class="deliver-section">
+            <h4>交付操作</h4>
+            <div class="drop-zone" id="drop-${order.id}"
+              ondragover="event.preventDefault(); this.classList.add('dragover')"
+              ondragleave="this.classList.remove('dragover')"
+              ondrop="处理拖放(event, '${order.id}')">
+              拖入或点击上传处理后的图片（可多张）
+              <input type="file" multiple accept="image/*" onchange="处理选择文件(this, '${order.id}')">
+            </div>
+            <div class="drop-previews" id="previews-${order.id}"></div>
+            <textarea class="deliver-text" id="text-${order.id}" placeholder="输入回传文字（可选，将渲染为图片供用户下载）"></textarea>
+            <button class="deliver-btn" onclick="执行交付('${order.id}')">交付</button>
+          </div>` : ''}
+
+          <!-- 删除订单 -->
+          <div class="delete-section">
+            <button class="delete-btn" onclick="删除订单('${order.id}', '${(order.service_type_label || order.service_type || '').replace(/'/g, "\\'")}')">
+              🗑 删除订单
+            </button>
           </div>
         </div>
-      `;
+      </div>`;
     }
 
-    function 构建交付上传区(orderId, isRedeliver) {
-      const submitLabel = isRedeliver ? '覆盖交付' : '交付';
-      return `
-        <div class="drop-zone" id="drop-${orderId}-${isRedeliver ? 'r' : 'n'}"
-          ondragover="event.preventDefault(); this.classList.add('dragover')"
-          ondragleave="this.classList.remove('dragover')"
-          ondrop="处理拖放(event, '${orderId}', ${isRedeliver})">
-          拖入或点击选择处理后的图片（可多张）
-          <input type="file" multiple accept="image/*"
-            onchange="处理选择文件(this, '${orderId}', ${isRedeliver})">
-        </div>
-        <div class="drop-previews" id="previews-${orderId}-${isRedeliver ? 'r' : 'n'}"></div>
-        <textarea class="deliver-text" id="text-${orderId}-${isRedeliver ? 'r' : 'n'}"
-          placeholder="回传文字（可选，渲染为图片）"></textarea>
-        <div class="deliver-actions">
-          <button class="deliver-btn" onclick="执行交付('${orderId}', ${isRedeliver})">${submitLabel}</button>
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // 展开 / 折叠订单
-    // ==========================================
+    // ══════════════════════════════════════
+    // 展开 / 折叠（持久化状态，防重渲染丢失）
+    // ══════════════════════════════════════
     function 展开订单(id) {
       const body = document.getElementById(`body-${id}`);
       if (!body) return;
@@ -628,98 +445,82 @@
       }
     }
 
-    // ==========================================
-    // 切换重新交付面板
-    // ==========================================
-    function 切换重交付面板(orderId) {
-      if (重交付激活.has(orderId)) {
-        重交付激活.delete(orderId);
-        delete 文件缓存[`${orderId}_r`];
-      } else {
-        重交付激活.add(orderId);
-      }
-      渲染订单列表();
-      // 重新展开
-      if (展开状态.has(orderId)) {
-        const body = document.getElementById(`body-${orderId}`);
-        if (body) body.classList.add('open');
-      }
+    // ══════════════════════════════════════
+    // 图片放大
+    // ══════════════════════════════════════
+    function 放大图片(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('active');
     }
 
-    // ==========================================
-    // 文件处理
-    // ==========================================
-    function 缓存键(orderId, isRedeliver) {
-      return isRedeliver ? `${orderId}_r` : `${orderId}_n`;
-    }
-
-    function 处理拖放(e, orderId, isRedeliver) {
-      e.preventDefault();
-      e.currentTarget.classList.remove('dragover');
-      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-      添加文件(orderId, isRedeliver, files);
-    }
-
-    function 处理选择文件(input, orderId, isRedeliver) {
-      const files = Array.from(input.files);
-      添加文件(orderId, isRedeliver, files);
-      input.value = '';
-    }
-
-    function 添加文件(orderId, isRedeliver, files) {
-      const key = 缓存键(orderId, isRedeliver);
-      if (!文件缓存[key]) 文件缓存[key] = [];
-      files.forEach(f => {
-        文件缓存[key].push(f);
-        const suffix = isRedeliver ? 'r' : 'n';
-        const container = document.getElementById(`previews-${orderId}-${suffix}`);
-        if (!container) return;
-        const idx = 文件缓存[key].length - 1;
-        const item = document.createElement('div');
-        item.className = 'drop-preview-item';
-        item.dataset.idx = idx;
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(f);
-        const rm = document.createElement('div');
-        rm.className = 'remove-preview';
-        rm.textContent = '×';
-        rm.onclick = () => 移除预览文件(orderId, isRedeliver, idx, item);
-        item.appendChild(img);
-        item.appendChild(rm);
-        container.appendChild(item);
+    // ══════════════════════════════════════
+    // 复制工具
+    // ══════════════════════════════════════
+    function 复制文本(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(() => btn.textContent = orig, 1500);
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+        const orig = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(() => btn.textContent = orig, 1500);
       });
     }
 
-    function 移除预览文件(orderId, isRedeliver, idx, el) {
-      const key = 缓存键(orderId, isRedeliver);
-      if (文件缓存[key]) 文件缓存[key][idx] = null;
-      el.remove();
+    function 复制邮件模板(orderId) {
+      const order = 全部订单.find(o => o.id === orderId);
+      if (!order) return;
+      const deliveryUrl = 生成交付链接(order.delivery_token);
+      const template = `您好，\n\n您在 Mo:link Design 提交的「${order.service_type_label}」服务已处理完成。\n\n请点击以下链接查看交付结果：\n${deliveryUrl}\n\n感谢您的使用！\nMo:link Design`;
+      const fullText = `收件人：${order.receive_target}\n主题：${order.service_type_label} - 交付结果\n\n${template}`;
+      navigator.clipboard.writeText(fullText)
+        .then(() => alert('邮件模板已复制到剪贴板，包含收件人、主题和正文'))
+        .catch(() => alert('复制失败，请手动操作'));
     }
 
-    // ==========================================
-    // 执行交付 / 重新交付
-    // ==========================================
-    async function 执行交付(orderId, isRedeliver) {
-      const key = 缓存键(orderId, isRedeliver);
-      const files = (文件缓存[key] || []).filter(Boolean);
-      const suffix = isRedeliver ? 'r' : 'n';
-      const text = document.getElementById(`text-${orderId}-${suffix}`)?.value || '';
+    // ══════════════════════════════════════
+    // 首次交付 —— 文件处理
+    // ══════════════════════════════════════
+    function 处理拖放(e, orderId) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      添加交付文件(orderId, Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+    }
 
-      if (files.length === 0 && !text.trim()) {
-        显示Toast('请至少上传一张图片或输入文字', '⚠');
-        return;
-      }
+    function 处理选择文件(input, orderId) {
+      添加交付文件(orderId, Array.from(input.files));
+      input.value = '';
+    }
 
-      const btn = document.querySelector(`#${isRedeliver ? 'redeliver' : 'card'}-${orderId} .deliver-btn`);
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = `<span class="loading-spinner"></span>${isRedeliver ? '覆盖中...' : '交付中...'}`;
-      }
+    function 添加交付文件(orderId, files) {
+      if (!交付文件缓存[orderId]) 交付文件缓存[orderId] = [];
+      交付文件缓存[orderId].push(...files);
+      const container = document.getElementById(`previews-${orderId}`);
+      if (!container) return;
+      files.forEach(f => {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(f);
+        container.appendChild(img);
+      });
+    }
+
+    async function 执行交付(orderId) {
+      const files = 交付文件缓存[orderId] || [];
+      const textEl = document.getElementById(`text-${orderId}`);
+      const text = textEl ? textEl.value : '';
+      if (files.length === 0 && !text.trim()) return alert('请至少上传一张图片或输入文字');
+
+      const btn = document.querySelector(`#card-${orderId} .deliver-btn`);
+      if (btn) { btn.disabled = true; btn.textContent = '交付中…'; }
 
       const formData = new FormData();
       files.forEach(f => formData.append('images', f));
       formData.append('text', text);
-      if (isRedeliver) formData.append('redeliver', '1');
 
       try {
         const resp = await fetch(`/api/admin/deliver/${orderId}`, {
@@ -728,25 +529,124 @@
           body: formData
         });
         const data = await resp.json();
-
         if (data.success) {
-          显示Toast(isRedeliver ? '已覆盖交付内容' : `交付成功，链接：${data.deliveryUrl}`, '✓');
-          delete 文件缓存[key];
-          重交付激活.delete(orderId);
+          let msg = data.message + '\n\n交付链接: ' + data.deliveryUrl;
+          if (!data.emailSent) msg += '\n\n⚠ 邮件发送失败，请在订单详情中手动通知用户。';
+          alert(msg);
+          delete 交付文件缓存[orderId];
           await 加载订单();
         } else {
-          显示Toast(data.error || '交付失败', '✗');
-          if (btn) { btn.disabled = false; btn.textContent = isRedeliver ? '覆盖交付' : '交付'; }
+          alert(data.error || '交付失败');
+          if (btn) { btn.disabled = false; btn.textContent = '交付'; }
         }
       } catch (err) {
-        显示Toast('请求失败：' + err.message, '✗');
-        if (btn) { btn.disabled = false; btn.textContent = isRedeliver ? '覆盖交付' : '交付'; }
+        alert('交付请求失败: ' + err.message);
+        if (btn) { btn.disabled = false; btn.textContent = '交付'; }
       }
     }
 
-    // ==========================================
+    // ══════════════════════════════════════
+    // 重新交付 —— 文件处理
+    // ══════════════════════════════════════
+    function 处理重交付拖放(e, orderId) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      添加重交付文件(orderId, Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+    }
+
+    function 处理重交付选择文件(input, orderId) {
+      添加重交付文件(orderId, Array.from(input.files));
+      input.value = '';
+    }
+
+    function 添加重交付文件(orderId, files) {
+      if (!重交付文件缓存[orderId]) 重交付文件缓存[orderId] = [];
+      重交付文件缓存[orderId].push(...files);
+      const container = document.getElementById(`rpreviews-${orderId}`);
+      if (!container) return;
+      files.forEach(f => {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(f);
+        container.appendChild(img);
+      });
+    }
+
+    function 切换重交付面板(orderId) {
+      if (重交付激活.has(orderId)) {
+        重交付激活.delete(orderId);
+        delete 重交付文件缓存[orderId];
+      } else {
+        重交付激活.add(orderId);
+      }
+      渲染订单列表();
+      // 确保该订单在重渲染后保持展开
+      const body = document.getElementById(`body-${orderId}`);
+      if (body && 展开状态.has(orderId)) body.classList.add('open');
+    }
+
+    async function 执行重新交付(orderId) {
+      const files = 重交付文件缓存[orderId] || [];
+      const textEl = document.getElementById(`rtext-${orderId}`);
+      const text = textEl ? textEl.value : '';
+      if (files.length === 0 && !text.trim()) return alert('请至少上传一张图片或输入文字');
+
+      const btn = document.querySelector(`#redeliver-${orderId} .deliver-btn`);
+      if (btn) { btn.disabled = true; btn.textContent = '覆盖中…'; }
+
+      const formData = new FormData();
+      files.forEach(f => formData.append('images', f));
+      formData.append('text', text);
+      formData.append('redeliver', '1');  // 后端据此执行覆盖逻辑
+
+      try {
+        const resp = await fetch(`/api/admin/deliver/${orderId}`, {
+          method: 'POST',
+          headers: { 'x-admin-secret': 管理密钥 },
+          body: formData
+        });
+        const data = await resp.json();
+        if (data.success) {
+          alert(data.message + '\n\n交付链接（不变）: ' + data.deliveryUrl);
+          delete 重交付文件缓存[orderId];
+          重交付激活.delete(orderId);
+          await 加载订单();
+        } else {
+          alert(data.error || '重新交付失败');
+          if (btn) { btn.disabled = false; btn.textContent = '覆盖交付'; }
+        }
+      } catch (err) {
+        alert('重新交付请求失败: ' + err.message);
+        if (btn) { btn.disabled = false; btn.textContent = '覆盖交付'; }
+      }
+    }
+
+    // ══════════════════════════════════════
+    // 删除订单
+    // ══════════════════════════════════════
+    async function 删除订单(orderId, serviceLabel) {
+      const confirmed = confirm(`确认删除订单「${serviceLabel}」？\n\n订单及相关图片文件将被永久删除，此操作无法撤销。`);
+      if (!confirmed) return;
+
+      try {
+        const resp = await fetch(`/api/admin/orders/${orderId}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-secret': 管理密钥 }
+        });
+        const data = await resp.json();
+        if (data.success) {
+          alert('订单已删除');
+          展开状态.delete(orderId);
+          重交付激活.delete(orderId);
+          await 加载订单();
+        } else {
+          alert(data.error || '删除失败');
+        }
+      } catch (err) { alert('删除请求失败: ' + err.message); }
+    }
+
+    // ══════════════════════════════════════
     // 初始化
-    // ==========================================
+    // ══════════════════════════════════════
     document.getElementById('admin-secret').addEventListener('keydown', e => {
       if (e.key === 'Enter') 加载订单();
     });

@@ -25,7 +25,7 @@ const clientStorage = multer.diskStorage({
     cb(null, UPLOADS_DIR);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname) || '.jpg';
     // 文件名格式：类型标记_UUID.扩展名
     const prefix = file.fieldname === 'artwork' ? '作品图' : '空间图';
     cb(null, `${prefix}_${uuidv4()}${ext}`);
@@ -36,8 +36,10 @@ const clientUpload = multer({
   storage: clientStorage,
   limits: { fileSize: 20 * 1024 * 1024 }, // 单张最大20MB
   fileFilter: (req, file, cb) => {
-    const allowed = /\.(jpg|jpeg|png|webp|bmp|tiff)$/i;
-    if (allowed.test(path.extname(file.originalname))) {
+    const allowedExt = /\.(jpg|jpeg|png|webp|bmp|tiff)$/i;
+    const allowedMime = /^image\/(jpeg|png|webp|bmp|tiff)$/i;
+    // 微信小程序临时文件名可能无后缀，用 mimetype 兜底
+    if (allowedExt.test(path.extname(file.originalname)) || allowedMime.test(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error('仅支持 JPG/PNG/WEBP/BMP/TIFF 格式的图片'));
