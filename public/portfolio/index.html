@@ -755,6 +755,81 @@
     }
     .komorebi-images .image-card { min-height: auto; }
 
+    /* ── Hero info card (Role + V1-V2 Vision) ── */
+    .hero-info-card {
+      margin-top: 28px;
+      background: linear-gradient(135deg, rgba(255,106,0,0.05) 0%, rgba(255,255,255,0.018) 100%);
+      border: 1px solid rgba(255,106,0,0.18);
+      border-radius: 18px;
+      padding: 20px 24px;
+      display: grid;
+      gap: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-info-card::after {
+      content: "";
+      position: absolute; inset: auto -40px -40px auto;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(255,106,0,0.12), transparent 65%);
+      filter: blur(12px); pointer-events: none;
+    }
+    .hero-info-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 16px;
+      padding: 14px 0;
+      align-items: start;
+    }
+    .hero-info-divider {
+      height: 1px;
+      background: rgba(255,106,0,0.15);
+    }
+    .hero-info-label {
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding-top: 3px;
+      font-weight: 600;
+    }
+    .hero-info-primary {
+      font-size: 14px;
+      color: var(--text);
+      letter-spacing: 0.01em;
+      margin-bottom: 5px;
+    }
+    .hero-info-sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .hero-info-body {
+      display: grid;
+      gap: 10px;
+    }
+    .hero-info-vision-item {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      font-size: 13px;
+      color: #c4beb5;
+      line-height: 1.72;
+    }
+    .hero-info-tag {
+      flex-shrink: 0;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      background: rgba(255,106,0,0.12);
+      border: 1px solid rgba(255,106,0,0.3);
+      border-radius: 4px;
+      padding: 2px 7px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
     /* ── Reveal ── */
     .reveal { opacity: 0; transform: translateY(20px); transition: opacity 800ms var(--ease), transform 800ms var(--ease); }
     .reveal.visible { opacity: 1; transform: translateY(0); }
@@ -914,11 +989,36 @@
             breath in,<br/>space responds.
           </h1>
           
-          <!-- 副标题：项目长描述，小一号无serif体 -->
+          <!-- 副标题：项目长描述 -->
           <p class="hero-copy reveal">
-            一套完整的交互装置系统——从呼吸与 HRV 生理数据采集，到嵌入式实时解算、蓝牙数据传输、TouchDesigner 视觉联动，到最终的空间沉浸体验与焦虑缓解效果验证。我在这个项目中同时承担系统架构、嵌入式开发、信号处理和视觉叙事。
+            一套完整的交互装置系统——从呼吸与 HRV 生理数据采集，到嵌入式实时解算、蓝牙数据传输、TouchDesigner 视觉联动，到最终的空间沉浸体验与焦虑缓解效果验证。我在项目中同时完成了系统架构、嵌入式开发、信号处理和视觉叙事。
           </p>
-          
+
+          <!-- Role + V1-V2 Vision 信息容器 -->
+          <div class="hero-info-card reveal magnetic">
+            <div class="hero-info-row">
+              <div class="hero-info-label">Role（角色）</div>
+              <div class="hero-info-body">
+                <div class="hero-info-primary">系统架构 · 嵌入式原型 · 信号处理 · 人机交互 · 视觉体验</div>
+                <div class="hero-info-sub">独立完成从传感采集到空间表达的全链路开发。</div>
+              </div>
+            </div>
+            <div class="hero-info-divider"></div>
+            <div class="hero-info-row">
+              <div class="hero-info-label">V1-V2 Vision</div>
+              <div class="hero-info-body">
+                <div class="hero-info-vision-item">
+                  <span class="hero-info-tag">V1</span>
+                  <span>产品导向，完成用户需求调研，快速开发功能原型与效果量化工具。设计收纳结构与外观风格。</span>
+                </div>
+                <div class="hero-info-vision-item">
+                  <span class="hero-info-tag">V2</span>
+                  <span>营销导向，思考真实市场推广路径，应用非接触式呼吸感知，空间以阳光色温与树影节律响应用户的每次呼吸。还原真实户外光影，作为帐篷产品的体验式营销方案。</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- CTA按钮行：两个按钮并排 -->
           <div class="cta-row reveal">
             <a class="btn primary magnetic" href="#gallery">Visual Narrative →</a>
@@ -927,6 +1027,17 @@
         </div>
         <!-- 右侧：媒体堆栈(图像卡片) -->
         <div class="hero-media reveal">
+          <!-- 实时输出效果图（全宽） -->
+          <div class="image-card medium magnetic lightbox-trigger"
+               data-kicker="V1 Vision"
+               data-caption="极简原型开发期间的工作台，反复调试呼吸腰带的模拟数据到灯带RGB数字数据的滤波与映射。">
+            <img src="./assets/8a100a440f5687bbc0fe8278cb902229.jpg" alt="Main visualization output" />
+            <div class="image-overlay">
+              <div class="image-kicker">V1 Vision</div>
+              <p class="image-caption">极简原型开发期间的工作台，反复调试呼吸腰带的模拟数据到灯带RGB数字数据的滤波与映射。</p>
+            </div>
+          </div>
+
           <!-- 大图卡片：目标渲染图 -->
           <div class="image-card tall magnetic"
                data-kicker="V2 Vision"
@@ -939,27 +1050,6 @@
               <div class="image-kicker">V2 Vision</div>
               <h3 class="image-title">呼吸驱动整个空间的光影。</h3>
               <p class="image-caption">V2 阶段的目标渲染——非接触式呼吸感知，空间以朝霞色温与树影节律响应每次呼吸。</p>
-            </div>
-          </div>
-          
-          <!-- 下方两列小卡片(meta-card + image-card) -->
-          <div class="hero-stack">
-            <!-- 角色信息元信息卡片 -->
-            <div class="meta-card magnetic">
-              <div class="meta-label">Role</div>
-              <div class="meta-value">系统架构 · 嵌入式原型 · 信号处理 · 视觉联动</div>
-              <div class="meta-small">独立完成从传感采集到空间表达的全链路开发。</div>
-            </div>
-            
-            <!-- 实时输出效果图 -->
-            <div class="image-card short magnetic lightbox-trigger"
-                 data-kicker="Realtime output"
-                 data-caption="呼吸算法输出经 TouchDesigner 处理后的木漏日视觉形态——光温与影速实时随呼吸节律变化。">
-              <img src="./assets/main-visualization.png" alt="Main visualization output" />
-              <div class="image-overlay">
-                <div class="image-kicker">Realtime output</div>
-                <p class="image-caption">呼吸算法输出驱动的投影光影实时形态。</p>
-              </div>
             </div>
           </div>
         </div>
@@ -984,10 +1074,10 @@
       <div class="section-head reveal">
         <div>
           <span class="eyebrow">Project overview</span>
-          <h2 class="section-title">给神经系统<br/>一个安静的接口。</h2>
+          <h2 class="section-title">身体不是容器<br/>是认知本身。</h2>
         </div>
         <div class="section-desc">
-          Meditation Tent 是一套交互装置系统。早期版本通过腰带压力传感和 HRV 手环探索生理输入与反馈映射，后期引入毫米波雷达做非接触呼吸检测，最终通过木漏日投影构建空间级反馈。HRV 手环始终保留——它的角色是效能验证：评估装置是否帮助使用者降低焦虑、提升副交感神经活跃度，形成"体验层 + 验证层"的双层架构。
+          Meditation Tent 是一套帮助用户感受自己身心状态的系统。早期版本通过腰带压力传感和 HRV 手环探索生理输入与反馈映射，后期引入毫米波雷达做非接触呼吸检测，通过光斑投影构建空间级反馈。HRV 手环始终保留作为效能验证：评估装置是否帮助使用者降低焦虑、提升副交感神经活跃度，形成"体验层 + 验证层"的双层架构。
         </div>
       </div>
 
@@ -996,21 +1086,21 @@
         <!-- 卡片1：占用右下2行，展示大编号+标题+正文 -->
         <article class="card span-2r reveal magnetic">
           <div class="big-number">01</div>
-          <h3>项目的核心判断</h3>
-          <p>多数冥想类产品停留在感官氛围层面，体验柔和，反馈却缺少个体化。真正能帮助初学者进入状态的是"自身生理节律被清晰觉察并即时回应"——整个项目围绕一个工程问题展开：如何把看不见的呼吸与自主神经状态，转成可被身体重新理解的空间反馈。</p>
+          <h3>项目背景</h3>
+          <p> "无意义感"在2023—2024年跻身大众最困扰心理问题的第二位，年轻人对身体信号、情感体验、现实边界的感受力集体下滑，其底层机制是身体经验被屏幕经验替代。卡巴金疗法认为，能起到帮助的是"患者自身生理节律被清晰觉察并即时回应"，这使得本产品设计围绕一个工程问题展开：如何成为把潜意识的身体信号拉回显意识层面的良好媒介。</p>
         </article>
 
         <!-- 卡片2：标准卡片尺寸 -->
         <article class="card reveal magnetic">
           <div class="meta-label">体验闭环</div>
           <h3>Experience Loop</h3>
-          <p>进入装置 → 被感知 → 获得反馈 → 节律趋稳 → 状态改善 → 数据验证。一个完整闭环，每个环节对应明确的技术实现。</p>
+          <p>进入装置 → 被感知 → 获得反馈 → 节律趋稳 → 状态改善 → 数据验证。算法参与生命过程，并通过感官反馈而非数字指标，形成重建具身认知的完整闭环。</p>
         </article>
 
         <!-- 卡片3：标准卡片尺寸 -->
         <article class="card reveal magnetic">
           <div class="meta-label">投影视觉</div>
-          <h3>木漏日 · 霞光映射</h3>
+          <h3>主视觉：木漏日</h3>
           <p>投影重现阳光穿透树叶的光影交织——使用者越平静，光色越趋近霞光的暖红，树影的晃动也越轻缓。</p>
         </article>
 
@@ -1018,7 +1108,7 @@
         <article class="card span-2c reveal magnetic">
           <div class="meta-label">系统定位</div>
           <h3>可测量的身心交互界面</h3>
-          <p>同时关心两件事：它是否足够打动人，它是否真的产生了生理层面的积极效果。前者需要空间设计与视觉表达，后者需要可量化的验证指标。两条线始终同步推进。</p>
+          <p>同时关心两件事：它是否真的产生了生理层面的积极效果；是否能够不依赖冰冷的健康数据直接打动用户。前者需要传感器提供可量化的生理指标，后者需要交互设计与视觉表达。两条线先后开始推进。</p>
         </article>
       </div>
     </section>
@@ -1099,7 +1189,7 @@
             <div class="image-overlay">
               <div class="image-kicker">实景搭建</div>
               <h3 class="image-title">装置已经是一个房间。</h3>
-              <p class="image-caption">半围合白色空间、坐垫、植物与投影光影构成可在任意室内地点搭建的体验现场，允许用户侧卧于其中，凝神感受呼吸起伏。</p>
+              <p class="image-caption">半围合白色空间、坐垫、植物与投影光影构成可在任意室内地点搭建的体验现场，允许用户舒适地卧于其中，凝神感受呼吸起伏。</p>
             </div>
           </div>
         </div>
@@ -1143,7 +1233,7 @@
         <div class="mapping-card reveal magnetic">
           <div class="mapping-index">映射轨道二 · 影速</div>
           <div class="mapping-title">呼吸节律驱动树影漂移。</div>
-          <p class="mapping-desc">树叶阴影的晃动速度直接由呼吸节律驱动。慢而深的呼吸让叶影趋向冥想性的静止，呼吸加快则影子的律动随之苏醒。空间在每次呼吸的间隔中，轻轻摇晃。</p>
+          <p class="mapping-desc">树叶阴影的晃动速度直接由呼吸节律驱动。慢而深的呼吸让叶影趋向冥想性的静止，呼吸加快则影子的律动随之苏醒。</p>
           <div class="mapping-detail">技术对位：呼吸周期时长映射至 TouchDesigner 粒子节点中的扰动频率与平移参数</div>
         </div>
       </div>
@@ -1152,14 +1242,14 @@
       <div class="komorebi-images" style="margin-top: 20px;">
         <div class="image-card ar-3-2 reveal magnetic"
              data-kicker="木漏日灵感"
-             data-caption="灵感参照——重装徒步中拍摄的黄昏。帐篷内透过篷布看到的树影与霞光，是整个投影系统视觉语言的起点。">
+             data-caption="灵感参照——在重装徒步中拍摄的黄昏。帐篷内透过篷布看到的树影与霞光，是V2投影系统视觉语言的起点。">
           <video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;pointer-events:none;">
             <source src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/tent-komorebi.mp4" type="video/mp4">
           </video>
           <div class="image-overlay">
             <div class="image-kicker">木漏日灵感</div>
             <h3 class="image-title">投影语言的起点。</h3>
-            <p class="image-caption">重装徒步中拍摄的黄昏——帐篷内透过篷布看到的树影与霞光。</p>
+            <p class="image-caption">在重装徒步中拍摄的黄昏——帐篷内透过篷布看到的树影与霞光，是V2投影系统视觉语言的起点。</p>
           </div>
         </div>
         <div class="image-card ar-3-2 reveal magnetic lightbox-trigger"
@@ -1859,9 +1949,9 @@
               <span>姓名</span>
               <span>李承泽</span>
             </div>
-            <a href="mailto:2636520057@qq.com" class="contact-line magnetic">
+            <a href="/cdn-cgi/l/email-protection#32000401040700020207057243431c515d5f" class="contact-line magnetic">
               <span>Email</span>
-              <span>2636520057@qq.com</span>
+              <span><span class="__cf_email__" data-cfemail="51636762676463616164661120207f323e3c">[email&#160;protected]</span></span>
             </a>
             <a href="tel:13651630034" class="contact-line magnetic">
               <span>Telephone</span>
@@ -1901,7 +1991,7 @@
   -->
   <div class="footer-note">Meditation Tent — Interactive Installation Portfolio</div>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     /*
     ═════════════════════════════════════════════════════════════════════════════
     【自定义光标系统】
@@ -2108,7 +2198,7 @@
       });
     }
 
-    document.querySelectorAll('.card, .image-card, .stat-card, .tool, .contact-card, .quote, .svg-card, .mapping-card, .arch-flow, .meta-card, .btn').forEach(setupSpread);
+    document.querySelectorAll('.card, .image-card, .stat-card, .tool, .contact-card, .quote, .svg-card, .mapping-card, .arch-flow, .meta-card, .btn, .hero-info-card').forEach(setupSpread);
     /* 
     为所有交互卡片应用点击涂布效果
     包含的卡片类型：
