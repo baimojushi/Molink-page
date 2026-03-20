@@ -41,12 +41,25 @@ db.exec(`
   );
 `);
 
+// 用户表：存储微信用户信息
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    openid TEXT PRIMARY KEY,
+    nickname TEXT,
+    avatar TEXT,
+    first_seen TEXT DEFAULT (datetime('now','localtime'))
+  );
+`);
+
 // 兼容升级：为旧数据库逐个添加可能缺失的字段
 const 升级字段 = [
   'device_uuid TEXT',
   'email_sent INTEGER DEFAULT 0',
   'viewed_at TEXT',
-  'downloaded_at TEXT'
+  'downloaded_at TEXT',
+  'openid TEXT',
+  'user_nickname TEXT',
+  'user_avatar TEXT'
 ];
 
 for (const col of 升级字段) {

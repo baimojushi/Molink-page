@@ -6,12 +6,52 @@ const db = require('../database');
 const { clientUpload } = require('../middleware/upload');
 const { 发送订单通知到目标机 } = require('../services/email');
 
+const WX_APPID = process.env.WX_APPID || 'wx248d207b3006d7f0';
+const WX_SECRET = process.env.WX_SECRET || '27281704adb1e19e2b3e686692a574a1';
+
 // 服务类型中文映射
 const 服务类型映射 = {
   'hang_in_home': '作品挂进家',
   'recommend_work': '根据空间推荐作品',
   'recommend_space': '根据作品推荐空间'
 };
+
+// ==========================================
+// 微信登录：code 换 openid，保存用户信息
+// POST /api/client/wx-login
+// ==========================================
+router.post('/wx-login', async (req, res) => {
+  const { code, nickname, avatar } = req.body;
+  if (!code) return res.status(400).json({ error: '缺少code' });
+
+  try {
+    const wxRes = await fetch(
+      `https://api.weixin.qq.com/sns/jscode2session?appid=${WX_APPID}&secret=${WX_SECRET}&js_code=${code}&grant_type=authorization_code`
+    );
+    const data = await wxRes.json();
+
+    if (data.errcode) {
+      console.error('微信登录失败:', data);
+      return res.status(400).json({ error: '微信授权失败', detail: data.errmsg });
+    }
+
+    const { openid } = data;
+
+    // 存入/更新用户表
+    db.prepare(`
+      INSERT INTO users (openid, nickname, avatar)
+      VALUES (?, ?, ?)
+      ON CONFLICT(openid) DO UPDATE SET
+        nickname = COALESCE(excluded.nickname, users.nickname),
+        avatar   = COALESCE(excluded.avatar,   users.avatar)
+    `).run(openid, nickname || null, avatar || null);
+
+    res.json({ success: true, openid, nickname: nickname || '', avatar: avatar || '' });
+  } catch (e) {
+    console.error('wx-login error:', e);
+    res.status(500).json({ error: '登录失败' });
+  }
+});
 
 // ==========================================
 // 小程序单图上传接口（微信小程序每次只能传一张图）
@@ -37,7 +77,7 @@ router.post('/upload-image',
 router.post('/submit',
   async (req, res) => {
     try {
-      const { service_type, receive_target, extra_service, device_uuid } = req.body;
+      const { service_type, receive_target, extra_service, device_uuid, openid, user_nickname, user_avatar } = req.body;
 
       // 参数验证
       if (!service_type || !服务类型映射[service_type]) {
@@ -70,8 +110,8 @@ router.post('/submit',
       const serviceLabel = 服务类型映射[service_type];
 
       const stmt = db.prepare(`
-        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
@@ -84,7 +124,10 @@ router.post('/submit',
         extra_service === 'true' || extra_service === '1' ? 1 : 0,
         artworkFilename,
         spaceFilename,
-        deliveryToken
+        deliveryToken,
+        openid || null,
+        user_nickname || null,
+        user_avatar || null
       );
 
       // 获取刚插入的完整订单记录（含 created_at）
