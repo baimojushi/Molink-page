@@ -59,7 +59,8 @@ const 升级字段 = [
   'downloaded_at TEXT',
   'openid TEXT',
   'user_nickname TEXT',
-  'user_avatar TEXT'
+  'user_avatar TEXT',
+  'artwork_size TEXT'
 ];
 
 for (const col of 升级字段) {

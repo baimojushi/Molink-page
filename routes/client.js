@@ -77,7 +77,7 @@ router.post('/upload-image',
 router.post('/submit',
   async (req, res) => {
     try {
-      const { service_type, receive_target, extra_service, device_uuid, openid, user_nickname, user_avatar } = req.body;
+      const { service_type, receive_target, extra_service, device_uuid, openid, user_nickname, user_avatar, artwork_size } = req.body;
 
       // 参数验证
       if (!service_type || !服务类型映射[service_type]) {
@@ -110,8 +110,8 @@ router.post('/submit',
       const serviceLabel = 服务类型映射[service_type];
 
       const stmt = db.prepare(`
-        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar, artwork_size)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
@@ -127,7 +127,8 @@ router.post('/submit',
         deliveryToken,
         openid || null,
         user_nickname || null,
-        user_avatar || null
+        user_avatar || null,
+        artwork_size || null
       );
 
       // 获取刚插入的完整订单记录（含 created_at）
