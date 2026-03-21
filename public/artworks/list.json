@@ -1,0 +1,724 @@
+[
+  {
+    "num": 1,
+    "name": "《奶牛》",
+    "author": "丁业淇",
+    "year": "2025",
+    "medium": "数码版画",
+    "size": "30×30cm",
+    "price": "1500",
+    "images": [
+      "/artworks/artwork_1_image64.png"
+    ]
+  },
+  {
+    "num": 2,
+    "name": "《瓶中春,自在飞》",
+    "author": "丁业淇",
+    "year": "2025",
+    "medium": "数码版画",
+    "size": "45×37cm",
+    "price": "3000",
+    "images": [
+      "/artworks/artwork_2_image65.png"
+    ]
+  },
+  {
+    "num": 3,
+    "name": "《叙情诗No.2》",
+    "author": "丁业淇",
+    "year": "2024",
+    "medium": "丝网版画",
+    "size": "65x90cm",
+    "price": "6000",
+    "images": [
+      "/artworks/artwork_3_image0.jpeg"
+    ]
+  },
+  {
+    "num": 4,
+    "name": "《叙情诗No.3》",
+    "author": "丁业淇",
+    "year": "",
+    "medium": "数码版画",
+    "size": "60×75cm",
+    "price": "3000",
+    "images": [
+      "/artworks/artwork_4_image12.png"
+    ]
+  },
+  {
+    "num": 5,
+    "name": "《叙情诗No.4》",
+    "author": "丁业淇",
+    "year": "",
+    "medium": "数码版画",
+    "size": "60×75cm",
+    "price": "3000",
+    "images": [
+      "/artworks/artwork_5_image66.png"
+    ]
+  },
+  {
+    "num": 6,
+    "name": "《昼的囚徒与夜的旁观者》",
+    "author": "黄洁薇",
+    "year": "",
+    "medium": "",
+    "size": "80×55cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_6_image1.jpeg",
+      "/artworks/artwork_7_image2.jpeg",
+      "/artworks/artwork_8_image3.jpeg"
+    ]
+  },
+  {
+    "num": 9,
+    "name": "《泪海》",
+    "author": "王熙然",
+    "year": "2026",
+    "medium": "布面油画",
+    "size": "30×40cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_9_image4.jpeg"
+    ]
+  },
+  {
+    "num": 10,
+    "name": "《暖阳》",
+    "author": "王熙然",
+    "year": "2025",
+    "medium": "布面油画",
+    "size": "60×80cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_10_image5.jpeg"
+    ]
+  },
+  {
+    "num": 13,
+    "name": "《银白》",
+    "author": "王熙然",
+    "year": "2026",
+    "medium": "布面油画",
+    "size": "30×40cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_13_image8.jpeg"
+    ]
+  },
+  {
+    "num": 14,
+    "name": "《余温》",
+    "author": "王熙然",
+    "year": "2025",
+    "medium": "布面油画",
+    "size": "30×40cm×2",
+    "price": "",
+    "images": [
+      "/artworks/artwork_14_image9.jpeg"
+    ]
+  },
+  {
+    "num": 15,
+    "name": "《欲望的硕果》",
+    "author": "王熙然",
+    "year": "2025",
+    "medium": "布面油画",
+    "size": "50×70cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_15_image10.jpeg"
+    ]
+  },
+  {
+    "num": 16,
+    "name": "《月影》",
+    "author": "王熙然",
+    "year": "2025",
+    "medium": "布面油画",
+    "size": "60×80cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_16_image11.jpeg"
+    ]
+  },
+  {
+    "num": 17,
+    "name": "《昨夜的酒》",
+    "author": "王熙然",
+    "year": "2026",
+    "medium": "布面油画",
+    "size": "80×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_17_image67.jpeg"
+    ]
+  },
+  {
+    "num": 22,
+    "name": "《鸽语》",
+    "author": "解雯惠",
+    "year": "2024",
+    "medium": "铜版",
+    "size": "28x21cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_22_image17.jpeg"
+    ]
+  },
+  {
+    "num": 23,
+    "name": "《光景NO.1》",
+    "author": "解雯惠",
+    "year": "2025",
+    "medium": "丝网版画",
+    "size": "49x74cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_23_image18.jpeg"
+    ]
+  },
+  {
+    "num": 24,
+    "name": "《光景NO.2》",
+    "author": "解雯惠",
+    "year": "2025",
+    "medium": "丝网版画",
+    "size": "49x74cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_24_image19.jpeg"
+    ]
+  },
+  {
+    "num": 25,
+    "name": "《光景NO.3》",
+    "author": "解雯惠",
+    "year": "2025",
+    "medium": "丝网版画",
+    "size": "49x74cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_25_image20.jpeg"
+    ]
+  },
+  {
+    "num": 26,
+    "name": "《光景NO.4》",
+    "author": "解雯惠",
+    "year": "2025",
+    "medium": "丝网版画",
+    "size": "49x74cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_26_image21.jpeg"
+    ]
+  },
+  {
+    "num": 28,
+    "name": "《牛群草原》",
+    "author": "解雯惠",
+    "year": "2024",
+    "medium": "铜版",
+    "size": "20x28cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_28_image23.jpeg"
+    ]
+  },
+  {
+    "num": 30,
+    "name": "《谦象·翠隐方涵》",
+    "author": "解雯惠",
+    "year": "2024",
+    "medium": "丝网独幅",
+    "size": "60x80cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_30_image25.jpeg"
+    ]
+  },
+  {
+    "num": 31,
+    "name": "《山海玄鸣》",
+    "author": "解雯惠",
+    "year": "2023",
+    "medium": "绝版套色",
+    "size": "16x19cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_31_image26.jpeg"
+    ]
+  },
+  {
+    "num": 33,
+    "name": "《星辰的游历》系列",
+    "author": "施歌",
+    "year": "",
+    "medium": "木板、宣纸、丙烯",
+    "size": "60×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_33_image28.jpeg"
+    ]
+  },
+  {
+    "num": 34,
+    "name": "《星辰的游历》系列",
+    "author": "施歌",
+    "year": "",
+    "medium": "木板、宣纸、丙烯",
+    "size": "60×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_34_image29.jpeg"
+    ]
+  },
+  {
+    "num": 35,
+    "name": "《星辰的游历》系列",
+    "author": "施歌",
+    "year": "",
+    "medium": "木板、宣纸、丙烯",
+    "size": "60×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_35_image30.jpeg"
+    ]
+  },
+  {
+    "num": 36,
+    "name": "《星辰的游历》系列",
+    "author": "施歌",
+    "year": "",
+    "medium": "木板、宣纸、丙烯",
+    "size": "60×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_36_image31.jpeg"
+    ]
+  },
+  {
+    "num": 37,
+    "name": "《花园系列》",
+    "author": "施歌",
+    "year": "",
+    "medium": "布面油画",
+    "size": "80×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_37_image32.jpeg"
+    ]
+  },
+  {
+    "num": 38,
+    "name": "《花园系列》",
+    "author": "施歌",
+    "year": "",
+    "medium": "布面油画",
+    "size": "80×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_38_image33.jpeg"
+    ]
+  },
+  {
+    "num": 39,
+    "name": "《花园系列》",
+    "author": "施歌",
+    "year": "",
+    "medium": "布面油画",
+    "size": "80×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_39_image34.jpeg"
+    ]
+  },
+  {
+    "num": 40,
+    "name": "《花园系列》",
+    "author": "施歌",
+    "year": "",
+    "medium": "布面油画",
+    "size": "80×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_40_image35.jpeg"
+    ]
+  },
+  {
+    "num": 45,
+    "name": "《都市动物》系列",
+    "author": "罗浩",
+    "year": "",
+    "medium": "纸浆、树脂、木板",
+    "size": "40×80cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_45_image40.png"
+    ]
+  },
+  {
+    "num": 46,
+    "name": "《都市动物》系列",
+    "author": "罗浩",
+    "year": "",
+    "medium": "纸浆、树脂、木板",
+    "size": "50×70 cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_46_image41.png"
+    ]
+  },
+  {
+    "num": 47,
+    "name": "《都市动物》系列",
+    "author": "罗浩",
+    "year": "",
+    "medium": "纸浆、树脂、木板",
+    "size": "50×110cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_47_image42.jpeg"
+    ]
+  },
+  {
+    "num": 53,
+    "name": "夏时",
+    "author": "卢雪儿",
+    "year": "",
+    "medium": "木板、孔雀石、碧玉、蓝铜矿、青金石",
+    "size": "50×50cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_53_image48.jpeg"
+    ]
+  },
+  {
+    "num": 54,
+    "name": "你像?匹??",
+    "author": "吕桢",
+    "year": "2026",
+    "medium": "布?综合（丙烯、银箔）",
+    "size": "80×80cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_54_image49.png"
+    ]
+  },
+  {
+    "num": 55,
+    "name": "归途",
+    "author": "吕桢",
+    "year": "2026",
+    "medium": "布?综合（丙烯、银箔）",
+    "size": "80×80cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_55_image50.png"
+    ]
+  },
+  {
+    "num": 56,
+    "name": "丛中",
+    "author": "吕桢",
+    "year": "2022",
+    "medium": "布?油画",
+    "size": "80×120cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_56_image51.png"
+    ]
+  },
+  {
+    "num": 57,
+    "name": "红?之森",
+    "author": "吕桢",
+    "year": "2022",
+    "medium": "布?油画",
+    "size": "80×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_57_image52.png"
+    ]
+  },
+  {
+    "num": 58,
+    "name": "《树与马》系列",
+    "author": "付玲莉",
+    "year": "2026",
+    "medium": "",
+    "size": "30×40cm×4",
+    "price": "",
+    "images": [
+      "/artworks/artwork_58_image53.png"
+    ]
+  },
+  {
+    "num": 59,
+    "name": "《街道》系列-1",
+    "author": "付玲莉",
+    "year": "2025",
+    "medium": "布?油画",
+    "size": "40×50cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_59_image54.png"
+    ]
+  },
+  {
+    "num": 60,
+    "name": "《街道》系列-2",
+    "author": "付玲莉",
+    "year": "2025",
+    "medium": "布?油画",
+    "size": "40×50cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_60_image55.png"
+    ]
+  },
+  {
+    "num": 61,
+    "name": "《万林》",
+    "author": "付玲莉",
+    "year": "2025",
+    "medium": "纸本油画棒",
+    "size": "38×42cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_61_image56.jpeg"
+    ]
+  },
+  {
+    "num": 63,
+    "name": "《立体主义展览》",
+    "author": "于佳宏",
+    "year": "",
+    "medium": "布面油画",
+    "size": "80×120cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_63_image58.jpeg"
+    ]
+  },
+  {
+    "num": 64,
+    "name": "《生命之力》",
+    "author": "于佳宏",
+    "year": "",
+    "medium": "布面油画",
+    "size": "60×80cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_64_image59.png"
+    ]
+  },
+  {
+    "num": 65,
+    "name": "《累》",
+    "author": "于佳宏",
+    "year": "",
+    "medium": "布面油画",
+    "size": "80×100cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_65_image60.jpeg"
+    ]
+  },
+  {
+    "num": 69,
+    "name": "《喜鹊》",
+    "author": "江梦玲",
+    "year": "2022年",
+    "medium": "纸本套色木刻",
+    "size": "86×60cm",
+    "price": "6000",
+    "images": [
+      "/artworks/artwork_69_image70.jpeg"
+    ]
+  },
+  {
+    "num": 70,
+    "name": "《September 9th》",
+    "author": "江梦玲",
+    "year": "2021年",
+    "medium": "纸本套色木刻",
+    "size": "52.5*48cm",
+    "price": "4000",
+    "images": [
+      "/artworks/artwork_70_image73.jpeg"
+    ]
+  },
+  {
+    "num": 71,
+    "name": "《房间》",
+    "author": "江梦玲",
+    "year": "2024年",
+    "medium": "纸本水印木刻",
+    "size": "27.5*26cm*2",
+    "price": "3600",
+    "images": [
+      "/artworks/artwork_71_image69.jpeg"
+    ]
+  },
+  {
+    "num": 72,
+    "name": "《掌上明珠》",
+    "author": "汤健菲",
+    "year": "2025",
+    "medium": "木板综合材料",
+    "size": "10×20cm",
+    "price": "",
+    "images": [
+      "/artworks/artwork_72_image72.png"
+    ]
+  },
+  {
+    "num": 73,
+    "name": "《幻夜交响曲》",
+    "author": "西子",
+    "year": "2025",
+    "medium": "数码喷绘",
+    "size": "14000x",
+    "price": "",
+    "images": [
+      "/artworks/artwork_73_image74.jpeg"
+    ]
+  },
+  {
+    "num": 74,
+    "name": "《星夜的调色盘》",
+    "author": "西子",
+    "year": "2025",
+    "medium": "数码喷绘",
+    "size": "18000x",
+    "price": "",
+    "images": [
+      "/artworks/artwork_74_image75.jpeg"
+    ]
+  },
+  {
+    "num": 75,
+    "name": "《紫月低语》",
+    "author": "西子",
+    "year": "2025",
+    "medium": "数码喷绘",
+    "size": "14000x",
+    "price": "",
+    "images": [
+      "/artworks/artwork_75_image77.jpeg"
+    ]
+  },
+  {
+    "num": 76,
+    "name": "《浮生若梦》",
+    "author": "周峰",
+    "year": "2024年",
+    "medium": "树脂",
+    "size": "16*50cm",
+    "price": "7500",
+    "images": [
+      "/artworks/artwork_76_image76.png"
+    ]
+  },
+  {
+    "num": 77,
+    "name": "《海百合》",
+    "author": "陈逸帆",
+    "year": "2023年",
+    "medium": "木板油画",
+    "size": "80*80cm",
+    "price": "7500",
+    "images": [
+      "/artworks/artwork_77_image68.jpeg"
+    ]
+  },
+  {
+    "num": 78,
+    "name": "《兜兜小记》系列NO.1",
+    "author": "陈看",
+    "year": "2023年",
+    "medium": "数码版画",
+    "size": "5*8cm",
+    "price": "600",
+    "images": [
+      "/artworks/artwork_78_image78.jpeg"
+    ]
+  },
+  {
+    "num": 79,
+    "name": "《兜兜小记》系列NO.2",
+    "author": "陈看",
+    "year": "2023年",
+    "medium": "数码版画",
+    "size": "5*8cm",
+    "price": "600",
+    "images": [
+      "/artworks/artwork_79_image80.jpeg"
+    ]
+  },
+  {
+    "num": 80,
+    "name": "《兜兜小记》系列NO.3",
+    "author": "陈看",
+    "year": "2023年",
+    "medium": "数码版画",
+    "size": "5*8cm",
+    "price": "600",
+    "images": [
+      "/artworks/artwork_80_image79.jpeg"
+    ]
+  },
+  {
+    "num": 81,
+    "name": "《兜兜小记》系列NO.4",
+    "author": "陈看",
+    "year": "2023年",
+    "medium": "数码版画",
+    "size": "5*8cm",
+    "price": "600",
+    "images": [
+      "/artworks/artwork_81_image81.png"
+    ]
+  },
+  {
+    "num": 82,
+    "name": "《兜兜小记》系列NO.5",
+    "author": "陈看",
+    "year": "2023年",
+    "medium": "数码版画",
+    "size": "5*8cm",
+    "price": "600",
+    "images": [
+      "/artworks/artwork_82_image82.jpeg"
+    ]
+  },
+  {
+    "num": 83,
+    "name": "《兜兜小记》系列NO.6",
+    "author": "陈看",
+    "year": "2023年",
+    "medium": "数码版画",
+    "size": "5*8cm",
+    "price": "600",
+    "images": [
+      "/artworks/artwork_83_image71.jpeg"
+    ]
+  },
+  {
+    "num": 84,
+    "name": "《兜兜小记》系列NO.7",
+    "author": "陈看",
+    "year": "2023年",
+    "medium": "数码版画",
+    "size": "5*8cm",
+    "price": "600",
+    "images": [
+      "/artworks/artwork_84_image83.jpeg"
+    ]
+  }
+]

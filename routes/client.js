@@ -282,4 +282,20 @@ router.post('/mark-downloaded/:orderId', (req, res) => {
   res.json({ success: true });
 });
 
+// ==========================================
+// 获取预设作品列表（拍卖版专用）
+// GET /api/client/artworks
+// ==========================================
+router.get('/artworks', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const listPath = path.join(__dirname, '..', 'public', 'artworks', 'list.json');
+  try {
+    const list = JSON.parse(fs.readFileSync(listPath, 'utf8'));
+    res.json({ artworks: list });
+  } catch (e) {
+    res.status(500).json({ error: '作品列表加载失败' });
+  }
+});
+
 module.exports = router;
