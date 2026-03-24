@@ -5,6 +5,9 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { clientUpload } = require('../middleware/upload');
 const { 发送订单通知到目标机 } = require('../services/email');
+const { submitImageRequest } = require('../services/snaptoshine');
+
+const SERVER_BASE_URL = 'https://www.molink.art';
 
 const WX_APPID = process.env.WX_APPID || 'wx248d207b3006d7f0';
 const WX_SECRET = process.env.WX_SECRET || '27281704adb1e19e2b3e686692a574a1';
@@ -109,9 +112,11 @@ router.post('/submit',
       const deliveryToken = uuidv4().replace(/-/g, '').substring(0, 16);
       const serviceLabel = 服务类型映射[service_type];
 
+      const { artwork_num, artwork_name } = req.body;
+
       const stmt = db.prepare(`
-        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar, artwork_size)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar, artwork_size, artwork_num, artwork_name)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
@@ -128,7 +133,9 @@ router.post('/submit',
         openid || null,
         user_nickname || null,
         user_avatar || null,
-        artwork_size || null
+        artwork_size || null,
+        artwork_num || null,
+        artwork_name || null
       );
 
       // 获取刚插入的完整订单记录（含 created_at）
@@ -136,6 +143,28 @@ router.post('/submit',
 
       // 异步发送邮件通知到目标机（不阻塞响应）
       发送订单通知到目标机(order).catch(err => console.error('通知发送异常:', err));
+
+      // 异步触发 AI 生图（不阻塞响应）
+      ;(async () => {
+        try {
+          const artworkUrl = artworkFilename ? `${SERVER_BASE_URL}/uploads/${artworkFilename}` : null;
+          const spaceUrl = spaceFilename ? `${SERVER_BASE_URL}/uploads/${spaceFilename}` : null;
+
+          const 服务描述 = {
+            hang_in_home: '请将这幅书画作品挂置到这个居室空间中，生成真实感效果图，保持空间原有布局和光影',
+            recommend_work: '请根据这个居室空间的风格，为其推荐并展示合适的书画艺术作品，生成布置效果图',
+            recommend_space: '请为这幅书画作品生成一个理想的生活化展览空间效果图，体现作品与空间的和谐关系'
+          };
+          const prompt = 服务描述[service_type] || '请生成室内空间与艺术作品搭配效果图';
+
+          const executionId = await submitImageRequest({ prompt, artworkUrl, spaceUrl });
+          db.prepare('UPDATE orders SET ai_execution_id = ?, status = ? WHERE id = ?')
+            .run(executionId, 'ai_generating', orderId);
+          console.log(`🤖 AI 生图已提交: 订单=${orderId} 执行=${executionId}`);
+        } catch (e) {
+          console.error('❌ AI 生图提交失败:', e.message);
+        }
+      })();
 
       res.json({
         success: true,

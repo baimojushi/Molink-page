@@ -8,6 +8,7 @@ const db = require('../database');
 const { adminUpload, DELIVERIES_DIR } = require('../middleware/upload');
 const { 发送交付通知到用户邮箱 } = require('../services/email');
 const { 文字渲染为图片 } = require('../services/textToImage');
+const { submitImageRequest, checkExecution, downloadFile } = require('../services/snaptoshine');
 
 // uploads 目录（用于删除订单时清理用户上传图片）
 const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
@@ -223,6 +224,75 @@ router.post('/deliver/:id',
     }
   }
 );
+
+// ==========================================
+// 一键通过：把 AI 生成图设为交付结果并通知用户
+// POST /api/admin/approve/:id
+// ==========================================
+router.post('/approve/:id', async (req, res) => {
+  try {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+    if (!order) return res.status(404).json({ error: '订单不存在' });
+    if (!order.ai_result_url) return res.status(400).json({ error: 'AI 效果图尚未生成完成' });
+
+    // 下载 AI 图并保存到 deliveries 目录
+    const buf = await downloadFile(order.ai_result_url);
+    const filename = `ai_${Date.now()}.jpg`;
+    const filePath = path.join(DELIVERIES_DIR, filename);
+    fs.writeFileSync(filePath, buf);
+
+    db.prepare(`
+      UPDATE orders SET status='delivered', delivery_images=?, delivered_at=datetime('now','localtime') WHERE id=?
+    `).run(JSON.stringify([filename]), order.id);
+
+    const deliveryUrl = `https://www.molink.art/d/${order.delivery_token}`;
+    let emailSent = false;
+    try {
+      emailSent = await 发送交付通知到用户邮箱(order, deliveryUrl);
+      db.prepare('UPDATE orders SET email_sent=? WHERE id=?').run(emailSent ? 1 : 0, order.id);
+    } catch (e) { console.error('邮件发送失败:', e); }
+
+    console.log(`✅ AI 效果图已审核通过: ${order.id}`);
+    res.json({ success: true, emailSent, deliveryUrl });
+  } catch (e) {
+    console.error('approve 失败:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ==========================================
+// 重新生成：用可选的调整说明重新提交 AI 任务
+// POST /api/admin/regenerate/:id
+// body: { note: '调整说明（可选）' }
+// ==========================================
+router.post('/regenerate/:id', async (req, res) => {
+  try {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+    if (!order) return res.status(404).json({ error: '订单不存在' });
+
+    const SERVER_BASE_URL = 'https://www.molink.art';
+    const artworkUrl = order.artwork_image ? `${SERVER_BASE_URL}/uploads/${order.artwork_image}` : null;
+    const spaceUrl = order.space_image ? `${SERVER_BASE_URL}/uploads/${order.space_image}` : null;
+
+    const 服务描述 = {
+      hang_in_home: '请将这幅书画作品挂置到这个居室空间中，生成真实感效果图，保持空间原有布局和光影',
+      recommend_work: '请根据这个居室空间的风格，为其推荐并展示合适的书画艺术作品，生成布置效果图',
+      recommend_space: '请为这幅书画作品生成一个理想的生活化展览空间效果图，体现作品与空间的和谐关系'
+    };
+    let prompt = 服务描述[order.service_type] || '请生成室内空间与艺术作品搭配效果图';
+    if (req.body.note) prompt += `\n\n调整要求：${req.body.note}`;
+
+    const executionId = await submitImageRequest({ prompt, artworkUrl, spaceUrl });
+    db.prepare('UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, status=? WHERE id=?')
+      .run(executionId, 'ai_generating', order.id);
+
+    console.log(`🔄 重新生成: 订单=${order.id} 执行=${executionId}`);
+    res.json({ success: true, executionId });
+  } catch (e) {
+    console.error('regenerate 失败:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // ==========================================
 // 删除订单：删除订单记录及相关图片文件

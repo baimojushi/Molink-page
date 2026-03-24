@@ -60,7 +60,11 @@ const 升级字段 = [
   'openid TEXT',
   'user_nickname TEXT',
   'user_avatar TEXT',
-  'artwork_size TEXT'
+  'artwork_size TEXT',
+  'ai_execution_id TEXT',
+  'ai_result_url TEXT',
+  'artwork_num TEXT',
+  'artwork_name TEXT'
 ];
 
 for (const col of 升级字段) {
