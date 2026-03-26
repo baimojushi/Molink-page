@@ -5,6 +5,12 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { clientUpload } = require('../middleware/upload');
 const { 发送订单通知到目标机 } = require('../services/email');
+const { submitImageRequest } = require('../services/snaptoshine');
+
+const SERVER_BASE_URL = 'https://www.molink.art';
+
+const WX_APPID = process.env.WX_APPID || 'wx248d207b3006d7f0';
+const WX_SECRET = process.env.WX_SECRET || '27281704adb1e19e2b3e686692a574a1';
 
 // 服务类型中文映射
 const 服务类型映射 = {
@@ -12,6 +18,43 @@ const 服务类型映射 = {
   'recommend_work': '根据空间推荐作品',
   'recommend_space': '根据作品推荐空间'
 };
+
+// ==========================================
+// 微信登录：code 换 openid，保存用户信息
+// POST /api/client/wx-login
+// ==========================================
+router.post('/wx-login', async (req, res) => {
+  const { code, nickname, avatar } = req.body;
+  if (!code) return res.status(400).json({ error: '缺少code' });
+
+  try {
+    const wxRes = await fetch(
+      `https://api.weixin.qq.com/sns/jscode2session?appid=${WX_APPID}&secret=${WX_SECRET}&js_code=${code}&grant_type=authorization_code`
+    );
+    const data = await wxRes.json();
+
+    if (data.errcode) {
+      console.error('微信登录失败:', data);
+      return res.status(400).json({ error: '微信授权失败', detail: data.errmsg });
+    }
+
+    const { openid } = data;
+
+    // 存入/更新用户表
+    db.prepare(`
+      INSERT INTO users (openid, nickname, avatar)
+      VALUES (?, ?, ?)
+      ON CONFLICT(openid) DO UPDATE SET
+        nickname = COALESCE(excluded.nickname, users.nickname),
+        avatar   = COALESCE(excluded.avatar,   users.avatar)
+    `).run(openid, nickname || null, avatar || null);
+
+    res.json({ success: true, openid, nickname: nickname || '', avatar: avatar || '' });
+  } catch (e) {
+    console.error('wx-login error:', e);
+    res.status(500).json({ error: '登录失败' });
+  }
+});
 
 // ==========================================
 // 小程序单图上传接口（微信小程序每次只能传一张图）
@@ -37,7 +80,7 @@ router.post('/upload-image',
 router.post('/submit',
   async (req, res) => {
     try {
-      const { service_type, receive_target, extra_service, device_uuid } = req.body;
+      const { service_type, receive_target, extra_service, device_uuid, openid, user_nickname, user_avatar, artwork_size } = req.body;
 
       // 参数验证
       if (!service_type || !服务类型映射[service_type]) {
@@ -69,9 +112,11 @@ router.post('/submit',
       const deliveryToken = uuidv4().replace(/-/g, '').substring(0, 16);
       const serviceLabel = 服务类型映射[service_type];
 
+      const { artwork_num, artwork_name } = req.body;
+
       const stmt = db.prepare(`
-        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar, artwork_size, artwork_num, artwork_name)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
@@ -84,7 +129,13 @@ router.post('/submit',
         extra_service === 'true' || extra_service === '1' ? 1 : 0,
         artworkFilename,
         spaceFilename,
-        deliveryToken
+        deliveryToken,
+        openid || null,
+        user_nickname || null,
+        user_avatar || null,
+        artwork_size || null,
+        artwork_num || null,
+        artwork_name || null
       );
 
       // 获取刚插入的完整订单记录（含 created_at）
@@ -92,6 +143,28 @@ router.post('/submit',
 
       // 异步发送邮件通知到目标机（不阻塞响应）
       发送订单通知到目标机(order).catch(err => console.error('通知发送异常:', err));
+
+      // 异步触发 AI 生图（不阻塞响应）
+      ;(async () => {
+        try {
+          const artworkUrl = artworkFilename ? `${SERVER_BASE_URL}/uploads/${artworkFilename}` : null;
+          const spaceUrl = spaceFilename ? `${SERVER_BASE_URL}/uploads/${spaceFilename}` : null;
+
+          const 服务描述 = {
+            hang_in_home: '请将这幅书画作品挂置到这个居室空间中，生成真实感效果图，保持空间原有布局和光影',
+            recommend_work: '请根据这个居室空间的风格，为其推荐并展示合适的书画艺术作品，生成布置效果图',
+            recommend_space: '请为这幅书画作品生成一个理想的生活化展览空间效果图，体现作品与空间的和谐关系'
+          };
+          const prompt = 服务描述[service_type] || '请生成室内空间与艺术作品搭配效果图';
+
+          const executionId = await submitImageRequest({ prompt, artworkUrl, spaceUrl });
+          db.prepare('UPDATE orders SET ai_execution_id = ?, status = ? WHERE id = ?')
+            .run(executionId, 'ai_generating', orderId);
+          console.log(`🤖 AI 生图已提交: 订单=${orderId} 执行=${executionId}`);
+        } catch (e) {
+          console.error('❌ AI 生图提交失败:', e.message);
+        }
+      })();
 
       res.json({
         success: true,
@@ -236,6 +309,22 @@ router.post('/mark-downloaded/:orderId', (req, res) => {
     db.prepare("UPDATE orders SET status = 'downloaded', downloaded_at = datetime('now','localtime') WHERE id = ?").run(req.params.orderId);
   }
   res.json({ success: true });
+});
+
+// ==========================================
+// 获取预设作品列表（拍卖版专用）
+// GET /api/client/artworks
+// ==========================================
+router.get('/artworks', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const listPath = path.join(__dirname, '..', 'public', 'artworks', 'list.json');
+  try {
+    const list = JSON.parse(fs.readFileSync(listPath, 'utf8'));
+    res.json({ artworks: list });
+  } catch (e) {
+    res.status(500).json({ error: '作品列表加载失败' });
+  }
 });
 
 module.exports = router;
