@@ -167,4 +167,49 @@ async function reviewDimensions(imageUrl, artworkSize) {
   }
 }
 
-module.exports = { reviewPhysics, reviewDimensions };
+// ──────────────────────────────────────────────
+// 提交前验证：图片内容是否符合该槽位
+// 策略：宁可放过，不可错杀——只拒绝明显错误，有疑问一律通过
+// ──────────────────────────────────────────────
+
+// 验证作品图：必须是某种艺术作品/画作
+async function validateArtworkImage(imageUrl) {
+  try {
+    const base64 = await imageToBase64Thumbnail(imageUrl, 512);
+    const prompt = `这张图片是否是一件艺术作品（包括国画、油画、水彩、版画、素描、水墨画、书法、雕塑照片等任何形式的艺术品或画作）？
+注意：只要看起来像是某种艺术创作，哪怕拍摄角度不佳或有装裱，都算"是"。
+只有明显不是艺术作品的（例如：自拍照、风景照、食物照、截图、纯文字图片、空白图片）才回答"否"。
+请只回答"是"或"否"。`;
+
+    const res = await callDashScope('qwen-vl-flash', base64, prompt);
+    const text = (res?.choices?.[0]?.message?.content || '是').trim();
+    const valid = !text.startsWith('否');
+    console.log(`🖼️ 作品图验证: ${valid ? '✅通过' : '❌不通过'}`);
+    return { valid, reason: valid ? '' : '上传的作品图片看起来不是艺术作品，请重新上传画作照片' };
+  } catch (e) {
+    console.error('作品图验证异常（放行）:', e.message);
+    return { valid: true };
+  }
+}
+
+// 验证空间图：必须是室内空间/房间
+async function validateSpaceImage(imageUrl) {
+  try {
+    const base64 = await imageToBase64Thumbnail(imageUrl, 512);
+    const prompt = `这张图片是否是一个室内空间或房间的照片（包括客厅、卧室、书房、餐厅、走廊、展厅等任何室内环境）？
+注意：只要是在室内拍摄的空间照片，哪怕较空旷或角度奇特，都算"是"。
+只有明显不是室内空间的（例如：户外风景、人物特写、艺术品特写、截图、纯文字）才回答"否"。
+请只回答"是"或"否"。`;
+
+    const res = await callDashScope('qwen-vl-flash', base64, prompt);
+    const text = (res?.choices?.[0]?.message?.content || '是').trim();
+    const valid = !text.startsWith('否');
+    console.log(`🏠 空间图验证: ${valid ? '✅通过' : '❌不通过'}`);
+    return { valid, reason: valid ? '' : '上传的空间图片看起来不是室内空间，请重新上传房间照片' };
+  } catch (e) {
+    console.error('空间图验证异常（放行）:', e.message);
+    return { valid: true };
+  }
+}
+
+module.exports = { reviewPhysics, reviewDimensions, validateArtworkImage, validateSpaceImage };

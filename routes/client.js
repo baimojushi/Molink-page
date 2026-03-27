@@ -6,6 +6,7 @@ const db = require('../database');
 const { clientUpload } = require('../middleware/upload');
 const { 发送订单通知到目标机 } = require('../services/email');
 const { submitImageRequest } = require('../services/snaptoshine');
+const { validateArtworkImage, validateSpaceImage } = require('../services/qwen');
 
 const SERVER_BASE_URL = 'https://www.molink.art';
 
@@ -224,6 +225,20 @@ router.post('/submit',
       }
       if (service_type === 'recommend_space' && !hasArtwork) {
         return res.status(400).json({ error: '「一画一宅」需提供作品图' });
+      }
+
+      // Qwen 图片内容验证（宁可放过、不可错杀）
+      if (artworkFilename) {
+        const artworkCheck = await validateArtworkImage(`${SERVER_BASE_URL}/uploads/${artworkFilename}`);
+        if (!artworkCheck.valid) {
+          return res.status(400).json({ error: artworkCheck.reason });
+        }
+      }
+      if (spaceFilename) {
+        const spaceCheck = await validateSpaceImage(`${SERVER_BASE_URL}/uploads/${spaceFilename}`);
+        if (!spaceCheck.valid) {
+          return res.status(400).json({ error: spaceCheck.reason });
+        }
       }
 
       // 生成订单
