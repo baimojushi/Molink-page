@@ -269,21 +269,17 @@ router.post('/regenerate/:id', async (req, res) => {
   try {
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
     if (!order) return res.status(404).json({ error: '订单不存在' });
+    if (!order.ai_user_message) return res.status(400).json({ error: '该订单没有保存生图消息，无法重新生成' });
 
-    const SERVER_BASE_URL = 'https://www.molink.art';
-    const artworkUrl = order.artwork_image ? `${SERVER_BASE_URL}/uploads/${order.artwork_image}` : null;
-    const spaceUrl = order.space_image ? `${SERVER_BASE_URL}/uploads/${order.space_image}` : null;
+    let userMessage = JSON.parse(order.ai_user_message);
 
-    const 服务描述 = {
-      hang_in_home: '请将这幅书画作品挂置到这个居室空间中，生成真实感效果图，保持空间原有布局和光影',
-      recommend_work: '请根据这个居室空间的风格，为其推荐并展示合适的书画艺术作品，生成布置效果图',
-      recommend_space: '请为这幅书画作品生成一个理想的生活化展览空间效果图，体现作品与空间的和谐关系'
-    };
-    let prompt = 服务描述[order.service_type] || '请生成室内空间与艺术作品搭配效果图';
-    if (req.body.note) prompt += `\n\n调整要求：${req.body.note}`;
+    // 如果管理员填写了备注，在消息末尾追加调整说明
+    if (req.body.note && req.body.note.trim()) {
+      userMessage = [...userMessage, { text: `\n\n调整要求：${req.body.note.trim()}` }];
+    }
 
-    const executionId = await submitImageRequest({ prompt, artworkUrl, spaceUrl });
-    db.prepare('UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, status=? WHERE id=?')
+    const executionId = await submitImageRequest({ userMessage });
+    db.prepare('UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=0, status=? WHERE id=?')
       .run(executionId, 'ai_generating', order.id);
 
     console.log(`🔄 重新生成: 订单=${order.id} 执行=${executionId}`);
