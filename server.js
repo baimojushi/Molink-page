@@ -106,7 +106,9 @@ function 启动AI轮询() {
 
     for (const order of pending) {
       try {
-        const { status, imageUrl } = await checkExecution(order.ai_execution_id);
+        const execResult = await checkExecution(order.ai_execution_id);
+        const { status, imageUrl } = execResult;
+        console.log(`📊 轮询结果 订单=${order.id} status=${status} imageUrl=${imageUrl} raw=${JSON.stringify(execResult.raw).substring(0, 300)}`);
 
         if (status === 'completed' || status === 'succeeded') {
           const retryCount = order.ai_retry_count || 0;
