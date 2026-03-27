@@ -34,10 +34,14 @@ function downloadBuffer(url) {
 
 // ──────────────────────────────────────────────
 // 下载图片并缩小为低分辨率 JPEG，返回 base64 字符串
+// urlOrPath: HTTP URL 或本地文件绝对路径
 // maxSize: 最长边像素数（缩小后最长边不超过此值）
 // ──────────────────────────────────────────────
-async function imageToBase64Thumbnail(url, maxSize) {
-  const buf = await downloadBuffer(url);
+async function imageToBase64Thumbnail(urlOrPath, maxSize) {
+  const fs = require('fs');
+  const buf = (urlOrPath.startsWith('http://') || urlOrPath.startsWith('https://'))
+    ? await downloadBuffer(urlOrPath)
+    : fs.readFileSync(urlOrPath);
   const resized = await sharp(buf)
     .resize(maxSize, maxSize, { fit: 'inside', withoutEnlargement: true })
     .jpeg({ quality: 75 })

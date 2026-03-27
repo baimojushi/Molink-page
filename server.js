@@ -112,6 +112,22 @@ function 启动AI轮询() {
 
         if (status === 'completed' || status === 'succeeded') {
           const retryCount = order.ai_retry_count || 0;
+
+          // imageUrl 为空说明 snaptoshine 返回格式不符，当作失败重试
+          if (!imageUrl) {
+            if (retryCount < MAX_AI_RETRIES && order.ai_user_message) {
+              const userMessage = JSON.parse(order.ai_user_message);
+              const newExecId = await submitImageRequest({ userMessage });
+              db.prepare('UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=? WHERE id=?')
+                .run(newExecId, retryCount + 1, order.id);
+              console.warn(`⚠️ 完成但无图片URL，重新提交（第${retryCount+1}次）: 订单=${order.id}`);
+            } else {
+              db.prepare("UPDATE orders SET status='pending' WHERE id=?").run(order.id);
+              console.warn(`⚠️ 完成但无图片URL，已用完重试，退回pending: 订单=${order.id}`);
+            }
+            continue;
+          }
+
           const review = await runQwenReview(order, imageUrl);
 
           if (!review.pass && retryCount < MAX_AI_RETRIES && order.ai_user_message) {

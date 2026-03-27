@@ -3,7 +3,9 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
+const path = require('path');
 const { clientUpload } = require('../middleware/upload');
+const UPLOADS_DIR = path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), 'uploads');
 const { 发送订单通知到目标机 } = require('../services/email');
 const { submitImageRequest } = require('../services/snaptoshine');
 const { validateArtworkImage, validateSpaceImage } = require('../services/qwen');
@@ -227,15 +229,15 @@ router.post('/submit',
         return res.status(400).json({ error: '「一画一宅」需提供作品图' });
       }
 
-      // Qwen 图片内容验证（宁可放过、不可错杀）
+      // Qwen 图片内容验证（直接读本地文件，不走公网，避免容器内无法访问自身域名）
       if (artworkFilename) {
-        const artworkCheck = await validateArtworkImage(`${SERVER_BASE_URL}/uploads/${artworkFilename}`);
+        const artworkCheck = await validateArtworkImage(path.join(UPLOADS_DIR, artworkFilename));
         if (!artworkCheck.valid) {
           return res.status(400).json({ error: artworkCheck.reason });
         }
       }
       if (spaceFilename) {
-        const spaceCheck = await validateSpaceImage(`${SERVER_BASE_URL}/uploads/${spaceFilename}`);
+        const spaceCheck = await validateSpaceImage(path.join(UPLOADS_DIR, spaceFilename));
         if (!spaceCheck.valid) {
           return res.status(400).json({ error: spaceCheck.reason });
         }
