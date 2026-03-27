@@ -6,7 +6,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const BACKEND_URL = 'snaptoshine.com';
 const WORKSPACE_ID = '3aafbca8-9c50-425a-b1a7-7fd526048893';
 const SYSTEM_PROMPT_ID = 'opt_demo_sys_image_001';
-const MODEL_ID = 'gemini-2.5-flash-image';
+const MODEL_ID = 'banana2';
+const TEMPERATURE = 0.7;
+const MAX_TOKENS = 4096;
+const EXECUTION_COUNT = 5;
 
 const EMAIL = process.env.SNAPTOSHINE_EMAIL || 'lyqyrxw1pbxzyh@gmail.com';
 const PASSWORD = process.env.SNAPTOSHINE_PASSWORD || '200562hj';
@@ -92,15 +95,11 @@ async function getToken() {
 
 // ──────────────────────────────────────────────
 // 提交 AI 生图任务
+// userMessage: 图文交替数组，如 [{text:'...'},{file_url:'...'},...]
 // 返回 execution_id
 // ──────────────────────────────────────────────
-async function submitImageRequest({ prompt, artworkUrl, spaceUrl }) {
+async function submitImageRequest({ userMessage }) {
   const token = await getToken();
-
-  const userMessage = [];
-  if (artworkUrl) userMessage.push({ file_url: artworkUrl });
-  if (spaceUrl) userMessage.push({ file_url: spaceUrl });
-  userMessage.push({ text: prompt });
 
   const body = {
     workspace_id: WORKSPACE_ID,
@@ -110,9 +109,11 @@ async function submitImageRequest({ prompt, artworkUrl, spaceUrl }) {
       user_message: userMessage,
       system_prompt_template_id: SYSTEM_PROMPT_ID,
       model_id: MODEL_ID,
-      execution_count: 1
+      temperature: TEMPERATURE,
+      max_tokens: MAX_TOKENS,
+      execution_count: EXECUTION_COUNT
     },
-    execution_count: 1
+    execution_count: EXECUTION_COUNT
   };
 
   const res = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
