@@ -109,8 +109,19 @@ async function uploadImageToSnaptoshine(externalUrl) {
     return imageUploadCache.get(externalUrl);
   }
 
-  const token = await getToken();
-  const rawBuf = await downloadImageBuffer(externalUrl);
+  let token, rawBuf;
+  try {
+    token = await getToken();
+  } catch (e) {
+    console.warn(`⚠️ 获取 token 失败: ${e.message}，降级使用外部URL`);
+    return externalUrl;
+  }
+  try {
+    rawBuf = await downloadImageBuffer(externalUrl);
+  } catch (e) {
+    console.warn(`⚠️ 下载图片失败 ${externalUrl}: ${e.message}，降级使用外部URL`);
+    return externalUrl;
+  }
 
   // 压缩到 1280px 以内，减少 base64 体积
   let buf, width, height;
