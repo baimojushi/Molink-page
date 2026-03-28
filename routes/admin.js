@@ -9,6 +9,7 @@ const { adminUpload, DELIVERIES_DIR } = require('../middleware/upload');
 const { 发送交付通知到用户邮箱 } = require('../services/email');
 const { 文字渲染为图片 } = require('../services/textToImage');
 const { submitImageRequest, checkExecution, downloadFile } = require('../services/snaptoshine');
+const { notifyCollector } = require('../services/wxNotify');
 
 // uploads 目录（用于删除订单时清理用户上传图片）
 const PERSISTENT_ROOT = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
@@ -203,6 +204,8 @@ router.post('/deliver/:id',
           console.error('邮件发送失败:', e);
         }
         db.prepare('UPDATE orders SET email_sent = ? WHERE id = ?').run(emailSent ? 1 : 0, req.params.id);
+        // 微信订阅消息通知（有 openid 且用户已订阅时生效）
+        notifyCollector(order.openid, order).catch(e => console.error('订阅消息通知失败:', e.message));
       }
 
       console.log(`✅ ${isRedeliver ? '重新' : ''}交付完成: ${req.params.id} -> ${deliveryUrl}`);
@@ -251,6 +254,8 @@ router.post('/approve/:id', async (req, res) => {
       emailSent = await 发送交付通知到用户邮箱(order, deliveryUrl);
       db.prepare('UPDATE orders SET email_sent=? WHERE id=?').run(emailSent ? 1 : 0, order.id);
     } catch (e) { console.error('邮件发送失败:', e); }
+    // 微信订阅消息通知
+    notifyCollector(order.openid, order).catch(e => console.error('订阅消息通知失败:', e.message));
 
     console.log(`✅ AI 效果图已审核通过: ${order.id}`);
     res.json({ success: true, emailSent, deliveryUrl });

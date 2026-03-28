@@ -225,34 +225,17 @@ async function createNewWorkspace() {
 async function submitImageRequest({ userMessage }) {
   const token = await getToken();
 
-  // ── 把图片下载、压缩并转成 base64 内联（同一URL只处理一次）──
-  // 先 resize 到 1280px 以内（JPEG 80质量），避免大图导致请求体过大
-  const uniqueUrls = [...new Set(userMessage.filter(m => m.file_url).map(m => m.file_url))];
-  const base64Map = {};
-  for (const url of uniqueUrls) {
-    try {
-      const buf = await downloadImageBuffer(url);
-      const resized = await sharp(buf)
-        .resize(1280, 1280, { fit: 'inside', withoutEnlargement: true })
-        .jpeg({ quality: 80 })
-        .toBuffer();
-      base64Map[url] = `data:image/jpeg;base64,${resized.toString('base64')}`;
-      console.log(`📸 图片压缩base64成功: ${url.substring(0, 60)} 原${buf.length}→压缩${resized.length} bytes`);
-    } catch (e) {
-      console.warn(`⚠️ 图片处理失败，保留原URL: ${url} 错误: ${e.message}`);
-      base64Map[url] = url; // 降级使用外部URL
-    }
-  }
-
-  // 替换 file_url 为 base64 data URL（保持 Snaptoshine file_url 字段格式）
+  // userMessage 里的 file_url 已经是完整公网 URL（如 https://www.molink.art/uploads/xxx.jpg）
+  // 直接使用，不再转 base64——Snaptoshine AI 需要能下载的 HTTP URL
+  // （base64 data: URL 在 submit 时能通过 201，但 AI 模型无法从 data: URL 下载图片内容）
   const processedMessage = userMessage.map(m =>
     m.file_url
-      ? { file_url: base64Map[m.file_url] }
+      ? { file_url: m.file_url }   // 保持原始公网 URL
       : { text: m.text }
   );
 
-  // 日志（base64内容太长，只记录图片占位和文本摘要）
-  const summary = processedMessage.map(m => m.file_url ? `[图:base64]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
+  // 日志
+  const summary = processedMessage.map(m => m.file_url ? `[图:${m.file_url.substring(0,50)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
   console.log(`📤 提交生图 消息结构: ${summary}`);
 
   const body = {
@@ -261,7 +244,8 @@ async function submitImageRequest({ userMessage }) {
     user_prompt: processedMessage,
     input_params: {
       user_message: processedMessage,
-      system_prompt_template_id: SYSTEM_PROMPT_ID,
+      // 不指定 system_prompt_template_id，让 AI 按照 user_message 的指令执行
+      // （指定 opt_demo_sys_image_001 会覆盖我们的画作和提示词）
       model_id: MODEL_ID,
       temperature: TEMPERATURE,
       max_tokens: MAX_TOKENS,

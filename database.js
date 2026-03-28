@@ -69,7 +69,8 @@ const 升级字段 = [
   'ai_user_message TEXT',
   'ai_submitted_at TEXT',
   'ai_ready_at TEXT',
-  'ai_current_step TEXT'
+  'ai_current_step TEXT',
+  'notes TEXT'
 ];
 
 for (const col of 升级字段) {

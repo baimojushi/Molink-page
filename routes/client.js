@@ -25,7 +25,7 @@ const 服务类型映射 = {
 // ==========================================
 // 构建 AI 生图消息（图文交替数组格式）
 // ==========================================
-function 构建生图消息(serviceType, artworkUrl, spaceUrl, size) {
+function 构建生图消息(serviceType, artworkUrl, spaceUrl, size, notes) {
   if (serviceType === 'hang_in_home') {
     const sz = size ? `尺寸：${size}` : '尺寸';
     return [
@@ -105,8 +105,9 @@ function 构建生图消息(serviceType, artworkUrl, spaceUrl, size) {
 
   if (serviceType === 'recommend_space') {
     const sz = size ? `尺寸：${size}` : '尺寸';
+    const notesPrefix = notes ? `用户备注：${notes}。请在生成时参考。\n` : '';
     return [
-      { text: '将这件作品' },
+      { text: notesPrefix + '将这件作品' },
       { file_url: artworkUrl },
       { text: `（${sz}） 放到这个与之高度匹配的家装空间内，空间内应包含所有必要的家具，重叠产生丰富视觉层次，大师级窗帘光影。作品` },
       { file_url: artworkUrl },
@@ -204,7 +205,7 @@ router.post('/upload-image',
 router.post('/submit',
   async (req, res) => {
     try {
-      const { service_type, receive_target, extra_service, device_uuid, openid, user_nickname, user_avatar, artwork_size } = req.body;
+      const { service_type, receive_target, extra_service, device_uuid, openid, user_nickname, user_avatar, artwork_size, notes } = req.body;
 
       // 参数验证
       if (!service_type || !服务类型映射[service_type]) {
@@ -256,8 +257,8 @@ router.post('/submit',
       const { artwork_num, artwork_name } = req.body;
 
       const stmt = db.prepare(`
-        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar, artwork_size, artwork_num, artwork_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar, artwork_size, artwork_num, artwork_name, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
@@ -276,7 +277,8 @@ router.post('/submit',
         user_avatar || null,
         artwork_size || null,
         artwork_num || null,
-        artwork_name || null
+        artwork_name || null,
+        notes || null
       );
 
       // 获取刚插入的完整订单记录（含 created_at）
@@ -307,7 +309,7 @@ router.post('/submit',
           }
 
           console.log(`🎨 生图参数 订单=${orderId} service=${service_type} artworkUrl=${artworkUrl} spaceUrl=${spaceUrl} size=${size}`);
-          const userMessage = 构建生图消息(service_type, artworkUrl, spaceUrl, size);
+          const userMessage = 构建生图消息(service_type, artworkUrl, spaceUrl, size, notes);
           // 先保存消息，确保即使提交失败也能从管理后台重试
           db.prepare("UPDATE orders SET ai_user_message = ? WHERE id = ?")
             .run(JSON.stringify(userMessage), orderId);
