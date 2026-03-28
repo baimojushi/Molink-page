@@ -334,6 +334,9 @@ async function submitImageRequest({ userMessage }) {
   for (const m of userMessage) {
     if (m.file_url) {
       const asset = await uploadImageToSnaptoshine(m.file_url);
+      if (!asset.asset_id) {
+        throw new Error(`图片上传Snaptoshine失败，无法获取asset_id，外链: ${m.file_url.substring(0, 80)}`);
+      }
       processedMessage.push(asset);
     } else {
       processedMessage.push({ text: m.text });
