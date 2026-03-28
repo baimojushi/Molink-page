@@ -115,9 +115,10 @@ async function uploadImageToSnaptoshine(externalUrl) {
     if (depth === undefined) depth = 0;
     if (!obj || depth > 6 || typeof obj !== 'object') return null;
     const id = obj.id || obj.asset_id || obj.uuid;
-    const url = obj.file_url || obj.url || obj.cdn_url || obj.image_url || obj.download_url || obj.asset_url;
-    if (id && url && typeof url === 'string' && /^https?:\/\/.{10}/.test(url)) {
-      return { asset_id: String(id), file_url: url };
+    const fileUrl = obj.file_url || obj.url || obj.cdn_url || obj.download_url;
+    const imageUrl = obj.thumbnail_file_url || obj.thumbnail_url || obj.image_url || fileUrl;
+    if (id && fileUrl && typeof fileUrl === 'string' && /^https?:\/\/.{10}/.test(fileUrl)) {
+      return { asset_id: String(id), file_url: fileUrl, image_url: imageUrl };
     }
     for (const key of Object.keys(obj)) {
       if (key === 'status' || key === 'created_at' || key === 'updated_at' || key === 'workspace_id') continue;
@@ -137,15 +138,11 @@ async function uploadImageToSnaptoshine(externalUrl) {
     return null;
   }
 
-  // 从执行结果提取 asset 对象（asset_id + file_url）
+  // 从执行结果提取 asset 对象（asset_id + file_url + image_url）
+  // 正确格式：{ asset_id: output[0].id, file_url: output[0].file_url, image_url: output[0].thumbnail_file_url }
+  // image_url 是缩略图，Snaptoshine 用它让 AI 真正看到图片，缺少此字段则 AI 看不到图片内容
   function extractAsset(exec) {
     if (!exec) return null;
-
-    // 直接字段
-    if (exec.asset_id && (exec.file_url || exec.url || exec.cdn_url)) {
-      const url = exec.file_url || exec.url || exec.cdn_url;
-      return { asset_id: exec.asset_id, file_url: url };
-    }
 
     // 尝试各种 output 容器字段
     const out = exec.output || exec.outputs || exec.result || exec.results ||
@@ -155,18 +152,20 @@ async function uploadImageToSnaptoshine(externalUrl) {
       if (Array.isArray(out) && out.length > 0) {
         const item = out[0];
         const id = item?.id || item?.asset_id || item?.uuid;
-        const url = item?.file_url || item?.url || item?.cdn_url || item?.image_url || item?.download_url;
-        if (id && url) {
-          console.log(`📸 extractAsset 找到: id=${id} url=${url.substring(0, 60)}`);
-          return { asset_id: id, file_url: url };
+        const fileUrl = item?.file_url || item?.url || item?.cdn_url || item?.download_url;
+        const imageUrl = item?.thumbnail_file_url || item?.thumbnail_url || item?.image_url || fileUrl;
+        if (id && fileUrl) {
+          console.log(`📸 extractAsset 找到: id=${id} file_url=${fileUrl.substring(0, 60)} image_url=${(imageUrl||'').substring(0, 60)}`);
+          return { asset_id: id, file_url: fileUrl, image_url: imageUrl };
         }
         console.log(`📸 extractAsset out[0] 结构: ${JSON.stringify(item).substring(0, 300)}`);
       } else if (!Array.isArray(out) && typeof out === 'object') {
         const id = out.id || out.asset_id || out.uuid;
-        const url = out.file_url || out.url || out.cdn_url || out.image_url;
-        if (id && url) {
-          console.log(`📸 extractAsset 找到(obj): id=${id} url=${url.substring(0, 60)}`);
-          return { asset_id: id, file_url: url };
+        const fileUrl = out.file_url || out.url || out.cdn_url;
+        const imageUrl = out.thumbnail_file_url || out.thumbnail_url || out.image_url || fileUrl;
+        if (id && fileUrl) {
+          console.log(`📸 extractAsset 找到(obj): id=${id} url=${fileUrl.substring(0, 60)}`);
+          return { asset_id: id, file_url: fileUrl, image_url: imageUrl };
         }
       }
     }
@@ -182,11 +181,11 @@ async function uploadImageToSnaptoshine(externalUrl) {
         for (const item of val) {
           if (!item || typeof item !== 'object') continue;
           const found = deepFindAsset(item, 0);
-          if (found) { console.log(`📸 深度命中[${key}[]]: asset_id=${found.asset_id}`); return found; }
+          if (found) { console.log(`📸 深度命中[${key}[]]: asset_id=${found.asset_id} image_url=${(found.image_url||'').substring(0,50)}`); return found; }
         }
       } else {
         const found = deepFindAsset(val, 0);
-        if (found) { console.log(`📸 深度命中[${key}]: asset_id=${found.asset_id}`); return found; }
+        if (found) { console.log(`📸 深度命中[${key}]: asset_id=${found.asset_id} image_url=${(found.image_url||'').substring(0,50)}`); return found; }
       }
     }
 
