@@ -303,7 +303,7 @@ router.post('/regenerate/:id', async (req, res) => {
       .run(executionIds[0], JSON.stringify(executionIds), 'ai_generating', order.id);
 
     console.log(`🔄 重新生成: 订单=${order.id} 批次=${executionIds.length} 个执行`);
-    res.json({ success: true, executionId });
+    res.json({ success: true, executionIds });
   } catch (e) {
     console.error('regenerate 失败:', e);
     res.status(500).json({ error: e.message });
