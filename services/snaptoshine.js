@@ -99,7 +99,8 @@ function downloadImageBuffer(url) {
 }
 
 // ──────────────────────────────────────────────
-// 上传图片到 Snaptoshine，返回其内部 file_url
+// 上传图片到 Snaptoshine，返回其内部 CDN file_url
+// 通过 executor_name='asset_upload' 提交，轮询完成后取 CDN URL
 // 同一张图只上传一次（进程内缓存）
 // ──────────────────────────────────────────────
 async function uploadImageToSnaptoshine(externalUrl) {
@@ -109,85 +110,100 @@ async function uploadImageToSnaptoshine(externalUrl) {
   }
 
   const token = await getToken();
-  const buf = await downloadImageBuffer(externalUrl);
-  const rawName = externalUrl.split('/').pop().split('?')[0] || 'image.jpg';
-  const filename = rawName.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const ext = filename.split('.').pop().toLowerCase();
-  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-  const uniqueFilename = `${Date.now()}_${filename}`;
+  const rawBuf = await downloadImageBuffer(externalUrl);
 
-  // ── 方法1：Supabase Storage 直传（Snaptoshine 自己的基础设施）──
-  const supabaseBuckets = ['assets', 'images', 'uploads', 'files', 'workspace-files', 'user-uploads', 'media', 'public'];
-  for (const bucket of supabaseBuckets) {
-    try {
-      const storagePath = `/storage/v1/object/${bucket}/${uniqueFilename}`;
-      const res = await httpsReqBuffer(
-        'fxcegiccwqtcuuyhzgkq.supabase.co',
-        storagePath,
-        'POST',
-        {
-          'Authorization': 'Bearer ' + token,
-          'apikey': SUPABASE_ANON_KEY,
-          'Content-Type': mimeType,
-          'Content-Length': buf.length,
-          'x-upsert': 'true'
-        },
-        buf
-      );
-      console.log(`📸 Supabase ${bucket} → status=${res.status} data=${JSON.stringify(res.data).substring(0, 120)}`);
-      if (res.status === 200 || res.status === 201) {
-        const publicUrl = `https://fxcegiccwqtcuuyhzgkq.supabase.co/storage/v1/object/public/${bucket}/${uniqueFilename}`;
-        imageUploadCache.set(externalUrl, publicUrl);
-        console.log(`✅ Supabase Storage 上传成功: ${publicUrl}`);
-        return publicUrl;
+  // 压缩到 1280px 以内，减少 base64 体积
+  let buf, width, height;
+  try {
+    const result = await sharp(rawBuf)
+      .resize(1280, 1280, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 85 })
+      .toBuffer({ resolveWithObject: true });
+    buf = result.data;
+    width = result.info.width;
+    height = result.info.height;
+  } catch (e) {
+    buf = rawBuf;
+    width = 1024; height = 1024;
+  }
+
+  const base64Data = `data:image/jpeg;base64,${buf.toString('base64')}`;
+  const clientId = require('crypto').randomUUID();
+  console.log(`📸 上传图片 (${buf.length} bytes, ${width}x${height}) → Snaptoshine CDN...`);
+
+  const uploadBody = {
+    workspace_id: currentWorkspaceId,
+    executor_name: 'asset_upload',
+    user_prompt: [],
+    input_params: {
+      base64_images: [base64Data],
+      client_request_id: clientId,
+      width,
+      height
+    },
+    execution_count: 1
+  };
+
+  const res = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
+    { 'Authorization': 'Bearer ' + token }, uploadBody);
+
+  console.log(`📸 上传提交 status=${res.status} data=${JSON.stringify(res.data).substring(0, 300)}`);
+
+  if (res.status !== 201) {
+    console.warn(`⚠️ 上传提交失败 (${res.status})，降级使用外部URL`);
+    return externalUrl;
+  }
+
+  // 从执行结果提取 file_url 的辅助函数
+  function extractCdnUrl(exec) {
+    if (!exec) return null;
+    const out = exec.output || exec.outputs || [];
+    if (Array.isArray(out) && out[0]?.file_url) return out[0].file_url;
+    if (exec.file_url) return exec.file_url;
+    return null;
+  }
+
+  // 检查是否已经立即完成
+  const firstExec = res.data.executions?.[0];
+  const execId = firstExec?.id;
+  const immediateUrl = extractCdnUrl(firstExec);
+  if (immediateUrl) {
+    imageUploadCache.set(externalUrl, immediateUrl);
+    console.log(`✅ 图片上传完成 (即时): ${immediateUrl}`);
+    return immediateUrl;
+  }
+
+  if (!execId) {
+    console.warn('⚠️ 未返回 execution ID，降级使用外部URL');
+    return externalUrl;
+  }
+
+  // 轮询直到完成（最多 60 秒）
+  const deadline = Date.now() + 60000;
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, 1500));
+    const pollRes = await httpsReq(BACKEND_URL, `/api/v1/executions/${execId}`, 'GET',
+      { 'Authorization': 'Bearer ' + token }, null);
+    const exec = pollRes.data;
+    console.log(`📸 上传轮询 status=${exec.status}`);
+
+    if (exec.status === 'completed' || exec.status === 'succeeded') {
+      const cdnUrl = extractCdnUrl(exec);
+      if (cdnUrl) {
+        imageUploadCache.set(externalUrl, cdnUrl);
+        console.log(`✅ 图片上传完成: ${cdnUrl}`);
+        return cdnUrl;
       }
-    } catch (e) {
-      console.log(`📸 Supabase ${bucket} → ERROR: ${e.message}`);
+      console.warn('⚠️ 完成但未找到 file_url:', JSON.stringify(exec).substring(0, 400));
+      return externalUrl;
+    }
+    if (exec.status === 'failed' || exec.status === 'error') {
+      console.warn('⚠️ 上传执行失败，降级使用外部URL');
+      return externalUrl;
     }
   }
 
-  // ── 方法2：Snaptoshine 后端各端点（multipart）──
-  const boundary = '----MolinkBoundary' + Date.now();
-  const headerPart = Buffer.from(
-    `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`
-  );
-  const footerPart = Buffer.from(`\r\n--${boundary}--\r\n`);
-  const multipartBody = Buffer.concat([headerPart, buf, footerPart]);
-
-  const endpoints = [
-    `/api/v1/workspaces/${currentWorkspaceId}/assets`,
-    `/api/v1/workspaces/${currentWorkspaceId}/files`,
-    `/api/v1/upload`,
-    `/api/v1/assets`,
-    `/api/v1/files`
-  ];
-
-  for (const ep of endpoints) {
-    try {
-      const res = await httpsReqBuffer(BACKEND_URL, ep, 'POST', {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        'Content-Length': multipartBody.length
-      }, multipartBody);
-
-      console.log(`📸 Snap ${ep} → status=${res.status} data=${JSON.stringify(res.data).substring(0, 150)}`);
-
-      if (res.status === 200 || res.status === 201) {
-        const d = res.data;
-        const snUrl = (typeof d === 'object') && (d.url || d.file_url || d.asset_url || d.public_url || d.path);
-        if (snUrl) {
-          imageUploadCache.set(externalUrl, snUrl);
-          console.log(`✅ 图片上传成功: ${snUrl}`);
-          return snUrl;
-        }
-      }
-    } catch (e) {
-      console.log(`📸 Snap ${ep} → ERROR: ${e.message}`);
-    }
-  }
-
-  // 全部失败，使用原始外部 URL（降级）
-  console.warn(`⚠️ 图片上传全部失败，降级使用外部URL: ${externalUrl}`);
+  console.warn('⚠️ 上传超时，降级使用外部URL');
   return externalUrl;
 }
 
