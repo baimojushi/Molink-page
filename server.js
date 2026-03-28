@@ -86,27 +86,45 @@ function 启动AI轮询() {
   const MAX_AI_RETRIES = parseInt(process.env.MAX_AI_RETRIES || '3');
 
   // 单张图片的 Qwen 审核（物理 → 画作一致性 → 尺寸），返回 { pass, reason }
-  async function runQwenReview(order, imageUrl) {
-    // 第1步：物理合理性
-    db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('物理合理性检查（Flash初审）…', order.id);
-    const physics = await reviewPhysics(imageUrl);
-    if (!physics.pass) return { pass: false, reason: physics.reason || '画面物理不合理' };
+  // execIndex/totalExecs: 当前是这批第几张（显示用）
+  async function runQwenReview(order, imageUrl, execIndex, totalExecs) {
+    const tag = `图${execIndex}/${totalExecs}`;
 
-    // 第2步：画作一致性
+    // ① 物理合理性（qwen-vl-flash，512px）
+    db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?")
+      .run(`${tag} ① 物理合理性审核（qwen-vl-flash）…`, order.id);
+    const physics = await reviewPhysics(imageUrl);
+    if (!physics.pass) {
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?")
+        .run(`${tag} ① ❌物理不通过：${physics.reason || '画面物理不合理'}`, order.id);
+      return { pass: false, reason: physics.reason || '画面物理不合理' };
+    }
+
+    // ② 画作一致性（qwen-vl-flash，效果图768px + 原作512px）
     const artworkImageUrl = order.artwork_image
       ? (order.artwork_image.startsWith('http') ? order.artwork_image : `https://www.molink.art/uploads/${order.artwork_image}`)
       : null;
     if (artworkImageUrl) {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('画作一致性检查…', order.id);
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?")
+        .run(`${tag} ✅物理通过 → ② 画作一致性（qwen-vl-flash）…`, order.id);
       const consistency = await reviewArtworkConsistency(imageUrl, artworkImageUrl);
-      if (!consistency.pass) return { pass: false, reason: consistency.reason || '效果图中画作与原作不一致' };
+      if (!consistency.pass) {
+        db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?")
+          .run(`${tag} ② ❌画作不一致：${consistency.reason || '效果图中画作与原作不符'}`, order.id);
+        return { pass: false, reason: consistency.reason || '效果图中画作与原作不一致' };
+      }
     }
 
-    // 第3步：尺寸比例
+    // ③ 尺寸比例（qwen-vl-max，768px）
     if (order.artwork_size) {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`尺寸比例检查（${order.artwork_size}）…`, order.id);
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?")
+        .run(`${tag} ✅物理✅画作 → ③ 尺寸比例终审（qwen-vl-max）…`, order.id);
       const dims = await reviewDimensions(imageUrl, order.artwork_size);
-      if (!dims.pass) return { pass: false, reason: dims.reason || '尺寸比例不符' };
+      if (!dims.pass) {
+        db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?")
+          .run(`${tag} ③ ❌尺寸不符：${dims.reason || '尺寸比例偏差过大'}`, order.id);
+        return { pass: false, reason: dims.reason || '尺寸比例不符' };
+      }
     }
 
     return { pass: true };
@@ -134,14 +152,15 @@ function 启动AI轮询() {
 
         const stillPending = [];
 
-        for (const execId of pendingIds) {
+        for (let idx = 0; idx < pendingIds.length; idx++) {
+          const execId = pendingIds[idx];
           const execResult = await checkExecution(execId);
           const { status, imageUrl } = execResult;
-          console.log(`📊 轮询 订单=${order.id.substring(0,8)} exec=${execId.substring(0,8)} status=${status} 有图=${!!imageUrl}`);
+          console.log(`📊 轮询 订单=${order.id.substring(0,8)} [${idx+1}/${pendingIds.length}] exec=${execId.substring(0,8)} status=${status} 有图=${!!imageUrl}`);
 
           if (status === 'completed' || status === 'succeeded') {
             if (imageUrl) {
-              const review = await runQwenReview(order, imageUrl);
+              const review = await runQwenReview(order, imageUrl, idx + 1, pendingIds.length);
               if (review.pass) {
                 resultUrls.push(imageUrl);
                 console.log(`✅ 通过审核 订单=${order.id.substring(0,8)} 已通过=${resultUrls.length} 张`);
@@ -217,7 +236,7 @@ function 启动AI轮询() {
         console.error(`轮询出错 订单=${order.id}:`, e.message);
       }
     }
-  }, 30 * 1000);
+  }, 10 * 1000);
 
-  console.log('🔄 AI 轮询已启动（每 30 秒，全批次追踪，含 Qwen 自动审核）');
+  console.log('🔄 AI 轮询已启动（每 10 秒，全批次追踪，含 Qwen 自动审核）');
 }
