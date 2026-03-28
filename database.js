@@ -71,8 +71,8 @@ const 升级字段 = [
   'ai_ready_at TEXT',
   'ai_current_step TEXT',
   'notes TEXT',
-  'ai_execution_ids TEXT',   -- JSON 数组，当前批次所有 execution ID
-  'ai_result_urls TEXT'      -- JSON 数组，审核通过的效果图 URL
+  'ai_execution_ids TEXT',
+  'ai_result_urls TEXT'
 ];
 
 for (const col of 升级字段) {
