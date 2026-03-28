@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const BACKEND_URL = 'snaptoshine.com';
 const DEFAULT_WORKSPACE_ID = 'f1bb03f2-1a41-4dff-83d1-b874946f03d5';
 let currentWorkspaceId = DEFAULT_WORKSPACE_ID;
-const SYSTEM_PROMPT_ID = 'opt_demo_sys_image_001';
+const SYSTEM_PROMPT_ID = '0d6bcbba-61e2-4330-b87e-0ddd874f84f1';
 const MODEL_ID = 'gemini-2.5-flash-image';
 const TEMPERATURE = 0.7;
 const MAX_TOKENS = 4096;
@@ -110,10 +110,43 @@ async function uploadImageToSnaptoshine(externalUrl) {
 
   const token = await getToken();
   const buf = await downloadImageBuffer(externalUrl);
-  const filename = externalUrl.split('/').pop().split('?')[0] || 'image.jpg';
+  const rawName = externalUrl.split('/').pop().split('?')[0] || 'image.jpg';
+  const filename = rawName.replace(/[^a-zA-Z0-9._-]/g, '_');
   const ext = filename.split('.').pop().toLowerCase();
   const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+  const uniqueFilename = `${Date.now()}_${filename}`;
 
+  // ── 方法1：Supabase Storage 直传（Snaptoshine 自己的基础设施）──
+  const supabaseBuckets = ['assets', 'images', 'uploads', 'files', 'workspace-files', 'user-uploads', 'media', 'public'];
+  for (const bucket of supabaseBuckets) {
+    try {
+      const storagePath = `/storage/v1/object/${bucket}/${uniqueFilename}`;
+      const res = await httpsReqBuffer(
+        'fxcegiccwqtcuuyhzgkq.supabase.co',
+        storagePath,
+        'POST',
+        {
+          'Authorization': 'Bearer ' + token,
+          'apikey': SUPABASE_ANON_KEY,
+          'Content-Type': mimeType,
+          'Content-Length': buf.length,
+          'x-upsert': 'true'
+        },
+        buf
+      );
+      console.log(`📸 Supabase ${bucket} → status=${res.status} data=${JSON.stringify(res.data).substring(0, 120)}`);
+      if (res.status === 200 || res.status === 201) {
+        const publicUrl = `https://fxcegiccwqtcuuyhzgkq.supabase.co/storage/v1/object/public/${bucket}/${uniqueFilename}`;
+        imageUploadCache.set(externalUrl, publicUrl);
+        console.log(`✅ Supabase Storage 上传成功: ${publicUrl}`);
+        return publicUrl;
+      }
+    } catch (e) {
+      console.log(`📸 Supabase ${bucket} → ERROR: ${e.message}`);
+    }
+  }
+
+  // ── 方法2：Snaptoshine 后端各端点（multipart）──
   const boundary = '----MolinkBoundary' + Date.now();
   const headerPart = Buffer.from(
     `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`
@@ -121,30 +154,35 @@ async function uploadImageToSnaptoshine(externalUrl) {
   const footerPart = Buffer.from(`\r\n--${boundary}--\r\n`);
   const multipartBody = Buffer.concat([headerPart, buf, footerPart]);
 
-  // 尝试 workspace 级别的文件上传
   const endpoints = [
+    `/api/v1/workspaces/${currentWorkspaceId}/assets`,
     `/api/v1/workspaces/${currentWorkspaceId}/files`,
+    `/api/v1/upload`,
     `/api/v1/assets`,
     `/api/v1/files`
   ];
 
   for (const ep of endpoints) {
-    const res = await httpsReqBuffer(BACKEND_URL, ep, 'POST', {
-      'Authorization': 'Bearer ' + token,
-      'Content-Type': `multipart/form-data; boundary=${boundary}`,
-      'Content-Length': multipartBody.length
-    }, multipartBody);
+    try {
+      const res = await httpsReqBuffer(BACKEND_URL, ep, 'POST', {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': multipartBody.length
+      }, multipartBody);
 
-    console.log(`📸 上传尝试 ${ep} → status=${res.status} data=${JSON.stringify(res.data).substring(0, 150)}`);
+      console.log(`📸 Snap ${ep} → status=${res.status} data=${JSON.stringify(res.data).substring(0, 150)}`);
 
-    if (res.status === 200 || res.status === 201) {
-      const d = res.data;
-      const snUrl = (typeof d === 'object') && (d.url || d.file_url || d.asset_url || d.public_url || d.path);
-      if (snUrl) {
-        imageUploadCache.set(externalUrl, snUrl);
-        console.log(`✅ 图片上传成功: ${snUrl}`);
-        return snUrl;
+      if (res.status === 200 || res.status === 201) {
+        const d = res.data;
+        const snUrl = (typeof d === 'object') && (d.url || d.file_url || d.asset_url || d.public_url || d.path);
+        if (snUrl) {
+          imageUploadCache.set(externalUrl, snUrl);
+          console.log(`✅ 图片上传成功: ${snUrl}`);
+          return snUrl;
+        }
       }
+    } catch (e) {
+      console.log(`📸 Snap ${ep} → ERROR: ${e.message}`);
     }
   }
 
@@ -225,14 +263,16 @@ async function createNewWorkspace() {
 async function submitImageRequest({ userMessage }) {
   const token = await getToken();
 
-  // userMessage 里的 file_url 已经是完整公网 URL（如 https://www.molink.art/uploads/xxx.jpg）
-  // 直接使用，不再转 base64——Snaptoshine AI 需要能下载的 HTTP URL
-  // （base64 data: URL 在 submit 时能通过 201，但 AI 模型无法从 data: URL 下载图片内容）
-  const processedMessage = userMessage.map(m =>
-    m.file_url
-      ? { file_url: m.file_url }   // 保持原始公网 URL
-      : { text: m.text }
-  );
+  // 将 file_url 上传到 Snaptoshine CDN，确保 AI 模型可以访问图片内容
+  const processedMessage = [];
+  for (const m of userMessage) {
+    if (m.file_url) {
+      const cdnUrl = await uploadImageToSnaptoshine(m.file_url);
+      processedMessage.push({ file_url: cdnUrl });
+    } else {
+      processedMessage.push({ text: m.text });
+    }
+  }
 
   // 日志
   const summary = processedMessage.map(m => m.file_url ? `[图:${m.file_url.substring(0,50)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
