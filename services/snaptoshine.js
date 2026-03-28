@@ -1,5 +1,6 @@
 // services/snaptoshine.js —— snaptoshine.com AI 生图服务
 const https = require('https');
+const sharp = require('sharp');
 
 const SUPABASE_URL = 'https://fxcegiccwqtcuuyhzgkq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y2VnaWNjd3F0Y3V1eWh6Z2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyNTQ3ODQsImV4cCI6MjA4MzgzMDc4NH0.vnqLmWFSxUExgXJnWQOuDpUY8rdrkbLemStXoLH9QQk';
@@ -224,19 +225,22 @@ async function createNewWorkspace() {
 async function submitImageRequest({ userMessage }) {
   const token = await getToken();
 
-  // ── 把图片转成 base64 内联数据（同一URL只下载一次）──
+  // ── 把图片下载、压缩并转成 base64 内联（同一URL只处理一次）──
+  // 先 resize 到 1280px 以内（JPEG 80质量），避免大图导致请求体过大
   const uniqueUrls = [...new Set(userMessage.filter(m => m.file_url).map(m => m.file_url))];
   const base64Map = {};
   for (const url of uniqueUrls) {
     try {
       const buf = await downloadImageBuffer(url);
-      const ext = url.split('.').pop().toLowerCase().split('?')[0];
-      const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-      base64Map[url] = `data:${mime};base64,${buf.toString('base64')}`;
-      console.log(`📸 图片base64编码成功: ${url.substring(0, 60)} (${buf.length} bytes)`);
+      const resized = await sharp(buf)
+        .resize(1280, 1280, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+      base64Map[url] = `data:image/jpeg;base64,${resized.toString('base64')}`;
+      console.log(`📸 图片压缩base64成功: ${url.substring(0, 60)} 原${buf.length}→压缩${resized.length} bytes`);
     } catch (e) {
-      console.warn(`⚠️ 图片下载失败，保留原URL: ${url} 错误: ${e.message}`);
-      base64Map[url] = url; // 降级
+      console.warn(`⚠️ 图片处理失败，保留原URL: ${url} 错误: ${e.message}`);
+      base64Map[url] = url; // 降级使用外部URL
     }
   }
 

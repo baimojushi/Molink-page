@@ -308,9 +308,12 @@ router.post('/submit',
 
           console.log(`🎨 生图参数 订单=${orderId} service=${service_type} artworkUrl=${artworkUrl} spaceUrl=${spaceUrl} size=${size}`);
           const userMessage = 构建生图消息(service_type, artworkUrl, spaceUrl, size);
+          // 先保存消息，确保即使提交失败也能从管理后台重试
+          db.prepare("UPDATE orders SET ai_user_message = ? WHERE id = ?")
+            .run(JSON.stringify(userMessage), orderId);
           const executionId = await submitImageRequest({ userMessage });
-          db.prepare("UPDATE orders SET ai_execution_id = ?, ai_user_message = ?, status = ?, ai_submitted_at = datetime('now','localtime') WHERE id = ?")
-            .run(executionId, JSON.stringify(userMessage), 'ai_generating', orderId);
+          db.prepare("UPDATE orders SET ai_execution_id = ?, status = ?, ai_submitted_at = datetime('now','localtime') WHERE id = ?")
+            .run(executionId, 'ai_generating', orderId);
           console.log(`🤖 AI 生图已提交: 订单=${orderId} 执行=${executionId}`);
         } catch (e) {
           console.error('❌ AI 生图提交失败:', e.message);
