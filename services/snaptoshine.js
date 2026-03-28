@@ -164,8 +164,30 @@ async function uploadImageToSnaptoshine(externalUrl) {
   console.log(`📸 上传提交 status=${res.status} data=${JSON.stringify(res.data).substring(0, 300)}`);
 
   if (res.status !== 201) {
-    console.warn(`⚠️ 上传提交失败 (${res.status})，降级使用外部URL`);
-    return fallback;
+    const errStr = JSON.stringify(res.data);
+    // 工作区满时，先新建工作区再重试上传（确保 upload 和 generation 在同一工作区）
+    if (res.status === 400 || res.status === 429 || errStr.includes('space') || errStr.includes('quota') || errStr.includes('limit')) {
+      console.warn(`⚠️ 上传工作区可能已满 (${res.status})，新建工作区后重试上传...`);
+      try {
+        await createNewWorkspace();
+        uploadBody.workspace_id = currentWorkspaceId;
+        const retryRes = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
+          { 'Authorization': 'Bearer ' + token }, uploadBody);
+        console.log(`📸 重试上传 status=${retryRes.status}`);
+        if (retryRes.status !== 201) {
+          console.warn(`⚠️ 重试上传失败 (${retryRes.status})，降级使用外部URL`);
+          return fallback;
+        }
+        // 替换 res 继续后续流程
+        Object.assign(res, retryRes);
+      } catch (e) {
+        console.warn(`⚠️ 新建工作区失败: ${e.message}，降级使用外部URL`);
+        return fallback;
+      }
+    } else {
+      console.warn(`⚠️ 上传提交失败 (${res.status})，降级使用外部URL`);
+      return fallback;
+    }
   }
 
   // 从执行结果提取 asset 对象（包含 asset_id 和 file_url）
