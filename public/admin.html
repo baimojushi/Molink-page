@@ -212,6 +212,29 @@
     .ai-review-section h4 { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 8px; font-weight: 600; }
     .ai-result-img { max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid var(--color-border); cursor: pointer; display: block; margin-bottom: 12px; }
     .ai-action-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+
+    /* ── AI 效果图多图画廊 ── */
+    .ai-gallery { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
+    .ai-gallery-item {
+      position: relative; cursor: pointer; border-radius: 8px; overflow: hidden;
+      border: 3px solid var(--color-border); transition: border-color 0.2s, opacity 0.2s;
+      opacity: 0.55;
+    }
+    .ai-gallery-item.selected { border-color: var(--color-accent); opacity: 1; }
+    .ai-gallery-item img { display: block; width: 180px; height: 180px; object-fit: cover; }
+    .ai-gallery-item .select-badge {
+      position: absolute; top: 6px; right: 6px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(200,200,200,0.7); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 13px;
+      transition: background 0.2s;
+    }
+    .ai-gallery-item.selected .select-badge { background: var(--color-accent); }
+    .ai-gallery-item .img-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.45); color: #fff;
+      font-size: 11px; text-align: center; padding: 3px 0;
+    }
     .approve-btn {
       padding: 10px 22px; background: var(--color-accent); color: #fff;
       border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600;
@@ -424,28 +447,45 @@
           </div>` : ''}
 
           <!-- AI 效果图审核（ai_ready / ai_generating 状态） -->
-          ${(order.status === 'ai_ready' || order.status === 'ai_generating' || order.ai_result_url) ? `
-          <div class="ai-review-section">
-            <h4>AI 效果图${order.status === 'ai_ready' ? '（待审核）' : order.status === 'ai_generating' ? '（生成中）' : ''}</h4>
-            ${order.ai_result_url ? `
-              <img class="ai-result-img" src="${order.ai_result_url}" alt="AI效果图" onclick="放大图片(this.src)">
-              <div class="ai-action-row">
-                <button class="approve-btn" id="approve-btn-${order.id}" onclick="执行通过交付('${order.id}')">✓ 通过并交付</button>
+          ${(() => {
+            let aiResultUrls = [];
+            try { aiResultUrls = JSON.parse(order.ai_result_urls || '[]'); } catch {}
+            if (aiResultUrls.length === 0 && order.ai_result_url) aiResultUrls = [order.ai_result_url];
+            const hasResults = aiResultUrls.length > 0;
+            const showSection = order.status === 'ai_ready' || order.status === 'ai_generating' || hasResults;
+            if (!showSection) return '';
+            return `
+            <div class="ai-review-section">
+              <h4>AI 效果图${order.status === 'ai_ready' ? `（${aiResultUrls.length} 张待审核）` : order.status === 'ai_generating' ? '（生成中）' : ''}</h4>
+              ${hasResults ? `
+                <p style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:8px;">点击图片选择/取消，绿色边框为已选中，交付时只交付选中图片</p>
+                <div class="ai-gallery" id="gallery-${order.id}">
+                  ${aiResultUrls.map((url, i) => `
+                    <div class="ai-gallery-item selected" data-url="${url}" onclick="切换AI图选择(this, '${order.id}')">
+                      <img src="${url}" onclick="event.stopPropagation(); 放大图片('${url}')">
+                      <div class="select-badge">✓</div>
+                      <div class="img-label">效果图 ${i + 1}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="ai-action-row">
+                  <button class="approve-btn" id="approve-btn-${order.id}" onclick="执行通过交付('${order.id}')">✓ 通过并交付选中图</button>
+                  <div class="regen-area">
+                    <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）：如"画作偏小，请调大""></textarea>
+                    <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">↻ 重新生成</button>
+                  </div>
+                </div>
+              ` : order.status === 'ai_generating' ? `
+                <p style="color:var(--color-text-tertiary);font-size:13px;">AI 正在生成中，请稍后刷新页面…</p>
+              ` : `
+                <p style="color:#c45c4a;font-size:13px;margin-bottom:10px;">⚠ AI 已完成但图片链接丢失，请重新生成。</p>
                 <div class="regen-area">
-                  <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）：如"画作偏小，请调大""></textarea>
+                  <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）"></textarea>
                   <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">↻ 重新生成</button>
                 </div>
-              </div>
-            ` : order.status === 'ai_generating' ? `
-              <p style="color:var(--color-text-tertiary);font-size:13px;">AI 正在生成中，请稍后刷新页面…</p>
-            ` : `
-              <p style="color:#c45c4a;font-size:13px;margin-bottom:10px;">⚠ AI 已完成但图片链接丢失，请重新生成。</p>
-              <div class="regen-area">
-                <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）"></textarea>
-                <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">↻ 重新生成</button>
-              </div>
-            `}
-          </div>` : ''}
+              `}
+            </div>`;
+          })()}
 
           <!-- 交付图片预览 -->
           ${交付图片.length > 0 ? `
@@ -735,29 +775,49 @@
     }
 
     // ══════════════════════════════════════
+    // AI 效果图：选中 / 取消选中
+    // ══════════════════════════════════════
+    function 切换AI图选择(el, orderId) {
+      el.classList.toggle('selected');
+      // 如果全部取消，给个提示
+      const gallery = document.getElementById(`gallery-${orderId}`);
+      if (gallery) {
+        const selected = gallery.querySelectorAll('.ai-gallery-item.selected').length;
+        const btn = document.getElementById(`approve-btn-${orderId}`);
+        if (btn) btn.textContent = `✓ 通过并交付选中图（${selected} 张）`;
+      }
+    }
+
+    // ══════════════════════════════════════
     // AI 审核：通过并交付
     // ══════════════════════════════════════
     async function 执行通过交付(orderId) {
+      const gallery = document.getElementById(`gallery-${orderId}`);
+      const selectedItems = gallery ? gallery.querySelectorAll('.ai-gallery-item.selected') : [];
+      const selectedUrls = Array.from(selectedItems).map(el => el.dataset.url);
+      if (selectedUrls.length === 0) return alert('请至少选择一张效果图');
+
       const btn = document.getElementById(`approve-btn-${orderId}`);
       if (btn) { btn.disabled = true; btn.textContent = '处理中…'; }
       try {
         const resp = await fetch(`/api/admin/approve/${orderId}`, {
           method: 'POST',
-          headers: { 'x-admin-secret': 管理密钥 }
+          headers: { 'x-admin-secret': 管理密钥, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selected_urls: selectedUrls })
         });
         const data = await resp.json();
         if (data.success) {
-          let msg = '✅ 审核通过，已交付！\n\n交付链接: ' + data.deliveryUrl;
+          let msg = `✅ 审核通过，已交付 ${data.count} 张！\n\n交付链接: ${data.deliveryUrl}`;
           if (!data.emailSent) msg += '\n\n⚠ 邮件发送失败，请手动通知用户。';
           alert(msg);
           await 加载订单();
         } else {
           alert(data.error || '操作失败');
-          if (btn) { btn.disabled = false; btn.textContent = '✓ 通过并交付'; }
+          if (btn) { btn.disabled = false; btn.textContent = '✓ 通过并交付选中图'; }
         }
       } catch (err) {
         alert('请求失败: ' + err.message);
-        if (btn) { btn.disabled = false; btn.textContent = '✓ 通过并交付'; }
+        if (btn) { btn.disabled = false; btn.textContent = '✓ 通过并交付选中图'; }
       }
     }
 

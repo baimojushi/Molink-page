@@ -270,12 +270,13 @@ async function submitImageRequest({ userMessage }) {
       if (res2.status !== 201 || !res2.data.executions?.[0]?.id) {
         throw new Error('新建空间后重试仍失败: ' + JSON.stringify(res2.data));
       }
-      return res2.data.executions[0].id;
+      return res2.data.executions.map(e => e.id);
     }
     throw new Error('提交失败: ' + errStr);
   }
 
-  return res.data.executions[0].id;
+  // 返回全部 execution ID 数组（后续逐个轮询，收集所有通过审核的效果图）
+  return res.data.executions.map(e => e.id);
 }
 
 // ──────────────────────────────────────────────

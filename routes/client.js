@@ -313,10 +313,10 @@ router.post('/submit',
           // 先保存消息，确保即使提交失败也能从管理后台重试
           db.prepare("UPDATE orders SET ai_user_message = ? WHERE id = ?")
             .run(JSON.stringify(userMessage), orderId);
-          const executionId = await submitImageRequest({ userMessage });
-          db.prepare("UPDATE orders SET ai_execution_id = ?, status = ?, ai_submitted_at = datetime('now','localtime') WHERE id = ?")
-            .run(executionId, 'ai_generating', orderId);
-          console.log(`🤖 AI 生图已提交: 订单=${orderId} 执行=${executionId}`);
+          const executionIds = await submitImageRequest({ userMessage });
+          db.prepare("UPDATE orders SET ai_execution_id = ?, ai_execution_ids = ?, status = ?, ai_submitted_at = datetime('now','localtime') WHERE id = ?")
+            .run(executionIds[0], JSON.stringify(executionIds), 'ai_generating', orderId);
+          console.log(`🤖 AI 生图已提交: 订单=${orderId} 批次=${executionIds.length} 个执行`);
         } catch (e) {
           console.error('❌ AI 生图提交失败:', e.message);
         }

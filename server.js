@@ -78,46 +78,35 @@ app.listen(PORT, () => {
 
 // ==========================================
 // AI 生图结果轮询（含 Qwen 自动审核）
-// MAX_AI_RETRIES: 最大重试次数，超过后无论是否通过均交给工作人员
+// 每批次生成 EXECUTION_COUNT 张图，全部轮询，收集所有通过审核的效果图
+// MAX_AI_RETRIES: 若整批全部未通过，重新提交的最大次数
 // ==========================================
 function 启动AI轮询() {
   const db = require('./database');
   const MAX_AI_RETRIES = parseInt(process.env.MAX_AI_RETRIES || '3');
 
-  // 运行两道 Qwen 审核：初审（物理法则）+ 终审（尺寸）
+  // 单张图片的 Qwen 审核（物理 → 画作一致性 → 尺寸），返回 { pass, reason }
   async function runQwenReview(order, imageUrl) {
-    // 第1步：物理合理性检查（Flash）
-    db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('第1步：物理合理性检查（Flash初审）', order.id);
+    // 第1步：物理合理性
+    db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('物理合理性检查（Flash初审）…', order.id);
     const physics = await reviewPhysics(imageUrl);
-    if (!physics.pass) {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`第1步未通过：${physics.reason || '画面物理不合理'}`, order.id);
-      return { pass: false };
-    }
+    if (!physics.pass) return { pass: false, reason: physics.reason || '画面物理不合理' };
 
-    // 第2步：画作一致性检查（Flash）——效果图里的画是否就是用户的那幅
+    // 第2步：画作一致性
     const artworkImageUrl = order.artwork_image
       ? (order.artwork_image.startsWith('http') ? order.artwork_image : `https://www.molink.art/uploads/${order.artwork_image}`)
       : null;
     if (artworkImageUrl) {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('第2步：画作一致性检查（确认用的是原作品）', order.id);
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('画作一致性检查…', order.id);
       const consistency = await reviewArtworkConsistency(imageUrl, artworkImageUrl);
-      if (!consistency.pass) {
-        db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`第2步未通过：${consistency.reason || '效果图中画作与原作不一致'}`, order.id);
-        return { pass: false };
-      }
+      if (!consistency.pass) return { pass: false, reason: consistency.reason || '效果图中画作与原作不一致' };
     }
 
-    // 第3步：尺寸比例检查（Max终审）
+    // 第3步：尺寸比例
     if (order.artwork_size) {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`第3步：尺寸比例检查（Max终审，${order.artwork_size}）`, order.id);
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`尺寸比例检查（${order.artwork_size}）…`, order.id);
       const dims = await reviewDimensions(imageUrl, order.artwork_size);
-      if (!dims.pass) {
-        db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`第3步未通过：${dims.reason || '尺寸比例不符'}`, order.id);
-        return { pass: false };
-      }
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('全部审核通过（物理✓ 画作✓ 尺寸✓）', order.id);
-    } else {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('审核通过（物理✓ 画作✓，无尺寸信息跳过终审）', order.id);
+      if (!dims.pass) return { pass: false, reason: dims.reason || '尺寸比例不符' };
     }
 
     return { pass: true };
@@ -125,60 +114,110 @@ function 启动AI轮询() {
 
   setInterval(async () => {
     const pending = db.prepare(
-      "SELECT id, ai_execution_id, ai_retry_count, ai_user_message, artwork_size FROM orders WHERE status='ai_generating' AND ai_execution_id IS NOT NULL"
+      "SELECT id, ai_execution_id, ai_execution_ids, ai_result_urls, ai_retry_count, ai_user_message, artwork_size, artwork_image FROM orders WHERE status='ai_generating' AND (ai_execution_ids IS NOT NULL OR ai_execution_id IS NOT NULL)"
     ).all();
 
     for (const order of pending) {
       try {
-        const execResult = await checkExecution(order.ai_execution_id);
-        const { status, imageUrl } = execResult;
-        const rawKeys = Object.keys(execResult.raw || {}).join(',');
-        console.log(`📊 轮询 订单=${order.id} status=${status} imageUrl=${imageUrl} keys=[${rawKeys}]`);
-        if (!imageUrl && (status === 'completed' || status === 'succeeded')) {
-          console.log(`📋 完整响应: ${JSON.stringify(execResult.raw)}`);
+        // 兼容旧订单（只有 ai_execution_id）和新订单（ai_execution_ids 数组）
+        let pendingIds;
+        try {
+          pendingIds = order.ai_execution_ids
+            ? JSON.parse(order.ai_execution_ids)
+            : (order.ai_execution_id ? [order.ai_execution_id] : []);
+        } catch { pendingIds = order.ai_execution_id ? [order.ai_execution_id] : []; }
+
+        let resultUrls = [];
+        try { resultUrls = JSON.parse(order.ai_result_urls || '[]'); } catch {}
+
+        if (pendingIds.length === 0) continue;
+
+        const stillPending = [];
+
+        for (const execId of pendingIds) {
+          const execResult = await checkExecution(execId);
+          const { status, imageUrl } = execResult;
+          console.log(`📊 轮询 订单=${order.id.substring(0,8)} exec=${execId.substring(0,8)} status=${status} 有图=${!!imageUrl}`);
+
+          if (status === 'completed' || status === 'succeeded') {
+            if (imageUrl) {
+              const review = await runQwenReview(order, imageUrl);
+              if (review.pass) {
+                resultUrls.push(imageUrl);
+                console.log(`✅ 通过审核 订单=${order.id.substring(0,8)} 已通过=${resultUrls.length} 张`);
+              } else {
+                console.log(`❌ 审核未通过（${review.reason}） 订单=${order.id.substring(0,8)}`);
+              }
+            } else {
+              // 完成但没有图片，记录完整响应供排查
+              console.log(`⚠️ 完成但无图 订单=${order.id.substring(0,8)} exec=${execId.substring(0,8)}`);
+              console.log(`📋 完整响应: ${JSON.stringify(execResult.raw).substring(0, 600)}`);
+            }
+            // 无论有无图，该 execution 已完成，不再追踪
+          } else if (['failed', 'cancelled', 'interrupted'].includes(status)) {
+            console.warn(`⚠️ execution 失败 status=${status} 订单=${order.id.substring(0,8)}`);
+            // 失败，丢弃
+          } else {
+            // 仍在运行中，保留在待轮询列表
+            stillPending.push(execId);
+          }
         }
 
-        if (status === 'completed' || status === 'succeeded') {
-          const retryCount = order.ai_retry_count || 0;
-
-          if (!imageUrl) {
+        if (stillPending.length > 0) {
+          // 批次尚未全部完成，更新进度
+          db.prepare("UPDATE orders SET ai_execution_ids=?, ai_result_urls=?, ai_current_step=? WHERE id=?")
+            .run(
+              JSON.stringify(stillPending),
+              JSON.stringify(resultUrls),
+              `轮询中：${pendingIds.length - stillPending.length}/${pendingIds.length} 已完成，${resultUrls.length} 张通过`,
+              order.id
+            );
+        } else {
+          // 整批完成
+          if (resultUrls.length > 0) {
+            db.prepare(`UPDATE orders SET
+              status='ai_ready', ai_execution_ids='[]',
+              ai_result_url=?, ai_result_urls=?,
+              ai_ready_at=datetime('now','localtime'),
+              ai_current_step=?
+              WHERE id=?`
+            ).run(
+              resultUrls[0],
+              JSON.stringify(resultUrls),
+              `审核完成：${resultUrls.length} 张效果图待管理员确认`,
+              order.id
+            );
+            console.log(`✅ 批次完成 订单=${order.id.substring(0,8)} 通过=${resultUrls.length} 张`);
+          } else {
+            // 整批全部未通过，考虑重试
+            const retryCount = order.ai_retry_count || 0;
             if (retryCount < MAX_AI_RETRIES && order.ai_user_message) {
               const userMessage = JSON.parse(order.ai_user_message);
-              const newExecId = await submitImageRequest({ userMessage });
-              db.prepare("UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=?, ai_current_step='图片获取失败，重新提交中…' WHERE id=?")
-                .run(newExecId, retryCount + 1, order.id);
+              const newIds = await submitImageRequest({ userMessage });
+              db.prepare(`UPDATE orders SET
+                ai_execution_id=?, ai_execution_ids=?,
+                ai_result_url=NULL, ai_result_urls='[]',
+                ai_retry_count=?, ai_current_step=?
+                WHERE id=?`
+              ).run(
+                newIds[0], JSON.stringify(newIds),
+                retryCount + 1,
+                `第 ${retryCount + 1} 次重新生成（整批未通过审核）`,
+                order.id
+              );
+              console.log(`🔄 整批未通过，重新生成（第 ${retryCount + 1} 次） 订单=${order.id.substring(0,8)}`);
             } else {
-              db.prepare("UPDATE orders SET status='pending', ai_current_step='图片获取失败，已退回' WHERE id=?").run(order.id);
+              db.prepare("UPDATE orders SET status='pending', ai_current_step='AI多次生成均未通过审核，请手动处理' WHERE id=?").run(order.id);
+              console.warn(`⚠️ 已达最大重试次数，转人工处理 订单=${order.id.substring(0,8)}`);
             }
-            continue;
           }
-
-          // Qwen 初审（物理检查）
-          db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`Qwen初审中（物理合理性检查，第${retryCount+1}次）`, order.id);
-          const review = await runQwenReview(order, imageUrl);
-
-          if (!review.pass && retryCount < MAX_AI_RETRIES && order.ai_user_message) {
-            const userMessage = JSON.parse(order.ai_user_message);
-            const newExecId = await submitImageRequest({ userMessage });
-            db.prepare("UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=?, ai_current_step=? WHERE id=?")
-              .run(newExecId, retryCount + 1, `Qwen审核未通过，重新生图（第${retryCount+1}次）`, order.id);
-            console.log(`🔄 Qwen 未通过，重新生成（第 ${retryCount + 1} 次）: 订单=${order.id}`);
-          } else {
-            if (!review.pass) console.log(`⚠️ 已达最大重试次数 (${MAX_AI_RETRIES})，直接交工作人员: 订单=${order.id}`);
-            db.prepare("UPDATE orders SET status='ai_ready', ai_result_url=?, ai_ready_at=datetime('now','localtime'), ai_current_step='审核通过，待管理员确认' WHERE id=?")
-              .run(imageUrl, order.id);
-            console.log(`✅ AI 生图完成: 订单=${order.id} 图片=${imageUrl}`);
-          }
-
-        } else if (status === 'failed' || status === 'cancelled' || status === 'interrupted') {
-          db.prepare("UPDATE orders SET status='pending', ai_current_step='AI生图失败' WHERE id=?").run(order.id);
-          console.warn(`⚠️ AI 生图失败: 订单=${order.id} 状态=${status}`);
         }
+
       } catch (e) {
         console.error(`轮询出错 订单=${order.id}:`, e.message);
       }
     }
   }, 30 * 1000);
 
-  console.log('🔄 AI 轮询已启动（每 30 秒，含 Qwen 自动审核）');
+  console.log('🔄 AI 轮询已启动（每 30 秒，全批次追踪，含 Qwen 自动审核）');
 }

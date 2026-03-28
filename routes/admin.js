@@ -231,22 +231,38 @@ router.post('/deliver/:id',
 // ==========================================
 // 一键通过：把 AI 生成图设为交付结果并通知用户
 // POST /api/admin/approve/:id
+// body (可选): { selected_urls: ['url1', 'url2', ...] } — 指定交付哪几张；不传则交付全部通过的
 // ==========================================
 router.post('/approve/:id', async (req, res) => {
   try {
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
     if (!order) return res.status(404).json({ error: '订单不存在' });
-    if (!order.ai_result_url) return res.status(400).json({ error: 'AI 效果图尚未生成完成' });
 
-    // 下载 AI 图并保存到 deliveries 目录
-    const buf = await downloadFile(order.ai_result_url);
-    const filename = `ai_${Date.now()}.jpg`;
-    const filePath = path.join(DELIVERIES_DIR, filename);
-    fs.writeFileSync(filePath, buf);
+    // 获取所有通过审核的效果图 URL
+    let resultUrls = [];
+    try { resultUrls = JSON.parse(order.ai_result_urls || '[]'); } catch {}
+    // 兼容旧数据：只有单张 ai_result_url 的订单
+    if (resultUrls.length === 0 && order.ai_result_url) resultUrls = [order.ai_result_url];
+    if (resultUrls.length === 0) return res.status(400).json({ error: 'AI 效果图尚未生成完成' });
+
+    // 若管理员只选了部分图，按选择交付
+    if (req.body.selected_urls && Array.isArray(req.body.selected_urls) && req.body.selected_urls.length > 0) {
+      const filtered = req.body.selected_urls.filter(u => resultUrls.includes(u));
+      if (filtered.length > 0) resultUrls = filtered;
+    }
+
+    // 下载所有选定图片并保存到 deliveries 目录
+    const filenames = [];
+    for (let i = 0; i < resultUrls.length; i++) {
+      const buf = await downloadFile(resultUrls[i]);
+      const filename = `ai_${Date.now()}_${i}.jpg`;
+      fs.writeFileSync(path.join(DELIVERIES_DIR, filename), buf);
+      filenames.push(filename);
+    }
 
     db.prepare(`
       UPDATE orders SET status='delivered', delivery_images=?, delivered_at=datetime('now','localtime') WHERE id=?
-    `).run(JSON.stringify([filename]), order.id);
+    `).run(JSON.stringify(filenames), order.id);
 
     const deliveryUrl = `https://www.molink.art/d/${order.delivery_token}`;
     let emailSent = false;
@@ -254,11 +270,10 @@ router.post('/approve/:id', async (req, res) => {
       emailSent = await 发送交付通知到用户邮箱(order, deliveryUrl);
       db.prepare('UPDATE orders SET email_sent=? WHERE id=?').run(emailSent ? 1 : 0, order.id);
     } catch (e) { console.error('邮件发送失败:', e); }
-    // 微信订阅消息通知
     notifyCollector(order.openid, order).catch(e => console.error('订阅消息通知失败:', e.message));
 
-    console.log(`✅ AI 效果图已审核通过: ${order.id}`);
-    res.json({ success: true, emailSent, deliveryUrl });
+    console.log(`✅ AI 效果图已审核通过: ${order.id} 共 ${filenames.length} 张`);
+    res.json({ success: true, emailSent, deliveryUrl, count: filenames.length });
   } catch (e) {
     console.error('approve 失败:', e);
     res.status(500).json({ error: e.message });
@@ -283,11 +298,11 @@ router.post('/regenerate/:id', async (req, res) => {
       userMessage = [...userMessage, { text: `\n\n调整要求：${req.body.note.trim()}` }];
     }
 
-    const executionId = await submitImageRequest({ userMessage });
-    db.prepare('UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=0, status=? WHERE id=?')
-      .run(executionId, 'ai_generating', order.id);
+    const executionIds = await submitImageRequest({ userMessage });
+    db.prepare('UPDATE orders SET ai_execution_id=?, ai_execution_ids=?, ai_result_url=NULL, ai_result_urls=NULL, ai_retry_count=0, status=? WHERE id=?')
+      .run(executionIds[0], JSON.stringify(executionIds), 'ai_generating', order.id);
 
-    console.log(`🔄 重新生成: 订单=${order.id} 执行=${executionId}`);
+    console.log(`🔄 重新生成: 订单=${order.id} 批次=${executionIds.length} 个执行`);
     res.json({ success: true, executionId });
   } catch (e) {
     console.error('regenerate 失败:', e);
