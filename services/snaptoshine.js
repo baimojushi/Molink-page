@@ -224,16 +224,27 @@ async function createNewWorkspace() {
 async function submitImageRequest({ userMessage }) {
   const token = await getToken();
 
-  // ── 先上传所有图片到 Snaptoshine（同一URL只上传一次）──
+  // ── 把图片转成 base64 内联数据（同一URL只下载一次）──
   const uniqueUrls = [...new Set(userMessage.filter(m => m.file_url).map(m => m.file_url))];
-  const urlMap = {};
+  const base64Map = {};
   for (const url of uniqueUrls) {
-    urlMap[url] = await uploadImageToSnaptoshine(url);
+    try {
+      const buf = await downloadImageBuffer(url);
+      const ext = url.split('.').pop().toLowerCase().split('?')[0];
+      const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+      base64Map[url] = `data:${mime};base64,${buf.toString('base64')}`;
+      console.log(`📸 图片base64编码成功: ${url.substring(0, 60)} (${buf.length} bytes)`);
+    } catch (e) {
+      console.warn(`⚠️ 图片下载失败，保留原URL: ${url} 错误: ${e.message}`);
+      base64Map[url] = url; // 降级
+    }
   }
 
-  // 替换 userMessage 中的 file_url 为 Snaptoshine 内部 URL
+  // 替换 file_url 为 base64 data URL，并使用 image_url 格式（OpenAI/Gemini兼容）
   const processedMessage = userMessage.map(m =>
-    m.file_url ? { ...m, file_url: urlMap[m.file_url] } : m
+    m.file_url
+      ? { type: 'image_url', image_url: { url: base64Map[m.file_url] } }
+      : { type: 'text', text: m.text }
   );
 
   // 日志
