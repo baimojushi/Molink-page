@@ -66,7 +66,9 @@ const 升级字段 = [
   'artwork_num TEXT',
   'artwork_name TEXT',
   'ai_retry_count INTEGER DEFAULT 0',
-  'ai_user_message TEXT'
+  'ai_user_message TEXT',
+  'ai_submitted_at TEXT',
+  'ai_ready_at TEXT'
 ];
 
 for (const col of 升级字段) {

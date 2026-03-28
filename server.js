@@ -146,7 +146,7 @@ function 启动AI轮询() {
             if (!review.pass) {
               console.log(`⚠️ 已达最大重试次数 (${MAX_AI_RETRIES})，直接交工作人员: 订单=${order.id}`);
             }
-            db.prepare("UPDATE orders SET status='ai_ready', ai_result_url=? WHERE id=?")
+            db.prepare("UPDATE orders SET status='ai_ready', ai_result_url=?, ai_ready_at=datetime('now','localtime') WHERE id=?")
               .run(imageUrl, order.id);
             console.log(`✅ AI 生图完成: 订单=${order.id} 图片=${imageUrl}`);
           }

@@ -304,7 +304,7 @@ router.post('/submit',
 
           const userMessage = 构建生图消息(service_type, artworkUrl, spaceUrl, size);
           const executionId = await submitImageRequest({ userMessage });
-          db.prepare('UPDATE orders SET ai_execution_id = ?, ai_user_message = ?, status = ? WHERE id = ?')
+          db.prepare("UPDATE orders SET ai_execution_id = ?, ai_user_message = ?, status = ?, ai_submitted_at = datetime('now','localtime') WHERE id = ?")
             .run(executionId, JSON.stringify(userMessage), 'ai_generating', orderId);
           console.log(`🤖 AI 生图已提交: 订单=${orderId} 执行=${executionId}`);
         } catch (e) {
