@@ -99,8 +99,9 @@ function downloadImageBuffer(url) {
 }
 
 // ──────────────────────────────────────────────
-// 上传图片到 Snaptoshine，返回其内部 CDN file_url
-// 通过 executor_name='asset_upload' 提交，轮询完成后取 CDN URL
+// 上传图片到 Snaptoshine，返回 { asset_id, file_url } 对象
+// asset_id 是关键：模型通过 asset_id 才能真正看到图片内容
+// 通过 executor_name='asset_upload' 提交，轮询完成后取资产信息
 // 同一张图只上传一次（进程内缓存）
 // ──────────────────────────────────────────────
 async function uploadImageToSnaptoshine(externalUrl) {
@@ -109,18 +110,20 @@ async function uploadImageToSnaptoshine(externalUrl) {
     return imageUploadCache.get(externalUrl);
   }
 
+  const fallback = { file_url: externalUrl };
+
   let token, rawBuf;
   try {
     token = await getToken();
   } catch (e) {
     console.warn(`⚠️ 获取 token 失败: ${e.message}，降级使用外部URL`);
-    return externalUrl;
+    return fallback;
   }
   try {
     rawBuf = await downloadImageBuffer(externalUrl);
   } catch (e) {
     console.warn(`⚠️ 下载图片失败 ${externalUrl}: ${e.message}，降级使用外部URL`);
-    return externalUrl;
+    return fallback;
   }
 
   // 压缩到 1280px 以内，减少 base64 体积
@@ -162,31 +165,33 @@ async function uploadImageToSnaptoshine(externalUrl) {
 
   if (res.status !== 201) {
     console.warn(`⚠️ 上传提交失败 (${res.status})，降级使用外部URL`);
-    return externalUrl;
+    return fallback;
   }
 
-  // 从执行结果提取 file_url 的辅助函数
-  function extractCdnUrl(exec) {
+  // 从执行结果提取 asset 对象（包含 asset_id 和 file_url）
+  // asset_id 是 Snaptoshine 模型识别图片的关键
+  function extractAsset(exec) {
     if (!exec) return null;
     const out = exec.output || exec.outputs || [];
-    if (Array.isArray(out) && out[0]?.file_url) return out[0].file_url;
-    if (exec.file_url) return exec.file_url;
+    if (Array.isArray(out) && out[0]?.id && out[0]?.file_url) {
+      return { asset_id: out[0].id, file_url: out[0].file_url };
+    }
     return null;
   }
 
   // 检查是否已经立即完成
   const firstExec = res.data.executions?.[0];
   const execId = firstExec?.id;
-  const immediateUrl = extractCdnUrl(firstExec);
-  if (immediateUrl) {
-    imageUploadCache.set(externalUrl, immediateUrl);
-    console.log(`✅ 图片上传完成 (即时): ${immediateUrl}`);
-    return immediateUrl;
+  const immediateAsset = extractAsset(firstExec);
+  if (immediateAsset) {
+    imageUploadCache.set(externalUrl, immediateAsset);
+    console.log(`✅ 图片上传完成 (即时): asset_id=${immediateAsset.asset_id}`);
+    return immediateAsset;
   }
 
   if (!execId) {
     console.warn('⚠️ 未返回 execution ID，降级使用外部URL');
-    return externalUrl;
+    return fallback;
   }
 
   // 轮询直到完成（最多 60 秒）
@@ -199,23 +204,23 @@ async function uploadImageToSnaptoshine(externalUrl) {
     console.log(`📸 上传轮询 status=${exec.status}`);
 
     if (exec.status === 'completed' || exec.status === 'succeeded') {
-      const cdnUrl = extractCdnUrl(exec);
-      if (cdnUrl) {
-        imageUploadCache.set(externalUrl, cdnUrl);
-        console.log(`✅ 图片上传完成: ${cdnUrl}`);
-        return cdnUrl;
+      const asset = extractAsset(exec);
+      if (asset) {
+        imageUploadCache.set(externalUrl, asset);
+        console.log(`✅ 图片上传完成: asset_id=${asset.asset_id} file_url=${asset.file_url}`);
+        return asset;
       }
-      console.warn('⚠️ 完成但未找到 file_url:', JSON.stringify(exec).substring(0, 400));
-      return externalUrl;
+      console.warn('⚠️ 完成但未找到 asset:', JSON.stringify(exec).substring(0, 400));
+      return fallback;
     }
     if (exec.status === 'failed' || exec.status === 'error') {
       console.warn('⚠️ 上传执行失败，降级使用外部URL');
-      return externalUrl;
+      return fallback;
     }
   }
 
   console.warn('⚠️ 上传超时，降级使用外部URL');
-  return externalUrl;
+  return fallback;
 }
 
 // 下载二进制文件（用于保存 AI 生成图片）
@@ -294,8 +299,8 @@ async function submitImageRequest({ userMessage }) {
   const processedMessage = [];
   for (const m of userMessage) {
     if (m.file_url) {
-      const cdnUrl = await uploadImageToSnaptoshine(m.file_url);
-      processedMessage.push({ file_url: cdnUrl });
+      const asset = await uploadImageToSnaptoshine(m.file_url);
+      processedMessage.push(asset);
     } else {
       processedMessage.push({ text: m.text });
     }
