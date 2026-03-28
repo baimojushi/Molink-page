@@ -284,7 +284,9 @@ router.post('/submit',
       // 异步触发 AI 生图（不阻塞响应）
       ;(async () => {
         try {
-          let artworkUrl = artworkFilename ? `${SERVER_BASE_URL}/uploads/${artworkFilename}` : null;
+          let artworkUrl = artworkFilename
+            ? (artworkFilename.startsWith('http') ? artworkFilename : `${SERVER_BASE_URL}/uploads/${artworkFilename}`)
+            : null;
           const spaceUrl = spaceFilename ? `${SERVER_BASE_URL}/uploads/${spaceFilename}` : null;
           let size = artwork_size || '';
 

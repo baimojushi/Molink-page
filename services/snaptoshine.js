@@ -184,7 +184,7 @@ function extractImageUrl(obj) {
   if (obj.file_url) return obj.file_url;
   if (obj.asset_url) return obj.asset_url;
   // outputs 数组
-  const outputs = obj.outputs || obj.output_items || obj.results || obj.messages || [];
+  const outputs = obj.output || obj.outputs || obj.output_items || obj.results || obj.messages || [];
   for (const item of outputs) {
     if (!item) continue;
     if (item.type === 'image' && item.url) return item.url;
