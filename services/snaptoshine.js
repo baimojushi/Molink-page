@@ -244,8 +244,7 @@ async function submitImageRequest({ userMessage }) {
     user_prompt: processedMessage,
     input_params: {
       user_message: processedMessage,
-      // 不指定 system_prompt_template_id，让 AI 按照 user_message 的指令执行
-      // （指定 opt_demo_sys_image_001 会覆盖我们的画作和提示词）
+      system_prompt_template_id: SYSTEM_PROMPT_ID,
       model_id: MODEL_ID,
       temperature: TEMPERATURE,
       max_tokens: MAX_TOKENS,
