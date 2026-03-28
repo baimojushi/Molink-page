@@ -4,12 +4,13 @@ const https = require('https');
 const SUPABASE_URL = 'https://fxcegiccwqtcuuyhzgkq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Y2VnaWNjd3F0Y3V1eWh6Z2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyNTQ3ODQsImV4cCI6MjA4MzgzMDc4NH0.vnqLmWFSxUExgXJnWQOuDpUY8rdrkbLemStXoLH9QQk';
 const BACKEND_URL = 'snaptoshine.com';
-const WORKSPACE_ID = '3aafbca8-9c50-425a-b1a7-7fd526048893';
+const DEFAULT_WORKSPACE_ID = '3aafbca8-9c50-425a-b1a7-7fd526048893';
+let currentWorkspaceId = DEFAULT_WORKSPACE_ID;
 const SYSTEM_PROMPT_ID = 'opt_demo_sys_image_001';
 const MODEL_ID = 'gemini-2.5-flash-image';
 const TEMPERATURE = 0.7;
 const MAX_TOKENS = 4096;
-const EXECUTION_COUNT = 1;
+const EXECUTION_COUNT = 5;
 
 const EMAIL = process.env.SNAPTOSHINE_EMAIL || 'lyqyrxw1pbxzyh@gmail.com';
 const PASSWORD = process.env.SNAPTOSHINE_PASSWORD || '200562hj';
@@ -94,6 +95,23 @@ async function getToken() {
 }
 
 // ──────────────────────────────────────────────
+// 新建 Snaptoshine 空间
+// ──────────────────────────────────────────────
+async function createNewWorkspace() {
+  const token = await getToken();
+  const name = `molink-auto-${Date.now()}`;
+  const res = await httpsReq(BACKEND_URL, '/api/v1/workspaces', 'POST',
+    { 'Authorization': 'Bearer ' + token }, { name });
+  console.log(`🆕 新建空间响应 status=${res.status} data=${JSON.stringify(res.data).substring(0, 200)}`);
+  if ((res.status === 200 || res.status === 201) && res.data.id) {
+    currentWorkspaceId = res.data.id;
+    console.log(`✅ 新空间已创建: ${currentWorkspaceId}`);
+    return currentWorkspaceId;
+  }
+  throw new Error('新建空间失败: ' + JSON.stringify(res.data));
+}
+
+// ──────────────────────────────────────────────
 // 提交 AI 生图任务
 // userMessage: 图文交替数组，如 [{text:'...'},{file_url:'...'},...]
 // 返回 execution_id
@@ -101,8 +119,12 @@ async function getToken() {
 async function submitImageRequest({ userMessage }) {
   const token = await getToken();
 
+  // 日志：显示消息结构（图片URL + 文字摘要）
+  const summary = userMessage.map(m => m.file_url ? `[图:${m.file_url.substring(0, 60)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
+  console.log(`📤 提交生图 消息结构: ${summary}`);
+
   const body = {
-    workspace_id: WORKSPACE_ID,
+    workspace_id: currentWorkspaceId,
     executor_name: 'Image',
     user_prompt: userMessage,
     input_params: {
@@ -120,7 +142,21 @@ async function submitImageRequest({ userMessage }) {
     { 'Authorization': 'Bearer ' + token }, body);
 
   if (res.status !== 201 || !res.data.executions?.[0]?.id) {
-    throw new Error('提交失败: ' + JSON.stringify(res.data));
+    const errStr = JSON.stringify(res.data);
+    // 检测空间已满，自动新建并重试
+    if (errStr.includes('space') || errStr.includes('quota') || errStr.includes('limit') || errStr.includes('满') || res.status === 429 || res.status === 400) {
+      console.warn(`⚠️ 空间可能已满 (status=${res.status})，尝试新建空间并重试...`);
+      await createNewWorkspace();
+      // 重试一次
+      const body2 = { ...body, workspace_id: currentWorkspaceId };
+      const res2 = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
+        { 'Authorization': 'Bearer ' + token }, body2);
+      if (res2.status !== 201 || !res2.data.executions?.[0]?.id) {
+        throw new Error('新建空间后重试仍失败: ' + JSON.stringify(res2.data));
+      }
+      return res2.data.executions[0].id;
+    }
+    throw new Error('提交失败: ' + errStr);
   }
 
   return res.data.executions[0].id;
