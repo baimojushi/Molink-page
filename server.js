@@ -86,14 +86,25 @@ function 启动AI轮询() {
 
   // 运行两道 Qwen 审核：初审（物理法则）+ 终审（尺寸）
   async function runQwenReview(order, imageUrl) {
-    // 初审：qwen-vl-flash，512px 缩略图
+    // 初审：Qwen-VL-Flash，物理合理性
+    db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('Qwen初审：物理合理性检查（Flash）', order.id);
     const physics = await reviewPhysics(imageUrl);
-    if (!physics.pass) return { pass: false };
+    if (!physics.pass) {
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`初审未通过：${physics.reason || '画面物理不合理'}`, order.id);
+      return { pass: false };
+    }
 
-    // 终审：qwen-vl-max，768px 缩略图（只在有尺寸信息时执行）
+    // 终审：Qwen-VL-Max，尺寸检查（只在有尺寸信息时执行）
     if (order.artwork_size) {
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`Qwen终审：尺寸检查（Max，作品尺寸 ${order.artwork_size}）`, order.id);
       const dims = await reviewDimensions(imageUrl, order.artwork_size);
-      if (!dims.pass) return { pass: false };
+      if (!dims.pass) {
+        db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`终审未通过：${dims.reason || '尺寸比例不符'}`, order.id);
+        return { pass: false };
+      }
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('终审通过：尺寸比例正确', order.id);
+    } else {
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('初审通过（无尺寸信息，跳过终审）', order.id);
     }
 
     return { pass: true };
