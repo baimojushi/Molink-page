@@ -9,7 +9,7 @@ const SYSTEM_PROMPT_ID = 'opt_demo_sys_image_001';
 const MODEL_ID = 'gemini-2.5-flash-image';
 const TEMPERATURE = 0.7;
 const MAX_TOKENS = 4096;
-const EXECUTION_COUNT = 5;
+const EXECUTION_COUNT = 1;
 
 const EMAIL = process.env.SNAPTOSHINE_EMAIL || 'lyqyrxw1pbxzyh@gmail.com';
 const PASSWORD = process.env.SNAPTOSHINE_PASSWORD || '200562hj';

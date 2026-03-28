@@ -108,7 +108,11 @@ function 启动AI轮询() {
       try {
         const execResult = await checkExecution(order.ai_execution_id);
         const { status, imageUrl } = execResult;
-        console.log(`📊 轮询结果 订单=${order.id} status=${status} imageUrl=${imageUrl} raw=${JSON.stringify(execResult.raw).substring(0, 300)}`);
+        const rawKeys = Object.keys(execResult.raw || {}).join(',');
+        console.log(`📊 轮询 订单=${order.id} status=${status} imageUrl=${imageUrl} keys=[${rawKeys}]`);
+        if (!imageUrl && (status === 'completed' || status === 'succeeded')) {
+          console.log(`📋 完整响应: ${JSON.stringify(execResult.raw)}`);
+        }
 
         if (status === 'completed' || status === 'succeeded') {
           const retryCount = order.ai_retry_count || 0;
