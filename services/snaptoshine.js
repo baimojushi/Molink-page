@@ -143,20 +143,62 @@ async function checkExecution(executionId) {
   const exec = res.data;
   const status = exec.status;
 
-  // 提取生成的图片 URL
   let imageUrl = null;
   if (status === 'completed' || status === 'succeeded') {
-    const outputs = exec.outputs || exec.output_items || [];
-    for (const item of outputs) {
-      if (item.type === 'image' && item.url) { imageUrl = item.url; break; }
-      if (item.file_url) { imageUrl = item.file_url; break; }
-      if (item.asset_url) { imageUrl = item.asset_url; break; }
+    // 先尝试从 execution 本身提取
+    imageUrl = extractImageUrl(exec);
+
+    // 若 execution 没有图片，从 user_request 提取（snaptoshine 可能把 outputs 挂在 user_request 上）
+    if (!imageUrl && exec.user_request_id) {
+      const urRes = await httpsReq(BACKEND_URL, `/api/v1/user-requests/${exec.user_request_id}`, 'GET',
+        { 'Authorization': 'Bearer ' + token }, null);
+      if (urRes.status === 200) {
+        console.log(`📋 user_request keys: ${Object.keys(urRes.data).join(',')}`);
+        console.log(`📋 user_request raw: ${JSON.stringify(urRes.data).substring(0, 800)}`);
+        imageUrl = extractImageUrl(urRes.data);
+        // user_request 可能有 executions 数组，逐个找
+        if (!imageUrl && Array.isArray(urRes.data.executions)) {
+          for (const e of urRes.data.executions) {
+            imageUrl = extractImageUrl(e);
+            if (imageUrl) break;
+          }
+        }
+      }
     }
-    // 兼容其他格式
-    if (!imageUrl && exec.result_url) imageUrl = exec.result_url;
+
+    if (!imageUrl) {
+      console.log(`📋 exec keys: ${Object.keys(exec).join(',')}`);
+      console.log(`📋 exec raw: ${JSON.stringify(exec).substring(0, 800)}`);
+    }
   }
 
   return { status, imageUrl, raw: exec };
+}
+
+function extractImageUrl(obj) {
+  if (!obj) return null;
+  // 直接字段
+  if (obj.result_url) return obj.result_url;
+  if (obj.image_url) return obj.image_url;
+  if (obj.output_url) return obj.output_url;
+  if (obj.file_url) return obj.file_url;
+  if (obj.asset_url) return obj.asset_url;
+  // outputs 数组
+  const outputs = obj.outputs || obj.output_items || obj.results || obj.messages || [];
+  for (const item of outputs) {
+    if (!item) continue;
+    if (item.type === 'image' && item.url) return item.url;
+    if (item.file_url) return item.file_url;
+    if (item.asset_url) return item.asset_url;
+    if (item.url && /\.(jpg|jpeg|png|webp|gif)/i.test(item.url)) return item.url;
+    if (item.content && typeof item.content === 'string' && item.content.startsWith('http')) return item.content;
+    // 嵌套
+    if (item.outputs) {
+      const nested = extractImageUrl({ outputs: item.outputs });
+      if (nested) return nested;
+    }
+  }
+  return null;
 }
 
 module.exports = { submitImageRequest, checkExecution, downloadFile };

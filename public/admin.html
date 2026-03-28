@@ -477,6 +477,17 @@
 
           <!-- Bug修复2：pending / processing 均显示首次交付操作区。
                旧版只判断 pending，processing 状态的订单无法完成交付。 -->
+          <!-- pending 但有 ai_user_message → 可重新提交AI -->
+          ${order.status === 'pending' && order.ai_user_message ? `
+          <div class="ai-review-section">
+            <h4>AI 效果图</h4>
+            <p style="color:#c45c4a;font-size:13px;margin-bottom:10px;">⚠ AI生成失败或未完成，可重新提交。</p>
+            <div class="regen-area">
+              <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）"></textarea>
+              <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">↻ 重新提交AI生成</button>
+            </div>
+          </div>` : ''}
+
           ${['pending', 'processing', 'ai_ready'].includes(order.status) ? `
           <div class="deliver-section">
             <h4>${order.status === 'ai_ready' ? '手动交付（覆盖AI效果图）' : '交付操作'}</h4>
