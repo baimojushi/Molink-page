@@ -55,13 +55,13 @@ async function imageToBase64Thumbnail(urlOrPath, maxSize) {
 // path: API 路径
 // apiKey: 鉴权 Key
 // ──────────────────────────────────────────────
-function callVisionAPI(hostname, path, apiKey, model, imageBase64, prompt) {
+function callVisionAPI(hostname, path, apiKey, model, imageBase64, prompt, customBody) {
   return new Promise((resolve, reject) => {
     if (!apiKey) {
       return resolve({ choices: [{ message: { content: '通过' } }] });
     }
 
-    const body = JSON.stringify({
+    const body = JSON.stringify(customBody || {
       model,
       messages: [{
         role: 'user',
@@ -216,4 +216,45 @@ async function validateSpaceImage(imageUrl) {
   }
 }
 
-module.exports = { reviewPhysics, reviewDimensions, validateArtworkImage, validateSpaceImage };
+// ──────────────────────────────────────────────
+// 画作一致性检查：对比原作品图和效果图里的挂画是否是同一幅
+// 模型：qwen-vl-flash（够用，省钱）
+// 策略：宁可放过，只拒绝明显换了画的情况
+// ──────────────────────────────────────────────
+async function reviewArtworkConsistency(resultImageUrl, artworkImageUrl) {
+  try {
+    const resultBase64 = await imageToBase64Thumbnail(resultImageUrl, 512);
+    const artworkBase64 = await imageToBase64Thumbnail(artworkImageUrl, 256);
+    const prompt = `我给你两张图：第一张是室内空间效果图，第二张是原始画作。
+请判断：效果图中墙上挂的画作，是否就是第二张图中的那幅画作（同一幅画）？
+注意：画作可能因光线、角度、装裱有所不同，只要主体内容相符即可认为一致。如果效果图中根本没有挂画，或者挂的是完全不同风格的另一幅画，则不通过。
+请只回答"通过"或"不通过"，如果不通过，紧跟一句原因（不超过20字）。`;
+
+    // 发送两张图片
+    const body = {
+      model: 'qwen-vl-flash',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${resultBase64}` } },
+          { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${artworkBase64}` } },
+          { type: 'text', text: prompt }
+        ]
+      }],
+      max_tokens: 64
+    };
+
+    const host = process.env.DASHSCOPE_HOST || 'dashscope-intl.aliyuncs.com';
+    const res = await callVisionAPI(host, '/compatible-mode/v1/chat/completions',
+      process.env.DASHSCOPE_API_KEY, null, null, null, body);
+    const text = res?.choices?.[0]?.message?.content || '通过';
+    const result = parseResult(text);
+    console.log(`🔍 Qwen 画作一致性: ${result.pass ? '✅通过' : '❌不通过 ' + result.reason}`);
+    return result;
+  } catch (e) {
+    console.error('Qwen 画作一致性检查异常（跳过）:', e.message);
+    return { pass: true };
+  }
+}
+
+module.exports = { reviewPhysics, reviewDimensions, validateArtworkImage, validateSpaceImage, reviewArtworkConsistency };

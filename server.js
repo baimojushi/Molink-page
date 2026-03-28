@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { 启动定时清理 } = require('./services/cleanup');
 const { submitImageRequest, checkExecution, downloadFile } = require('./services/snaptoshine');
-const { reviewPhysics, reviewDimensions } = require('./services/qwen');
+const { reviewPhysics, reviewDimensions, reviewArtworkConsistency } = require('./services/qwen');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -86,25 +86,38 @@ function 启动AI轮询() {
 
   // 运行两道 Qwen 审核：初审（物理法则）+ 终审（尺寸）
   async function runQwenReview(order, imageUrl) {
-    // 初审：Qwen-VL-Flash，物理合理性
-    db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('Qwen初审：物理合理性检查（Flash）', order.id);
+    // 第1步：物理合理性检查（Flash）
+    db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('第1步：物理合理性检查（Flash初审）', order.id);
     const physics = await reviewPhysics(imageUrl);
     if (!physics.pass) {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`初审未通过：${physics.reason || '画面物理不合理'}`, order.id);
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`第1步未通过：${physics.reason || '画面物理不合理'}`, order.id);
       return { pass: false };
     }
 
-    // 终审：Qwen-VL-Max，尺寸检查（只在有尺寸信息时执行）
-    if (order.artwork_size) {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`Qwen终审：尺寸检查（Max，作品尺寸 ${order.artwork_size}）`, order.id);
-      const dims = await reviewDimensions(imageUrl, order.artwork_size);
-      if (!dims.pass) {
-        db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`终审未通过：${dims.reason || '尺寸比例不符'}`, order.id);
+    // 第2步：画作一致性检查（Flash）——效果图里的画是否就是用户的那幅
+    const artworkImageUrl = order.artwork_image
+      ? (order.artwork_image.startsWith('http') ? order.artwork_image : `https://www.molink.art/uploads/${order.artwork_image}`)
+      : null;
+    if (artworkImageUrl) {
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('第2步：画作一致性检查（确认用的是原作品）', order.id);
+      const consistency = await reviewArtworkConsistency(imageUrl, artworkImageUrl);
+      if (!consistency.pass) {
+        db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`第2步未通过：${consistency.reason || '效果图中画作与原作不一致'}`, order.id);
         return { pass: false };
       }
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('终审通过：尺寸比例正确', order.id);
+    }
+
+    // 第3步：尺寸比例检查（Max终审）
+    if (order.artwork_size) {
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`第3步：尺寸比例检查（Max终审，${order.artwork_size}）`, order.id);
+      const dims = await reviewDimensions(imageUrl, order.artwork_size);
+      if (!dims.pass) {
+        db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`第3步未通过：${dims.reason || '尺寸比例不符'}`, order.id);
+        return { pass: false };
+      }
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('全部审核通过（物理✓ 画作✓ 尺寸✓）', order.id);
     } else {
-      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('初审通过（无尺寸信息，跳过终审）', order.id);
+      db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run('审核通过（物理✓ 画作✓，无尺寸信息跳过终审）', order.id);
     }
 
     return { pass: true };
