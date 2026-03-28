@@ -240,15 +240,15 @@ async function submitImageRequest({ userMessage }) {
     }
   }
 
-  // 替换 file_url 为 base64 data URL，并使用 image_url 格式（OpenAI/Gemini兼容）
+  // 替换 file_url 为 base64 data URL（保持 Snaptoshine file_url 字段格式）
   const processedMessage = userMessage.map(m =>
     m.file_url
-      ? { type: 'image_url', image_url: { url: base64Map[m.file_url] } }
-      : { type: 'text', text: m.text }
+      ? { file_url: base64Map[m.file_url] }
+      : { text: m.text }
   );
 
-  // 日志
-  const summary = processedMessage.map(m => m.file_url ? `[图:${m.file_url.substring(0, 60)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
+  // 日志（base64内容太长，只记录图片占位和文本摘要）
+  const summary = processedMessage.map(m => m.file_url ? `[图:base64]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
   console.log(`📤 提交生图 消息结构: ${summary}`);
 
   const body = {

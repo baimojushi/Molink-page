@@ -223,11 +223,17 @@ async function validateSpaceImage(imageUrl) {
 // ──────────────────────────────────────────────
 async function reviewArtworkConsistency(resultImageUrl, artworkImageUrl) {
   try {
-    const resultBase64 = await imageToBase64Thumbnail(resultImageUrl, 512);
-    const artworkBase64 = await imageToBase64Thumbnail(artworkImageUrl, 256);
+    const resultBase64 = await imageToBase64Thumbnail(resultImageUrl, 768);
+    const artworkBase64 = await imageToBase64Thumbnail(artworkImageUrl, 512);
     const prompt = `我给你两张图：第一张是室内空间效果图，第二张是原始画作。
-请判断：效果图中墙上挂的画作，是否就是第二张图中的那幅画作（同一幅画）？
-注意：画作可能因光线、角度、装裱有所不同，只要主体内容相符即可认为一致。如果效果图中根本没有挂画，或者挂的是完全不同风格的另一幅画，则不通过。
+请严格判断：效果图中墙上挂的画，是否就是第二张原始画作（同一幅作品）？
+
+判断规则（严格）：
+- 两幅画的主体内容、整体风格、色调、构图必须高度一致才算通过
+- 只要画作主体明显不同（如原作是山水画，效果图挂的是抽象画；原作是花鸟，效果图挂的是人物），就不通过
+- 效果图中没有明显的挂画：不通过
+- 宁可错判（把相似的判为不同），也不放过明显不同的画作
+
 请只回答"通过"或"不通过"，如果不通过，紧跟一句原因（不超过20字）。`;
 
     // 发送两张图片
