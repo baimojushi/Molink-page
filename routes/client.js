@@ -302,6 +302,7 @@ router.post('/submit',
             }
           }
 
+          console.log(`🎨 生图参数 订单=${orderId} service=${service_type} artworkUrl=${artworkUrl} spaceUrl=${spaceUrl} size=${size}`);
           const userMessage = 构建生图消息(service_type, artworkUrl, spaceUrl, size);
           const executionId = await submitImageRequest({ userMessage });
           db.prepare("UPDATE orders SET ai_execution_id = ?, ai_user_message = ?, status = ?, ai_submitted_at = datetime('now','localtime') WHERE id = ?")
