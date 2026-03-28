@@ -172,9 +172,21 @@ async function uploadImageToSnaptoshine(externalUrl) {
   // asset_id 是 Snaptoshine 模型识别图片的关键
   function extractAsset(exec) {
     if (!exec) return null;
-    const out = exec.output || exec.outputs || [];
-    if (Array.isArray(out) && out[0]?.id && out[0]?.file_url) {
-      return { asset_id: out[0].id, file_url: out[0].file_url };
+    const out = exec.output || exec.outputs || exec.result || exec.results || exec.data || [];
+    if (Array.isArray(out) && out.length > 0) {
+      const item = out[0];
+      const id = item?.id || item?.asset_id || item?.uuid;
+      const url = item?.file_url || item?.url || item?.cdn_url || item?.image_url;
+      if (id && url) {
+        console.log(`📸 extractAsset 找到: id=${id} url=${url.substring(0, 60)}`);
+        return { asset_id: id, file_url: url };
+      }
+      console.log(`📸 extractAsset out[0] 结构: ${JSON.stringify(item).substring(0, 200)}`);
+    } else {
+      // 尝试从顶层字段提取
+      const id = exec.id || exec.asset_id;
+      const url = exec.file_url || exec.url || exec.cdn_url;
+      if (id && url) return { asset_id: id, file_url: url };
     }
     return null;
   }
@@ -210,11 +222,11 @@ async function uploadImageToSnaptoshine(externalUrl) {
         console.log(`✅ 图片上传完成: asset_id=${asset.asset_id} file_url=${asset.file_url}`);
         return asset;
       }
-      console.warn('⚠️ 完成但未找到 asset:', JSON.stringify(exec).substring(0, 400));
+      console.warn('⚠️ 完成但未找到 asset，完整响应:', JSON.stringify(exec).substring(0, 800));
       return fallback;
     }
     if (exec.status === 'failed' || exec.status === 'error') {
-      console.warn('⚠️ 上传执行失败，降级使用外部URL');
+      console.warn('⚠️ 上传执行失败，完整响应:', JSON.stringify(exec).substring(0, 400));
       return fallback;
     }
   }
