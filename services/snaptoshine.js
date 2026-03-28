@@ -110,88 +110,7 @@ async function uploadImageToSnaptoshine(externalUrl) {
     return imageUploadCache.get(externalUrl);
   }
 
-  const fallback = { file_url: externalUrl };
-
-  let token, rawBuf;
-  try {
-    token = await getToken();
-  } catch (e) {
-    console.warn(`⚠️ 获取 token 失败: ${e.message}，降级使用外部URL`);
-    return fallback;
-  }
-  try {
-    rawBuf = await downloadImageBuffer(externalUrl);
-  } catch (e) {
-    console.warn(`⚠️ 下载图片失败 ${externalUrl}: ${e.message}，降级使用外部URL`);
-    return fallback;
-  }
-
-  // 压缩到 1280px 以内，减少 base64 体积
-  let buf, width, height;
-  try {
-    const result = await sharp(rawBuf)
-      .resize(1280, 1280, { fit: 'inside', withoutEnlargement: true })
-      .jpeg({ quality: 85 })
-      .toBuffer({ resolveWithObject: true });
-    buf = result.data;
-    width = result.info.width;
-    height = result.info.height;
-  } catch (e) {
-    buf = rawBuf;
-    width = 1024; height = 1024;
-  }
-
-  const base64Data = `data:image/jpeg;base64,${buf.toString('base64')}`;
-  const clientId = require('crypto').randomUUID();
-  console.log(`📸 上传图片 (${buf.length} bytes, ${width}x${height}) → Snaptoshine CDN...`);
-
-  const uploadBody = {
-    workspace_id: currentWorkspaceId,
-    executor_name: 'asset_upload',
-    user_prompt: [],
-    input_params: {
-      base64_images: [base64Data],
-      client_request_id: clientId,
-      width,
-      height
-    },
-    execution_count: 1
-  };
-
-  const res = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
-    { 'Authorization': 'Bearer ' + token }, uploadBody);
-
-  console.log(`📸 上传提交 status=${res.status} data=${JSON.stringify(res.data).substring(0, 300)}`);
-
-  if (res.status !== 201) {
-    const errStr = JSON.stringify(res.data);
-    // 工作区满时，先新建工作区再重试上传（确保 upload 和 generation 在同一工作区）
-    if (res.status === 400 || res.status === 429 || errStr.includes('space') || errStr.includes('quota') || errStr.includes('limit')) {
-      console.warn(`⚠️ 上传工作区可能已满 (${res.status})，新建工作区后重试上传...`);
-      try {
-        await createNewWorkspace();
-        uploadBody.workspace_id = currentWorkspaceId;
-        const retryRes = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
-          { 'Authorization': 'Bearer ' + token }, uploadBody);
-        console.log(`📸 重试上传 status=${retryRes.status}`);
-        if (retryRes.status !== 201) {
-          console.warn(`⚠️ 重试上传失败 (${retryRes.status})，降级使用外部URL`);
-          return fallback;
-        }
-        // 替换 res 继续后续流程
-        Object.assign(res, retryRes);
-      } catch (e) {
-        console.warn(`⚠️ 新建工作区失败: ${e.message}，降级使用外部URL`);
-        return fallback;
-      }
-    } else {
-      console.warn(`⚠️ 上传提交失败 (${res.status})，降级使用外部URL`);
-      return fallback;
-    }
-  }
-
-  // 从执行结果提取 asset 对象（包含 asset_id 和 file_url）
-  // asset_id 是 Snaptoshine 模型识别图片的关键
+  // 从执行结果提取 asset 对象（asset_id + file_url）
   function extractAsset(exec) {
     if (!exec) return null;
     const out = exec.output || exec.outputs || exec.result || exec.results || exec.data || [];
@@ -205,7 +124,6 @@ async function uploadImageToSnaptoshine(externalUrl) {
       }
       console.log(`📸 extractAsset out[0] 结构: ${JSON.stringify(item).substring(0, 200)}`);
     } else {
-      // 尝试从顶层字段提取
       const id = exec.id || exec.asset_id;
       const url = exec.file_url || exec.url || exec.cdn_url;
       if (id && url) return { asset_id: id, file_url: url };
@@ -213,48 +131,111 @@ async function uploadImageToSnaptoshine(externalUrl) {
     return null;
   }
 
-  // 检查是否已经立即完成
-  const firstExec = res.data.executions?.[0];
-  const execId = firstExec?.id;
-  const immediateAsset = extractAsset(firstExec);
-  if (immediateAsset) {
-    imageUploadCache.set(externalUrl, immediateAsset);
-    console.log(`✅ 图片上传完成 (即时): asset_id=${immediateAsset.asset_id}`);
-    return immediateAsset;
-  }
+  // 最多尝试 5 次，每次失败后等待递增时间再重试
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    if (attempt > 1) {
+      const delay = 3000 * (attempt - 1);
+      console.log(`⏳ ${delay / 1000}秒后进行第 ${attempt} 次上传尝试...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+    console.log(`📸 上传图片 第${attempt}/${MAX_ATTEMPTS}次 → Snaptoshine CDN...`);
 
-  if (!execId) {
-    console.warn('⚠️ 未返回 execution ID，降级使用外部URL');
-    return fallback;
-  }
+    try {
+      // 1. 获取 token
+      const token = await getToken();
 
-  // 轮询直到完成（最多 60 秒）
-  const deadline = Date.now() + 60000;
-  while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, 1500));
-    const pollRes = await httpsReq(BACKEND_URL, `/api/v1/executions/${execId}`, 'GET',
-      { 'Authorization': 'Bearer ' + token }, null);
-    const exec = pollRes.data;
-    console.log(`📸 上传轮询 status=${exec.status}`);
+      // 2. 下载图片
+      const rawBuf = await downloadImageBuffer(externalUrl);
 
-    if (exec.status === 'completed' || exec.status === 'succeeded') {
-      const asset = extractAsset(exec);
-      if (asset) {
-        imageUploadCache.set(externalUrl, asset);
-        console.log(`✅ 图片上传完成: asset_id=${asset.asset_id} file_url=${asset.file_url}`);
-        return asset;
+      // 3. 压缩到 1280px 以内
+      let buf, width, height;
+      try {
+        const result = await sharp(rawBuf)
+          .resize(1280, 1280, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer({ resolveWithObject: true });
+        buf = result.data; width = result.info.width; height = result.info.height;
+      } catch (e) {
+        buf = rawBuf; width = 1024; height = 1024;
       }
-      console.warn('⚠️ 完成但未找到 asset，完整响应:', JSON.stringify(exec).substring(0, 800));
-      return fallback;
-    }
-    if (exec.status === 'failed' || exec.status === 'error') {
-      console.warn('⚠️ 上传执行失败，完整响应:', JSON.stringify(exec).substring(0, 400));
-      return fallback;
+
+      const base64Data = `data:image/jpeg;base64,${buf.toString('base64')}`;
+      const clientId = require('crypto').randomUUID();
+      console.log(`📸 图片大小: ${buf.length} bytes, ${width}x${height}`);
+
+      // 4. 提交 asset_upload
+      const uploadBody = {
+        workspace_id: currentWorkspaceId,
+        executor_name: 'asset_upload',
+        user_prompt: [],
+        input_params: { base64_images: [base64Data], client_request_id: clientId, width, height },
+        execution_count: 1
+      };
+
+      let uploadRes = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
+        { 'Authorization': 'Bearer ' + token }, uploadBody);
+      console.log(`📸 上传提交 status=${uploadRes.status}`);
+
+      // 工作区满时新建工作区重试
+      if (uploadRes.status !== 201) {
+        const errStr = JSON.stringify(uploadRes.data);
+        if (uploadRes.status === 400 || uploadRes.status === 429 ||
+            errStr.includes('space') || errStr.includes('quota') || errStr.includes('limit')) {
+          console.warn(`⚠️ 工作区已满，新建工作区...`);
+          await createNewWorkspace();
+          uploadBody.workspace_id = currentWorkspaceId;
+          uploadRes = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
+            { 'Authorization': 'Bearer ' + token }, uploadBody);
+          console.log(`📸 重试上传 status=${uploadRes.status}`);
+        }
+        if (uploadRes.status !== 201) {
+          throw new Error(`上传提交失败 status=${uploadRes.status}: ${JSON.stringify(uploadRes.data).substring(0, 200)}`);
+        }
+      }
+
+      // 5. 检查是否立即完成
+      const firstExec = uploadRes.data.executions?.[0];
+      const execId = firstExec?.id;
+      const immediateAsset = extractAsset(firstExec);
+      if (immediateAsset) {
+        imageUploadCache.set(externalUrl, immediateAsset);
+        console.log(`✅ 图片上传完成(即时) asset_id=${immediateAsset.asset_id}`);
+        return immediateAsset;
+      }
+      if (!execId) throw new Error('未返回 execution ID');
+
+      // 6. 轮询直到完成（最多 90 秒）
+      const deadline = Date.now() + 90000;
+      while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 2000));
+        const pollRes = await httpsReq(BACKEND_URL, `/api/v1/executions/${execId}`, 'GET',
+          { 'Authorization': 'Bearer ' + token }, null);
+        const exec = pollRes.data;
+        console.log(`📸 上传轮询[${attempt}] status=${exec.status}`);
+
+        if (exec.status === 'completed' || exec.status === 'succeeded') {
+          const asset = extractAsset(exec);
+          if (asset) {
+            imageUploadCache.set(externalUrl, asset);
+            console.log(`✅ 图片上传完成 asset_id=${asset.asset_id} file_url=${asset.file_url}`);
+            return asset;
+          }
+          throw new Error('完成但未找到asset: ' + JSON.stringify(exec).substring(0, 600));
+        }
+        if (exec.status === 'failed' || exec.status === 'error') {
+          throw new Error(`上传执行失败: ${JSON.stringify(exec).substring(0, 300)}`);
+        }
+      }
+      throw new Error('上传轮询超时(90秒)');
+
+    } catch (e) {
+      console.warn(`⚠️ 第${attempt}/${MAX_ATTEMPTS}次上传失败: ${e.message}`);
+      if (attempt === MAX_ATTEMPTS) {
+        throw new Error(`图片上传Snaptoshine彻底失败(已重试${MAX_ATTEMPTS}次): ${e.message}`);
+      }
     }
   }
-
-  console.warn('⚠️ 上传超时，降级使用外部URL');
-  return fallback;
 }
 
 // 下载二进制文件（用于保存 AI 生成图片）
@@ -334,9 +315,6 @@ async function submitImageRequest({ userMessage }) {
   for (const m of userMessage) {
     if (m.file_url) {
       const asset = await uploadImageToSnaptoshine(m.file_url);
-      if (!asset.asset_id) {
-        throw new Error(`图片上传Snaptoshine失败，无法获取asset_id，外链: ${m.file_url.substring(0, 80)}`);
-      }
       processedMessage.push(asset);
     } else {
       processedMessage.push({ text: m.text });
