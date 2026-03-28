@@ -410,6 +410,8 @@
           ${order.delivered_at ? `<div class="detail-row"><span class="label">交付时间</span><span>${order.delivered_at}${order.created_at ? '（总计 ' + calcMinSec(order.created_at, order.delivered_at) + '）' : ''}</span></div>` : ''}
           <!-- 当前步骤 -->
           <div class="detail-row"><span class="label">当前步骤</span><span style="font-weight:600">${步骤描述(order)}</span></div>
+          ${order.ai_current_step ? `<div class="detail-row"><span class="label">详细步骤</span><span style="color:var(--color-primary-dark)">${order.ai_current_step}</span></div>` : ''}
+          ${order.ai_retry_count > 0 ? `<div class="detail-row"><span class="label">重试次数</span><span>${order.ai_retry_count} 次</span></div>` : ''}
 
           <!-- 用户上传图 -->
           ${(order.artwork_image || order.space_image) ? `

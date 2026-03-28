@@ -68,7 +68,8 @@ const 升级字段 = [
   'ai_retry_count INTEGER DEFAULT 0',
   'ai_user_message TEXT',
   'ai_submitted_at TEXT',
-  'ai_ready_at TEXT'
+  'ai_ready_at TEXT',
+  'ai_current_step TEXT'
 ];
 
 for (const col of 升级字段) {

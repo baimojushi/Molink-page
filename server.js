@@ -117,42 +117,37 @@ function 启动AI轮询() {
         if (status === 'completed' || status === 'succeeded') {
           const retryCount = order.ai_retry_count || 0;
 
-          // imageUrl 为空说明 snaptoshine 返回格式不符，当作失败重试
           if (!imageUrl) {
             if (retryCount < MAX_AI_RETRIES && order.ai_user_message) {
               const userMessage = JSON.parse(order.ai_user_message);
               const newExecId = await submitImageRequest({ userMessage });
-              db.prepare('UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=? WHERE id=?')
+              db.prepare("UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=?, ai_current_step='图片获取失败，重新提交中…' WHERE id=?")
                 .run(newExecId, retryCount + 1, order.id);
-              console.warn(`⚠️ 完成但无图片URL，重新提交（第${retryCount+1}次）: 订单=${order.id}`);
             } else {
-              db.prepare("UPDATE orders SET status='pending' WHERE id=?").run(order.id);
-              console.warn(`⚠️ 完成但无图片URL，已用完重试，退回pending: 订单=${order.id}`);
+              db.prepare("UPDATE orders SET status='pending', ai_current_step='图片获取失败，已退回' WHERE id=?").run(order.id);
             }
             continue;
           }
 
+          // Qwen 初审（物理检查）
+          db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?").run(`Qwen初审中（物理合理性检查，第${retryCount+1}次）`, order.id);
           const review = await runQwenReview(order, imageUrl);
 
           if (!review.pass && retryCount < MAX_AI_RETRIES && order.ai_user_message) {
-            // Qwen 未通过且还有重试机会 → 重新提交生图
             const userMessage = JSON.parse(order.ai_user_message);
             const newExecId = await submitImageRequest({ userMessage });
-            db.prepare('UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=? WHERE id=?')
-              .run(newExecId, retryCount + 1, order.id);
+            db.prepare("UPDATE orders SET ai_execution_id=?, ai_result_url=NULL, ai_retry_count=?, ai_current_step=? WHERE id=?")
+              .run(newExecId, retryCount + 1, `Qwen审核未通过，重新生图（第${retryCount+1}次）`, order.id);
             console.log(`🔄 Qwen 未通过，重新生成（第 ${retryCount + 1} 次）: 订单=${order.id}`);
           } else {
-            // 通过审核，或已达最大重试次数 → 进入待审核
-            if (!review.pass) {
-              console.log(`⚠️ 已达最大重试次数 (${MAX_AI_RETRIES})，直接交工作人员: 订单=${order.id}`);
-            }
-            db.prepare("UPDATE orders SET status='ai_ready', ai_result_url=?, ai_ready_at=datetime('now','localtime') WHERE id=?")
+            if (!review.pass) console.log(`⚠️ 已达最大重试次数 (${MAX_AI_RETRIES})，直接交工作人员: 订单=${order.id}`);
+            db.prepare("UPDATE orders SET status='ai_ready', ai_result_url=?, ai_ready_at=datetime('now','localtime'), ai_current_step='审核通过，待管理员确认' WHERE id=?")
               .run(imageUrl, order.id);
             console.log(`✅ AI 生图完成: 订单=${order.id} 图片=${imageUrl}`);
           }
 
         } else if (status === 'failed' || status === 'cancelled' || status === 'interrupted') {
-          db.prepare("UPDATE orders SET status='pending' WHERE id=?").run(order.id);
+          db.prepare("UPDATE orders SET status='pending', ai_current_step='AI生图失败' WHERE id=?").run(order.id);
           console.warn(`⚠️ AI 生图失败: 订单=${order.id} 状态=${status}`);
         }
       } catch (e) {
