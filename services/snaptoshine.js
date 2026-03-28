@@ -19,8 +19,11 @@ const PASSWORD = process.env.SNAPTOSHINE_PASSWORD || '200562hj';
 let cachedToken = null;
 let tokenExpiresAt = 0;
 
+// 图片上传缓存：外部URL → Snaptoshine 内部 file_url（进程内有效）
+const imageUploadCache = new Map();
+
 // ──────────────────────────────────────────────
-// 底层 HTTPS 请求封装
+// 底层 HTTPS 请求封装（JSON body）
 // ──────────────────────────────────────────────
 function httpsReq(hostname, path, method, headers, body) {
   return new Promise((resolve, reject) => {
@@ -45,6 +48,108 @@ function httpsReq(hostname, path, method, headers, body) {
     if (data) req.write(data);
     req.end();
   });
+}
+
+// ──────────────────────────────────────────────
+// HTTPS 请求封装（Buffer body，用于文件上传）
+// ──────────────────────────────────────────────
+function httpsReqBuffer(hostname, path, method, headers, body) {
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname, path, method,
+      headers: { 'User-Agent': 'Mozilla/5.0', ...headers }
+    }, res => {
+      let b = '';
+      res.on('data', d => b += d);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, data: JSON.parse(b) }); }
+        catch { resolve({ status: res.statusCode, data: b }); }
+      });
+    });
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
+  });
+}
+
+// ──────────────────────────────────────────────
+// 下载外部图片为 Buffer
+// ──────────────────────────────────────────────
+function downloadImageBuffer(url) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const mod = urlObj.protocol === 'https:' ? https : require('http');
+    const req = mod.request({
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      method: 'GET',
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    }, res => {
+      if (res.statusCode === 301 || res.statusCode === 302) {
+        return downloadImageBuffer(res.headers.location).then(resolve).catch(reject);
+      }
+      const chunks = [];
+      res.on('data', d => chunks.push(d));
+      res.on('end', () => resolve(Buffer.concat(chunks)));
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+// ──────────────────────────────────────────────
+// 上传图片到 Snaptoshine，返回其内部 file_url
+// 同一张图只上传一次（进程内缓存）
+// ──────────────────────────────────────────────
+async function uploadImageToSnaptoshine(externalUrl) {
+  if (imageUploadCache.has(externalUrl)) {
+    console.log(`📸 图片缓存命中: ${externalUrl.substring(0, 60)}`);
+    return imageUploadCache.get(externalUrl);
+  }
+
+  const token = await getToken();
+  const buf = await downloadImageBuffer(externalUrl);
+  const filename = externalUrl.split('/').pop().split('?')[0] || 'image.jpg';
+  const ext = filename.split('.').pop().toLowerCase();
+  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+  const boundary = '----MolinkBoundary' + Date.now();
+  const headerPart = Buffer.from(
+    `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`
+  );
+  const footerPart = Buffer.from(`\r\n--${boundary}--\r\n`);
+  const multipartBody = Buffer.concat([headerPart, buf, footerPart]);
+
+  // 尝试 workspace 级别的文件上传
+  const endpoints = [
+    `/api/v1/workspaces/${currentWorkspaceId}/files`,
+    `/api/v1/assets`,
+    `/api/v1/files`
+  ];
+
+  for (const ep of endpoints) {
+    const res = await httpsReqBuffer(BACKEND_URL, ep, 'POST', {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      'Content-Length': multipartBody.length
+    }, multipartBody);
+
+    console.log(`📸 上传尝试 ${ep} → status=${res.status} data=${JSON.stringify(res.data).substring(0, 150)}`);
+
+    if (res.status === 200 || res.status === 201) {
+      const d = res.data;
+      const snUrl = (typeof d === 'object') && (d.url || d.file_url || d.asset_url || d.public_url || d.path);
+      if (snUrl) {
+        imageUploadCache.set(externalUrl, snUrl);
+        console.log(`✅ 图片上传成功: ${snUrl}`);
+        return snUrl;
+      }
+    }
+  }
+
+  // 全部失败，使用原始外部 URL（降级）
+  console.warn(`⚠️ 图片上传全部失败，降级使用外部URL: ${externalUrl}`);
+  return externalUrl;
 }
 
 // 下载二进制文件（用于保存 AI 生成图片）
@@ -119,16 +224,28 @@ async function createNewWorkspace() {
 async function submitImageRequest({ userMessage }) {
   const token = await getToken();
 
-  // 日志：显示消息结构（图片URL + 文字摘要）
-  const summary = userMessage.map(m => m.file_url ? `[图:${m.file_url.substring(0, 60)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
+  // ── 先上传所有图片到 Snaptoshine（同一URL只上传一次）──
+  const uniqueUrls = [...new Set(userMessage.filter(m => m.file_url).map(m => m.file_url))];
+  const urlMap = {};
+  for (const url of uniqueUrls) {
+    urlMap[url] = await uploadImageToSnaptoshine(url);
+  }
+
+  // 替换 userMessage 中的 file_url 为 Snaptoshine 内部 URL
+  const processedMessage = userMessage.map(m =>
+    m.file_url ? { ...m, file_url: urlMap[m.file_url] } : m
+  );
+
+  // 日志
+  const summary = processedMessage.map(m => m.file_url ? `[图:${m.file_url.substring(0, 60)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
   console.log(`📤 提交生图 消息结构: ${summary}`);
 
   const body = {
     workspace_id: currentWorkspaceId,
     executor_name: 'Image',
-    user_prompt: userMessage,
+    user_prompt: processedMessage,
     input_params: {
-      user_message: userMessage,
+      user_message: processedMessage,
       system_prompt_template_id: SYSTEM_PROMPT_ID,
       model_id: MODEL_ID,
       temperature: TEMPERATURE,
