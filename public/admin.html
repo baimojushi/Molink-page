@@ -389,8 +389,8 @@
           <div class="images-section">
             <h4>用户上传</h4>
             <div class="images-row">
-              ${order.artwork_image ? `<div class="img-wrap"><img src="/uploads/${order.artwork_image}" alt="作品图" onclick="放大图片(this.src)" onerror="this.style.border='2px solid #c45c4a'; this.title='加载失败: /uploads/${order.artwork_image}'"><div class="img-label">作品图</div></div>` : ''}
-              ${order.space_image    ? `<div class="img-wrap"><img src="/uploads/${order.space_image}"   alt="空间图" onclick="放大图片(this.src)" onerror="this.style.border='2px solid #c45c4a'; this.title='加载失败: /uploads/${order.space_image}'"><div class="img-label">空间图</div></div>` : ''}
+              ${order.artwork_image ? `<div class="img-wrap"><img src="${order.artwork_image.startsWith('http') ? order.artwork_image : '/uploads/' + order.artwork_image}" alt="作品图" onclick="放大图片(this.src)" onerror="this.style.border='2px solid #c45c4a'"><div class="img-label">作品图</div></div>` : ''}
+              ${order.space_image    ? `<div class="img-wrap"><img src="${order.space_image.startsWith('http') ? order.space_image : '/uploads/' + order.space_image}"   alt="空间图" onclick="放大图片(this.src)" onerror="this.style.border='2px solid #c45c4a'"><div class="img-label">空间图</div></div>` : ''}
             </div>
           </div>` : ''}
 
