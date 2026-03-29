@@ -371,13 +371,13 @@ async function createNewWorkspace() {
 async function submitImageRequest({ userMessage }) {
   const token = await getToken();
 
-  // 将 file_url 上传到 Snaptoshine CDN，只保留 { asset_id, image_url }
-  // 与手动提交格式完全一致，file_url 字段会干扰服务端处理路径
+  // 将 file_url 上传到 Snaptoshine CDN，保留 { asset_id, file_url, image_url }
+  // 与手动提交格式完全一致
   const processedMessage = [];
   for (const m of userMessage) {
     if (m.file_url) {
       const asset = await uploadImageToSnaptoshine(m.file_url);
-      // 只发 asset_id + image_url，与网页版手动格式完全一致
+      // 与网页版手动格式完全一致：asset_id + file_url + image_url
       processedMessage.push({ asset_id: asset.asset_id, file_url: asset.file_url, image_url: asset.image_url });
     } else {
       processedMessage.push({ text: m.text });
@@ -391,6 +391,7 @@ async function submitImageRequest({ userMessage }) {
   const body = {
     workspace_id: currentWorkspaceId,
     executor_name: 'Image',
+    execution_count: EXECUTION_COUNT,
     user_prompt: processedMessage,
     input_params: {
       conversation_id: null,
