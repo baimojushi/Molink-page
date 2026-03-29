@@ -106,11 +106,8 @@ function callDashScope(model, imageBase64, prompt) {
     process.env.DASHSCOPE_API_KEY, model, imageBase64, prompt);
 }
 
-// 终审：wcode.net qwen-vl-max
-function callWcode(model, imageBase64, prompt) {
-  return callVisionAPI('wcode.net', '/api/gpt/v1/chat/completions',
-    process.env.WCODE_API_KEY, model, imageBase64, prompt);
-}
+// 终审：wcode.net qwen-vl-max（已废弃，key 失效）
+// function callWcode(model, imageBase64, prompt) { ... }
 
 // ──────────────────────────────────────────────
 // 解析 Qwen 回答是否通过
@@ -136,7 +133,7 @@ async function reviewPhysics(imageUrl) {
 注意：轻微的AI生成痕迹是正常的，只拒绝明显无法展示给客户的图片。
 请只回答"通过"或"不通过"，如果不通过，紧跟一句原因（不超过20字）。`;
 
-    const res = await callDashScope('qwen-vl-flash', base64, prompt);
+    const res = await callDashScope('qwen-vl-plus', base64, prompt);
     const text = res?.choices?.[0]?.message?.content || '通过';
     const result = parseResult(text);
     console.log(`🔍 Qwen 初审结果: ${result.pass ? '✅通过' : '❌不通过 ' + result.reason}`);
@@ -182,7 +179,7 @@ async function validateArtworkImage(imageUrl) {
 只有明显不是艺术作品的（例如：自拍照、风景照、食物照、截图、纯文字图片、空白图片）才回答"否"。
 请只回答"是"或"否"。`;
 
-    const res = await callDashScope('qwen-vl-flash', base64, prompt);
+    const res = await callDashScope('qwen-vl-plus', base64, prompt);
     const text = (res?.choices?.[0]?.message?.content || '是').trim();
     const valid = !text.startsWith('否');
     console.log(`🖼️ 作品图验证: ${valid ? '✅通过' : '❌不通过'}`);
@@ -202,7 +199,7 @@ async function validateSpaceImage(imageUrl) {
 只有明显不是室内空间的（例如：户外风景、人物特写、艺术品特写、截图、纯文字）才回答"否"。
 请只回答"是"或"否"。`;
 
-    const res = await callDashScope('qwen-vl-flash', base64, prompt);
+    const res = await callDashScope('qwen-vl-plus', base64, prompt);
     const text = (res?.choices?.[0]?.message?.content || '是').trim();
     const valid = !text.startsWith('否');
     console.log(`🏠 空间图验证: ${valid ? '✅通过' : '❌不通过'}`);
@@ -235,7 +232,7 @@ async function reviewArtworkConsistency(resultImageUrl, artworkImageUrl) {
 
     // 发送两张图片
     const body = {
-      model: 'qwen-vl-flash',
+      model: 'qwen-vl-plus',
       messages: [{
         role: 'user',
         content: [
