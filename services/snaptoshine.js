@@ -401,10 +401,9 @@ async function submitImageRequest({ userMessage }) {
       max_tokens: MAX_TOKENS,
       execution_count: EXECUTION_COUNT,
       modalities: ['image'],
-      aspect_ratio: null,
-      image_size: null
-    },
-    execution_count: EXECUTION_COUNT
+      aspect_ratio: '1:1',
+      image_size: '1K'
+    }
   };
 
   const res = await httpsReq(BACKEND_URL, '/api/v1/user-requests', 'POST',
