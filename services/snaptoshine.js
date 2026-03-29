@@ -8,7 +8,7 @@ const BACKEND_URL = 'snaptoshine.com';
 const DEFAULT_WORKSPACE_ID = 'f1bb03f2-1a41-4dff-83d1-b874946f03d5';
 let currentWorkspaceId = DEFAULT_WORKSPACE_ID;
 const SYSTEM_PROMPT_ID = '0d6bcbba-61e2-4330-b87e-0ddd874f84f1';
-const MODEL_ID = 'gemini-2.5-flash-image';
+const MODEL_ID = 'gemini-3.1-flash-image-preview';
 const TEMPERATURE = 0.7;
 const MAX_TOKENS = 4096;
 const EXECUTION_COUNT = 5;
@@ -371,19 +371,21 @@ async function createNewWorkspace() {
 async function submitImageRequest({ userMessage }) {
   const token = await getToken();
 
-  // 将 file_url 上传到 Snaptoshine CDN，确保 AI 模型可以访问图片内容
+  // 将 file_url 上传到 Snaptoshine CDN，只保留 { asset_id, image_url }
+  // 与手动提交格式完全一致，file_url 字段会干扰服务端处理路径
   const processedMessage = [];
   for (const m of userMessage) {
     if (m.file_url) {
       const asset = await uploadImageToSnaptoshine(m.file_url);
-      processedMessage.push(asset);
+      // 只发 asset_id + image_url，与网页版手动格式完全一致
+      processedMessage.push({ asset_id: asset.asset_id, image_url: asset.image_url });
     } else {
       processedMessage.push({ text: m.text });
     }
   }
 
   // 日志
-  const summary = processedMessage.map(m => m.file_url ? `[图:${m.file_url.substring(0,50)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
+  const summary = processedMessage.map(m => m.image_url ? `[图:asset=${m.asset_id.substring(0,8)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
   console.log(`📤 提交生图 消息结构: ${summary}`);
 
   const body = {
@@ -391,12 +393,16 @@ async function submitImageRequest({ userMessage }) {
     executor_name: 'Image',
     user_prompt: processedMessage,
     input_params: {
+      conversation_id: null,
       user_message: processedMessage,
       system_prompt_template_id: SYSTEM_PROMPT_ID,
       model_id: MODEL_ID,
       temperature: TEMPERATURE,
       max_tokens: MAX_TOKENS,
-      execution_count: EXECUTION_COUNT
+      execution_count: EXECUTION_COUNT,
+      modalities: ['image'],
+      aspect_ratio: null,
+      image_size: null
     },
     execution_count: EXECUTION_COUNT
   };
