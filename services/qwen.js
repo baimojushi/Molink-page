@@ -155,10 +155,7 @@ async function reviewPhysics(imageUrl) {
 async function reviewDimensions(imageUrl, artworkSize) {
   try {
     const base64 = await imageToBase64Thumbnail(imageUrl, 768);
-    const prompt = `这是一张AI生成的室内空间效果图，其中挂有一幅艺术作品。
-要求的作品尺寸为：${artworkSize}
-请判断：图中挂画的尺寸比例是否大致正确？（不要求精确，只判断是否存在明显的比例错误，例如：要求小幅作品却出现了占满整面墙的大画，或要求大幅作品却只有明信片大小）
-请只回答"通过"或"不通过"，如果不通过，紧跟一句原因（不超过20字）。`;
+    const prompt = `图中的画作的尺寸应该为（${artworkSize}），你帮我判断这个画作的尺寸是否正确。请只回答"通过"或"不通过"，如果不通过，紧跟一句原因（不超过20字）。`;
 
     const res = await callWcode('qwen-vl-max', base64, prompt);
     const text = res?.choices?.[0]?.message?.content || '通过';

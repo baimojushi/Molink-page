@@ -123,7 +123,7 @@ function 启动AI轮询() {
       if (!dims.pass) {
         db.prepare("UPDATE orders SET ai_current_step=? WHERE id=?")
           .run(`${tag} ③ ❌尺寸不符：${dims.reason || '尺寸比例偏差过大'}`, order.id);
-        return { pass: false, reason: dims.reason || '尺寸比例不符' };
+        return { pass: false, reason: dims.reason || '尺寸比例不符', isDimension: true };
       }
     }
 
@@ -201,8 +201,21 @@ function 启动AI轮询() {
             if (review.pass) {
               resultUrls.push(imageUrl);
               console.log(`✅ 通过审核 订单=${order.id.substring(0,8)} 已通过=${resultUrls.length} 张`);
+            } else if (review.isDimension && order.artwork_size) {
+              // 终审尺寸不符：用修正 prompt 单独重新提交该图
+              try {
+                const fixMessage = [
+                  { file_url: imageUrl },
+                  { text: `这个图片中的画作的尺寸应该是（${order.artwork_size}）请按照这个调整` }
+                ];
+                const fixIds = await submitImageRequest({ userMessage: fixMessage });
+                stillPending.push(...fixIds);
+                console.log(`🔧 尺寸不符，提交修正 订单=${order.id.substring(0,8)} fixExec=${fixIds[0]?.substring(0,8)}`);
+              } catch (e) {
+                console.error('尺寸修正请求失败:', e.message);
+              }
             } else {
-              console.log(`❌ 审核未通过（${review.reason}） 订单=${order.id.substring(0,8)}`);
+              console.log(`❌ 初审未通过（${review.reason}），丢弃 订单=${order.id.substring(0,8)}`);
             }
           }
         }
