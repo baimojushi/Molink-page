@@ -157,7 +157,7 @@ async function reviewDimensions(imageUrl, artworkSize) {
     const base64 = await imageToBase64Thumbnail(imageUrl, 768);
     const prompt = `图中的画作的尺寸应该为（${artworkSize}），你帮我判断这个画作的尺寸是否正确。请只回答"通过"或"不通过"，如果不通过，紧跟一句原因（不超过20字）。`;
 
-    const res = await callWcode('qwen-vl-max', base64, prompt);
+    const res = await callDashScope('qwen-vl-max', base64, prompt);
     const text = res?.choices?.[0]?.message?.content || '通过';
     const result = parseResult(text);
     console.log(`🔍 Qwen 终审结果: ${result.pass ? '✅通过' : '❌不通过 ' + result.reason}`);
