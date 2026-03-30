@@ -425,6 +425,7 @@
           <div class="detail-row"><span class="label">订单编号</span><span>${order.id.substring(0,8)}…</span></div>
           <div class="detail-row"><span class="label">接收${接收标签}</span><span>${order.receive_target}</span></div>
           <div class="detail-row"><span class="label">附加服务</span><span>${order.extra_service ? '是' : '否'}</span></div>
+          ${order.artwork_size ? `<div class="detail-row"><span class="label">画作尺寸</span><span style="font-weight:600;color:var(--color-primary-dark)">${order.artwork_size}</span></div>` : ''}
 
           <!-- 时间进度 -->
           <div class="detail-row"><span class="label">提交时间</span><span>${order.created_at || '—'}</span></div>

@@ -192,7 +192,7 @@ function 启动AI轮询() {
 
         // 串行跑所有已完成图片的 Qwen 审核（避免并行处理大图导致内存溢出）
         if (completedWithImages.length > 0) {
-          const dimFixCount = order.ai_dim_fix_count || 0;
+          let dimFixCount = order.ai_dim_fix_count || 0;
           for (const { execId, idx, imageUrl } of completedWithImages) {
             let review;
             try {
@@ -207,7 +207,9 @@ function 启动AI轮询() {
             } else if (review.isDimension && order.artwork_size) {
               // 终审尺寸不符：最多修正3次，每次只生成1张
               if (dimFixCount >= 3) {
-                console.log(`⛔ 尺寸修正已达3次上限，丢弃 订单=${order.id.substring(0,8)}`);
+                // 3次修正已耗尽，直接交付此图（不丢弃，不重新生成）
+                resultUrls.push(imageUrl);
+                console.log(`⛔ 尺寸修正已达3次上限，直接交付 订单=${order.id.substring(0,8)}`);
               } else {
                 try {
                   const fixMessage = [
@@ -216,8 +218,9 @@ function 启动AI轮询() {
                   ];
                   const fixIds = await submitImageRequest({ userMessage: fixMessage, executionCount: 1 });
                   stillPending.push(...fixIds);
-                  db.prepare("UPDATE orders SET ai_dim_fix_count=? WHERE id=?").run(dimFixCount + 1, order.id);
-                  console.log(`🔧 尺寸不符，提交修正(第${dimFixCount + 1}/3次) 订单=${order.id.substring(0,8)} fixExec=${fixIds[0]?.substring(0,8)}`);
+                  dimFixCount++;  // 先更新本地计数，再写DB，避免同批多张失败时计数错误
+                  db.prepare("UPDATE orders SET ai_dim_fix_count=? WHERE id=?").run(dimFixCount, order.id);
+                  console.log(`🔧 尺寸不符，提交修正(第${dimFixCount}/3次) 订单=${order.id.substring(0,8)} fixExec=${fixIds[0]?.substring(0,8)}`);
                 } catch (e) {
                   console.error('尺寸修正请求失败:', e.message);
                 }
@@ -262,7 +265,7 @@ function 启动AI轮询() {
               db.prepare(`UPDATE orders SET
                 ai_execution_id=?, ai_execution_ids=?,
                 ai_result_url=NULL, ai_result_urls='[]',
-                ai_retry_count=?, ai_current_step=?
+                ai_retry_count=?, ai_dim_fix_count=0, ai_current_step=?
                 WHERE id=?`
               ).run(
                 newIds[0], JSON.stringify(newIds),
