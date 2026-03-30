@@ -368,7 +368,8 @@ async function createNewWorkspace() {
 // userMessage: 图文交替数组，如 [{text:'...'},{file_url:'...'},...]
 // 返回 execution_id
 // ──────────────────────────────────────────────
-async function submitImageRequest({ userMessage }) {
+async function submitImageRequest({ userMessage, executionCount }) {
+  const count = executionCount || EXECUTION_COUNT;
   const token = await getToken();
 
   // 将 file_url 上传到 Snaptoshine CDN，保留 { asset_id, file_url, image_url }
@@ -386,12 +387,12 @@ async function submitImageRequest({ userMessage }) {
 
   // 日志
   const summary = processedMessage.map(m => m.image_url ? `[图:asset=${m.asset_id.substring(0,8)}]` : `"${(m.text||'').substring(0, 30)}"`).join(', ');
-  console.log(`📤 提交生图 消息结构: ${summary}`);
+  console.log(`📤 提交生图 消息结构: ${summary} 数量=${count}`);
 
   const body = {
     workspace_id: currentWorkspaceId,
     executor_name: 'Image',
-    execution_count: EXECUTION_COUNT,
+    execution_count: count,
     user_prompt: processedMessage,
     input_params: {
       conversation_id: null,
@@ -400,7 +401,7 @@ async function submitImageRequest({ userMessage }) {
       model_id: MODEL_ID,
       temperature: TEMPERATURE,
       max_tokens: MAX_TOKENS,
-      execution_count: EXECUTION_COUNT,
+      execution_count: count,
       modalities: ['image'],
       aspect_ratio: '1:1',
       image_size: '1K'

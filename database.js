@@ -72,7 +72,8 @@ const 升级字段 = [
   'ai_current_step TEXT',
   'notes TEXT',
   'ai_execution_ids TEXT',
-  'ai_result_urls TEXT'
+  'ai_result_urls TEXT',
+  'ai_dim_fix_count INTEGER DEFAULT 0'
 ];
 
 for (const col of 升级字段) {

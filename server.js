@@ -131,9 +131,15 @@ function 启动AI轮询() {
   }
 
   setInterval(async () => {
-    const pending = db.prepare(
-      "SELECT id, ai_execution_id, ai_execution_ids, ai_result_urls, ai_retry_count, ai_user_message, artwork_size, artwork_image FROM orders WHERE status='ai_generating' AND (ai_execution_ids IS NOT NULL OR ai_execution_id IS NOT NULL)"
-    ).all();
+    let pending;
+    try {
+      pending = db.prepare(
+        "SELECT id, ai_execution_id, ai_execution_ids, ai_result_urls, ai_retry_count, ai_user_message, artwork_size, artwork_image, ai_dim_fix_count FROM orders WHERE status='ai_generating' AND (ai_execution_ids IS NOT NULL OR ai_execution_id IS NOT NULL)"
+      ).all();
+    } catch (e) {
+      console.error('轮询查询出错:', e.message);
+      return;
+    }
 
     for (const order of pending) {
       try {
@@ -184,35 +190,37 @@ function 启动AI轮询() {
           }
         }
 
-        // 并行跑所有已完成图片的 Qwen 审核
+        // 串行跑所有已完成图片的 Qwen 审核（避免并行处理大图导致内存溢出）
         if (completedWithImages.length > 0) {
-          const reviewResults = await Promise.allSettled(
-            completedWithImages.map(({ execId, idx, imageUrl }) =>
-              runQwenReview(order, imageUrl, idx + 1, pendingIds.length)
-                .then(review => ({ imageUrl, review }))
-            )
-          );
-          for (const rr of reviewResults) {
-            if (rr.status === 'rejected') {
-              console.error(`Qwen审核出错 订单=${order.id.substring(0,8)}:`, rr.reason?.message);
+          const dimFixCount = order.ai_dim_fix_count || 0;
+          for (const { execId, idx, imageUrl } of completedWithImages) {
+            let review;
+            try {
+              review = await runQwenReview(order, imageUrl, idx + 1, pendingIds.length);
+            } catch (e) {
+              console.error(`Qwen审核出错 订单=${order.id.substring(0,8)}:`, e.message);
               continue;
             }
-            const { imageUrl, review } = rr.value;
             if (review.pass) {
               resultUrls.push(imageUrl);
               console.log(`✅ 通过审核 订单=${order.id.substring(0,8)} 已通过=${resultUrls.length} 张`);
             } else if (review.isDimension && order.artwork_size) {
-              // 终审尺寸不符：用修正 prompt 单独重新提交该图
-              try {
-                const fixMessage = [
-                  { file_url: imageUrl },
-                  { text: `这个图片中的画作的尺寸应该是（${order.artwork_size}）请按照这个调整` }
-                ];
-                const fixIds = await submitImageRequest({ userMessage: fixMessage });
-                stillPending.push(...fixIds);
-                console.log(`🔧 尺寸不符，提交修正 订单=${order.id.substring(0,8)} fixExec=${fixIds[0]?.substring(0,8)}`);
-              } catch (e) {
-                console.error('尺寸修正请求失败:', e.message);
+              // 终审尺寸不符：最多修正3次，每次只生成1张
+              if (dimFixCount >= 3) {
+                console.log(`⛔ 尺寸修正已达3次上限，丢弃 订单=${order.id.substring(0,8)}`);
+              } else {
+                try {
+                  const fixMessage = [
+                    { file_url: imageUrl },
+                    { text: `这个图片中的画作的尺寸应该是（${order.artwork_size}）请按照这个调整` }
+                  ];
+                  const fixIds = await submitImageRequest({ userMessage: fixMessage, executionCount: 1 });
+                  stillPending.push(...fixIds);
+                  db.prepare("UPDATE orders SET ai_dim_fix_count=? WHERE id=?").run(dimFixCount + 1, order.id);
+                  console.log(`🔧 尺寸不符，提交修正(第${dimFixCount + 1}/3次) 订单=${order.id.substring(0,8)} fixExec=${fixIds[0]?.substring(0,8)}`);
+                } catch (e) {
+                  console.error('尺寸修正请求失败:', e.message);
+                }
               }
             } else {
               console.log(`❌ 初审未通过（${review.reason}），丢弃 订单=${order.id.substring(0,8)}`);
