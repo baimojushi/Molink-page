@@ -64,7 +64,16 @@ const 升级字段 = [
   'ai_execution_id TEXT',
   'ai_result_url TEXT',
   'artwork_num TEXT',
-  'artwork_name TEXT'
+  'artwork_name TEXT',
+  'ai_retry_count INTEGER DEFAULT 0',
+  'ai_user_message TEXT',
+  'ai_submitted_at TEXT',
+  'ai_ready_at TEXT',
+  'ai_current_step TEXT',
+  'notes TEXT',
+  'ai_execution_ids TEXT',
+  'ai_result_urls TEXT',
+  'ai_dim_fix_count INTEGER DEFAULT 0'
 ];
 
 for (const col of 升级字段) {

@@ -27,7 +27,7 @@ const clientStorage = multer.diskStorage({
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname) || '.jpg';
     // 文件名格式：类型标记_UUID.扩展名
-    const prefix = file.fieldname === 'artwork' ? '作品图' : '空间图';
+    const prefix = file.fieldname === 'artwork' ? 'artwork' : 'space';
     cb(null, `${prefix}_${uuidv4()}${ext}`);
   }
 });
