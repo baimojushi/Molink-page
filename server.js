@@ -82,6 +82,10 @@ app.listen(PORT, () => {
 // MAX_AI_RETRIES: 若整批全部未通过，重新提交的最大次数
 // ==========================================
 function 启动AI轮询() {
+  if (process.env.DISABLE_AI_POLLING === '1') {
+    console.log('⏸️ AI 轮询已被环境变量禁用（DISABLE_AI_POLLING=1）');
+    return;
+  }
   const db = require('./database');
   const MAX_AI_RETRIES = parseInt(process.env.MAX_AI_RETRIES || '3');
 
