@@ -1,0 +1,274 @@
+.header {
+  padding: 40rpx 0 32rpx;
+}
+
+.service-tag {
+  display: block;
+  font-size: 22rpx;
+  color: var(--color-accent);
+  letter-spacing: 1rpx;
+  margin-bottom: 8rpx;
+}
+
+.page-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.upload-section {
+  margin-bottom: 32rpx;
+}
+
+.upload-label {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--color-text-main);
+  margin-bottom: 8rpx;
+}
+
+.upload-hint {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+  margin-bottom: 16rpx;
+}
+
+.upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 280rpx;
+  border: 2rpx dashed var(--color-primary-light);
+}
+
+.upload-icon {
+  font-size: 64rpx;
+  color: var(--color-primary-light);
+  line-height: 1;
+}
+
+.upload-text {
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+  margin-top: 12rpx;
+}
+
+.image-preview {
+  position: relative;
+  height: 280rpx;
+  overflow: hidden;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  width: 52rpx;
+  height: 52rpx;
+  background: rgba(0,0,0,0.45);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24rpx;
+}
+
+.upload-privacy-tip {
+  font-size: 20rpx;
+  color: var(--color-text-disabled);
+  margin-top: 10rpx;
+  letter-spacing: 0.5rpx;
+}
+
+.upload-photo-tip {
+  display: block;
+  font-size: 20rpx;
+  color: var(--color-text-disabled);
+  margin-top: 10rpx;
+  text-align: center;
+}
+
+/* 尺寸输入 */
+.size-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+.size-label {
+  font-size: 26rpx;
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+.size-input {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  font-size: 26rpx;
+  box-sizing: border-box;
+}
+
+/* 软装优化勾选 */
+.extra-optimize-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin: 16rpx 0 24rpx;
+}
+.extra-optimize-check {
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 6rpx;
+  border: 1.5rpx solid var(--color-text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: #fff;
+}
+.extra-optimize-check.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.extra-optimize-label {
+  font-size: 26rpx;
+  color: var(--color-text-sub);
+}
+
+/* 邮箱（常显） */
+.email-section {
+  margin-bottom: 160rpx;
+  margin-top: 8rpx;
+}
+
+.email-input {
+  width: 100%;
+  padding: 28rpx 28rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.input-placeholder {
+  color: var(--color-text-disabled);
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(245, 239, 233, 0.98) 60%, transparent);
+}
+
+.submit-tip {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+  margin-top: 12rpx;
+}
+
+.btn-primary.disabled {
+  background: var(--color-text-disabled);
+}
+
+/* 国拍版：上传/选作品库 切换 tabs */
+.source-tabs {
+  display: flex;
+  background: rgba(0,0,0,0.06);
+  border-radius: 14rpx;
+  padding: 6rpx;
+  margin-bottom: 20rpx;
+  gap: 6rpx;
+}
+.source-tab {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  border-radius: 10rpx;
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+  transition: all 0.2s;
+}
+.source-tab.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* 国拍版：作品库网格 */
+.artwork-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-bottom: 16rpx;
+}
+.artwork-item {
+  width: calc(25% - 8rpx);
+  border-radius: 8rpx;
+  overflow: hidden;
+  border: 3rpx solid transparent;
+  position: relative;
+}
+.artwork-item.selected {
+  border-color: var(--color-primary);
+}
+.artwork-thumb {
+  width: 100%;
+  height: 160rpx;
+  display: block;
+}
+.artwork-item-num {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.42);
+  color: #fff;
+  font-size: 18rpx;
+  text-align: center;
+  padding: 4rpx 0;
+}
+
+/* 已选作品信息 */
+.selected-info {
+  padding: 16rpx 20rpx;
+  margin-bottom: 8rpx;
+}
+.selected-info-text {
+  font-size: 24rpx;
+  color: var(--color-text-sub);
+}
+.selected-info-placeholder {
+  margin-bottom: 8rpx;
+}
+
+@media (min-width: 520px) {
+  .header { padding: 24px 0 18px; }
+  .service-tag { font-size: 12px; }
+  .page-title { font-size: 22px; }
+  .upload-label { font-size: 14px; margin-bottom: 4px; }
+  .upload-hint { font-size: 12px; margin-bottom: 10px; }
+  .upload-box { height: 150px; }
+  .upload-icon { font-size: 32px; }
+  .upload-text { font-size: 13px; margin-top: 8px; }
+  .image-preview { height: 150px; }
+  .email-section { margin-bottom: 100px; }
+  .email-header { margin-bottom: 10px; }
+  .email-input { padding: 14px 16px; font-size: 14px; }
+  .size-label { font-size: 13px; }
+  .size-input { padding: 10px 14px; font-size: 13px; }
+  .upload-section { margin-bottom: 18px; }
+  .bottom-bar { padding: 14px 24px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .submit-tip { font-size: 12px; margin-top: 8px; }
+  .upload-photo-tip { font-size: 11px; }
+  .upload-privacy-tip { font-size: 11px; margin-top: 6px; }
+}

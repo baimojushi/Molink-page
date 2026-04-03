@@ -1,0 +1,37 @@
+<view class="page-container waiting-page">
+  <view class="content-center">
+    <view class="loader-wrap">
+      <view class="loader">
+        <view
+          class="dot"
+          wx:for="{{dots}}"
+          wx:key="*this"
+          style="transform: rotate({{item}}deg) translateY(-36rpx); animation-delay: {{item / 360 * -1.2}}s"
+        ></view>
+      </view>
+    </view>
+
+    <text class="waiting-title">效果图制作中</text>
+    <text class="waiting-desc">我们正在为您精心制作\n整个流程约需 3～5 分钟\n完成后将第一时间通知您</text>
+
+    <view class="info-card glass-card" wx:if="{{submitTime}}">
+      <text class="info-label">提交时间</text>
+      <text class="info-value">{{submitTime}}</text>
+    </view>
+
+    <view class="notify-card glass-card" wx:if="{{!subscribed}}" bindtap="subscribeNotification">
+      <text class="notify-icon">🔔</text>
+      <view class="notify-content">
+        <text class="notify-title">画作完成后第一时间通知您</text>
+        <text class="notify-desc">开启后可关闭小程序，完成即收到微信提醒</text>
+      </view>
+      <text class="notify-btn">开启</text>
+    </view>
+    <view class="notify-card subscribed" wx:else>
+      <text class="notify-icon">✓</text>
+      <text class="notify-done">已开启通知</text>
+    </view>
+
+    <text class="back-home-btn" bindtap="goHome">返回首页提交新委托</text>
+  </view>
+</view>

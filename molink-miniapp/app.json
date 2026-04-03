@@ -1,0 +1,22 @@
+{
+  "appid": "wx248d207b3006d7f0",
+  "pages": [
+    "pages/index/index",
+    "pages/upload/upload",
+    "pages/waiting/waiting",
+    "pages/result/result",
+    "pages/staff-login/staff-login",
+    "pages/staff-orders/staff-orders",
+    "pages/staff-detail/staff-detail",
+    "pages/webview/webview"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#f5efe9",
+    "navigationBarTitleText": "Mo:link",
+    "navigationBarTextStyle": "black"
+  },
+  "navigateToMiniProgramAppIdList": [],
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

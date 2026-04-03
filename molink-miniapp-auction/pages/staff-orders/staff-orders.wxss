@@ -1,0 +1,140 @@
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin: 4rpx 0;
+}
+.user-avatar {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+}
+.user-name {
+  font-size: 24rpx;
+  color: #917355;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0 40rpx;
+}
+
+.greeting { display: flex; align-items: baseline; }
+.hi { font-size: 28rpx; color: var(--color-text-hint); }
+.name { font-size: 32rpx; font-weight: 600; color: var(--color-text-main); }
+
+.logout-btn {
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+  padding: 8rpx 0;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+}
+
+.filter-item {
+  padding: 12rpx 28rpx;
+  border-radius: var(--radius-xl);
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+  background: rgba(145,115,85,0.08);
+}
+
+.filter-item.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 80rpx 0;
+  color: var(--color-text-hint);
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80rpx 0;
+  color: var(--color-text-hint);
+}
+
+.order-card {
+  padding: 28rpx;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.service-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin-bottom: 6rpx;
+}
+
+.order-time {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+}
+
+.status-badge {
+  font-size: 22rpx;
+  padding: 6rpx 18rpx;
+  border-radius: var(--radius-xl);
+  flex-shrink: 0;
+}
+
+.status-pending { background: rgba(230,126,34,0.12); color: #e67e22; }
+.status-processing { background: rgba(41,128,185,0.12); color: #2980b9; }
+.status-delivered { background: rgba(39,174,96,0.12); color: #27ae60; }
+.status-viewed { background: rgba(39,174,96,0.15); color: #219a52; }
+.status-downloaded { background: rgba(122,158,126,0.2); color: #4a7c4e; font-weight: 600; }
+
+.card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-id {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+  font-family: monospace;
+}
+
+.go-arrow {
+  font-size: 28rpx;
+  color: var(--color-primary-light);
+}
+
+@media (min-width: 520px) {
+  .top-bar { padding: 12px 0 24px; }
+  .hi { font-size: 14px; }
+  .name { font-size: 15px; }
+  .logout-btn { font-size: 13px; }
+  .filter-bar { gap: 10px; margin-bottom: 18px; }
+  .filter-item { padding: 7px 16px; font-size: 13px; }
+  .order-card { padding: 16px; }
+  .card-top { margin-bottom: 12px; }
+  .service-name { font-size: 15px; margin-bottom: 4px; }
+  .order-time { font-size: 13px; }
+  .status-badge { font-size: 12px; padding: 4px 12px; }
+  .order-id { font-size: 13px; }
+  .go-arrow { font-size: 14px; }
+  .order-list { gap: 12px; }
+}

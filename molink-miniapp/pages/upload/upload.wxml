@@ -1,0 +1,113 @@
+<view class="page-container">
+  <view class="header">
+    <text class="service-tag">{{serviceLabel}}</text>
+    <text class="page-title">上传图片</text>
+  </view>
+
+  <view class="upload-section" wx:for="{{uploadConfig}}" wx:key="key" wx:for-item="cfg">
+    <view class="upload-label">{{cfg.label}}</view>
+    <view class="upload-hint">{{cfg.hint}}</view>
+
+    <!-- 国拍版 + 作品图：显示「上传/选作品库」双模式 -->
+    <block wx:if="{{isAuctionVersion && cfg.key === 'artwork'}}">
+
+      <view class="source-tabs">
+        <view class="source-tab {{artworkSource === 'upload' ? 'active' : ''}}"
+          bindtap="switchArtworkSource" data-source="upload">上传图片</view>
+        <view class="source-tab {{artworkSource === 'select' ? 'active' : ''}}"
+          bindtap="switchArtworkSource" data-source="select">从作品库选</view>
+      </view>
+
+      <!-- 上传模式 -->
+      <block wx:if="{{artworkSource === 'upload'}}">
+        <view class="image-preview glass-card" wx:if="{{images[cfg.key]}}">
+          <image class="preview-img" src="{{images[cfg.key]}}" mode="aspectFill"
+            bindtap="previewImage" data-src="{{images[cfg.key]}}" />
+          <view class="remove-btn" bindtap="removeImage" data-key="{{cfg.key}}">✕</view>
+        </view>
+        <view class="upload-box glass-card" wx:else bindtap="chooseImage" data-key="{{cfg.key}}">
+          <text class="upload-icon">+</text>
+          <text class="upload-text">拍摄 / 上传</text>
+        </view>
+        <text class="upload-photo-tip">随手拍摄，清晰即可</text>
+      </block>
+
+      <!-- 选作品库模式 -->
+      <block wx:else>
+        <view class="artwork-grid">
+          <view wx:for="{{artworkList}}" wx:key="num" wx:for-item="aw"
+            class="artwork-item {{selectedArtwork && selectedArtwork.num === aw.num ? 'selected' : ''}}"
+            bindtap="selectArtwork" data-artwork="{{aw}}">
+            <image class="artwork-thumb" src="{{aw.thumbUrl}}" mode="aspectFill" lazy-load />
+            <text class="artwork-item-num">{{aw.num}}</text>
+          </view>
+        </view>
+        <view wx:if="{{selectedArtwork}}" class="selected-info glass-card">
+          <text class="selected-info-text">已选 No.{{selectedArtwork.num}}　{{selectedArtwork.name}}　{{selectedArtwork.size}}</text>
+        </view>
+        <view wx:else class="selected-info-placeholder">
+          <text class="upload-hint">点击作品即可选择</text>
+        </view>
+      </block>
+
+    </block>
+
+    <!-- 普通版 或 空间图：原有上传逻辑 -->
+    <block wx:else>
+      <view class="image-preview glass-card" wx:if="{{images[cfg.key]}}">
+        <image class="preview-img" src="{{images[cfg.key]}}" mode="aspectFill"
+          bindtap="previewImage" data-src="{{images[cfg.key]}}" />
+        <view class="remove-btn" bindtap="removeImage" data-key="{{cfg.key}}">✕</view>
+      </view>
+      <view class="upload-box glass-card" wx:else bindtap="chooseImage" data-key="{{cfg.key}}">
+        <text class="upload-icon">+</text>
+        <text class="upload-text">拍摄 / 上传</text>
+        <text wx:if="{{cfg.key === 'space'}}" class="upload-privacy-tip">🔒 处理完成后自动清除</text>
+      </view>
+      <text class="upload-photo-tip">随手拍摄，清晰即可</text>
+    </block>
+
+    <!-- 作品尺寸（仅作品图显示） -->
+    <view wx:if="{{cfg.showSize}}" class="size-row">
+      <text class="size-label">📐 作品尺寸（选填）</text>
+      <input class="size-input glass-card" type="text"
+        placeholder="如：68×68cm" placeholder-class="input-placeholder"
+        value="{{artworkSize}}" bindinput="onSizeInput" />
+    </view>
+  </view>
+
+  <!-- 软装优化勾选 -->
+  <view wx:if="{{showExtraOptimize}}" class="extra-optimize-row" bindtap="toggleExtraOptimize">
+    <view class="extra-optimize-check {{extraOptimize ? 'checked' : ''}}">
+      <text wx:if="{{extraOptimize}}">✓</text>
+    </view>
+    <text class="extra-optimize-label">顺带微调软装细节（靠枕·织物·小摆件）</text>
+  </view>
+
+  <!-- 备注（仅一画一宅显示） -->
+  <view wx:if="{{showNotes}}" class="email-section">
+    <text class="size-label">📝 备注（选填）</text>
+    <input class="email-input glass-card" type="text"
+      placeholder="如：卧室、现代简约风、有大窗户"
+      placeholder-class="input-placeholder"
+      value="{{notes}}" bindinput="onNotesInput" />
+  </view>
+
+  <!-- 邮箱 -->
+  <view class="email-section">
+    <text class="size-label">📬 效果图完成后发到您邮箱（选填）</text>
+    <input class="email-input glass-card" type="text"
+      placeholder="填邮箱，图片做好了我们发您"
+      placeholder-class="input-placeholder"
+      value="{{email}}" bindinput="onEmailInput" />
+  </view>
+
+  <view class="bottom-bar">
+    <button class="btn-primary {{submitting ? 'disabled' : ''}}"
+      bindtap="submitOrder" disabled="{{submitting}}">
+      <text wx:if="{{!submitting}}">提交委托</text>
+      <text wx:else>提交中...</text>
+    </button>
+    <text class="submit-tip">提交时将询问是否接收效果图完成通知</text>
+  </view>
+</view>

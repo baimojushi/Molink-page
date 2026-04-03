@@ -1,0 +1,58 @@
+<view class="page-container">
+  <view class="result-header">
+    <view class="success-icon">✓</view>
+    <text class="result-title">效果图已完成</text>
+    <text class="result-sub">{{submitTime ? '提交于 ' + submitTime : ''}}</text>
+  </view>
+
+  <!-- 其他待查看的订单提示 -->
+  <view wx:if="{{otherDeliveredOrders.length > 0}}" class="other-orders-banner">
+    <text class="other-orders-text">还有 {{otherDeliveredOrders.length}} 个效果图等待查看</text>
+    <view class="other-orders-list">
+      <view
+        wx:for="{{otherDeliveredOrders}}"
+        wx:key="id"
+        class="other-order-item"
+        data-id="{{item.id}}"
+        bindtap="goToNextOrder"
+      >
+        <text class="other-order-label">{{item.service_type_label}}</text>
+        <text class="other-order-arrow">查看 →</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="images-section" wx:if="{{deliveryImages.length > 0}}">
+    <view class="section-label">您的效果图</view>
+    <view class="image-list">
+      <view
+        class="image-item glass-card"
+        wx:for="{{deliveryImages}}"
+        wx:key="*this"
+      >
+        <image
+          class="delivery-img"
+          src="{{item}}"
+          mode="aspectFill"
+          bindtap="previewImage"
+          data-src="{{item}}"
+          lazy-load
+        />
+        <view class="image-actions">
+          <button class="action-btn" bindtap="saveImage" data-src="{{item}}">
+            保存到相册
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <text class="empty-text">效果图加载中...</text>
+  </view>
+
+  <view class="again-section">
+    <button class="btn-secondary" bindtap="submitAgain">提交新的委托</button>
+    <text class="privacy-notice">您提交的原始照片已从服务器删除</text>
+  </view>
+</view>

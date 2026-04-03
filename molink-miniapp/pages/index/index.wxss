@@ -1,0 +1,252 @@
+/* 登录弹窗 */
+.login-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.login-card {
+  margin: 0 48rpx;
+  padding: 64rpx 48rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+}
+.login-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #3d2b1f;
+}
+.login-desc {
+  font-size: 28rpx;
+  color: #7a6a5a;
+  text-align: center;
+}
+.login-btn {
+  width: 100%;
+  margin-top: 16rpx;
+}
+.login-skip {
+  font-size: 26rpx;
+  color: #aaa;
+  margin-top: 8rpx;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 0 56rpx;
+}
+
+.logo {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  letter-spacing: 4rpx;
+}
+
+.tagline {
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+  margin-top: 8rpx;
+  letter-spacing: 2rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--color-text-sub);
+  margin-bottom: 24rpx;
+}
+
+.service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding-bottom: 160rpx;
+}
+
+.service-card {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 28rpx;
+  transition: all 0.25s ease;
+  border: 2rpx solid transparent;
+}
+
+.service-card.selected {
+  border-color: var(--color-primary);
+  background: rgba(145, 115, 85, 0.08);
+}
+
+.service-icon {
+  width: 52rpx;
+  height: 52rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.service-info {
+  flex: 1;
+}
+
+.service-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin-bottom: 8rpx;
+}
+
+.service-desc {
+  display: block;
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+  line-height: 1.5;
+}
+
+.service-check {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--color-text-disabled);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+.service-check.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(245, 239, 233, 0.98) 60%, transparent);
+}
+
+.btn-primary.disabled {
+  background: var(--color-text-disabled);
+}
+
+.active-order-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  border-radius: var(--radius-lg);
+  margin-bottom: 32rpx;
+}
+
+.active-order-card.pending {
+  background: rgba(145, 115, 85, 0.1);
+  border: 1rpx solid rgba(145, 115, 85, 0.2);
+}
+
+.active-order-card.delivered {
+  background: rgba(122, 158, 126, 0.15);
+  border: 1rpx solid rgba(122, 158, 126, 0.4);
+}
+
+.active-order-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.active-order-icon {
+  font-size: 40rpx;
+  color: var(--color-primary);
+}
+
+.active-order-card.delivered .active-order-icon {
+  color: var(--color-accent);
+}
+
+.active-order-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin-bottom: 4rpx;
+}
+
+.active-order-hint {
+  display: block;
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.active-order-arrow {
+  font-size: 28rpx;
+  color: var(--color-primary-light);
+}
+
+.disclaimer {
+  padding: 0 4rpx 32rpx;
+}
+
+.disclaimer-text {
+  display: block;
+  font-size: 20rpx;
+  line-height: 1.7;
+  color: rgba(90, 90, 90, 0.28);
+  letter-spacing: 0.5rpx;
+  text-align: justify;
+  text-indent: 2em;
+}
+
+.privacy-link {
+  display: block;
+  font-size: 22rpx;
+  color: rgba(90, 90, 90, 0.55);
+  text-align: center;
+  margin-top: 10rpx;
+  text-decoration: underline;
+}
+
+.contact-text {
+  display: block;
+  font-size: 22rpx;
+  color: rgba(90, 90, 90, 0.5);
+  text-align: center;
+  margin-top: 16rpx;
+}
+
+@media (min-width: 520px) {
+  .disclaimer-text { font-size: 11px; }
+}
+
+@media (min-width: 520px) {
+  .header { padding: 32px 0 28px; }
+  .logo { font-size: 26px; letter-spacing: 2px; }
+  .tagline { font-size: 13px; }
+  .section-title { font-size: 14px; margin-bottom: 14px; }
+  .service-list { gap: 10px; padding-bottom: 100px; }
+  .service-card { padding: 14px 14px; }
+  .service-icon { width: 26px; height: 26px; margin-right: 14px; }
+  .service-title { font-size: 15px; margin-bottom: 4px; }
+  .service-desc { font-size: 12px; }
+  .service-check { width: 22px; height: 22px; font-size: 12px; }
+  .bottom-bar { padding: 14px 24px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .active-order-card { padding: 14px 18px; margin-bottom: 18px; }
+  .active-order-icon { font-size: 22px; }
+  .active-order-title { font-size: 14px; }
+  .active-order-hint { font-size: 12px; }
+  .active-order-arrow { font-size: 14px; }
+}

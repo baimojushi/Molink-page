@@ -1,0 +1,41 @@
+<view class="page-container">
+  <view class="header">
+    <text class="page-title">选择作品</text>
+    <text class="page-sub">共 {{artworks.length}} 件参展作品</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-tip">加载中...</view>
+
+  <view class="artwork-grid" wx:else>
+    <view
+      class="artwork-card {{selected && selected.num === item.num ? 'selected' : ''}}"
+      wx:for="{{artworks}}"
+      wx:key="num"
+      data-artwork="{{item}}"
+      bindtap="selectArtwork"
+    >
+      <image
+        class="artwork-img"
+        src="{{item.images[0]}}"
+        mode="aspectFill"
+        lazy-load
+        catchtap="previewArtwork"
+        data-artwork="{{item}}"
+      />
+      <view class="artwork-info">
+        <text class="artwork-name">{{item.name || '（无题）'}}</text>
+        <text class="artwork-author">{{item.author}}</text>
+        <text class="artwork-meta">{{item.medium}} {{item.size}}</text>
+        <text wx:if="{{item.price}}" class="artwork-price">保留价 ¥{{item.price}}</text>
+      </view>
+      <view wx:if="{{selected && selected.num === item.num}}" class="check-mark">✓</view>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <button
+      class="btn-primary {{selected ? '' : 'disabled'}}"
+      bindtap="confirmSelection"
+    >确认选择{{selected ? '：' + (selected.name || '（无题）') : ''}}</button>
+  </view>
+</view>

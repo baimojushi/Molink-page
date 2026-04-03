@@ -1,0 +1,50 @@
+<view class="page-container">
+  <view class="top-bar">
+    <text class="page-heading">订单管理</text>
+    <text class="logout-btn" bindtap="logout">退出</text>
+  </view>
+
+  <view class="filter-bar">
+    <view class="filter-item {{filterStatus === 'all' ? 'active' : ''}}" data-status="all" bindtap="setFilter">全部</view>
+    <view class="filter-item {{filterStatus === 'pending' ? 'active' : ''}}" data-status="pending" bindtap="setFilter">待处理</view>
+    <view class="filter-item {{filterStatus === 'ai_ready' ? 'active' : ''}}" data-status="ai_ready" bindtap="setFilter">待审核</view>
+    <view class="filter-item {{filterStatus === 'completed' ? 'active' : ''}}" data-status="completed" bindtap="setFilter">已交付</view>
+    <view class="filter-item {{filterStatus === 'downloaded' ? 'active' : ''}}" data-status="downloaded" bindtap="setFilter">已下载</view>
+  </view>
+
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <view class="order-list" wx:else>
+    <view wx:if="{{filteredOrders.length === 0}}" class="empty-state">
+      <text class="empty-text">暂无订单</text>
+    </view>
+
+    <view
+      class="order-card glass-card"
+      wx:for="{{filteredOrders}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goToDetail"
+    >
+      <view class="card-top">
+        <view class="service-info">
+          <text class="service-name">{{item.serviceLabel}}</text>
+          <view class="user-info" wx:if="{{item.user_nickname}}">
+            <image wx:if="{{item.user_avatar}}" class="user-avatar" src="{{item.user_avatar}}" mode="aspectFill"/>
+            <text class="user-name">{{item.user_nickname}}</text>
+          </view>
+          <text class="order-time">{{item.submitTimeFormatted}}</text>
+        </view>
+        <view class="status-badge status-{{item.status}}">
+          {{item.statusText}}
+        </view>
+      </view>
+      <view class="card-bottom">
+        <text class="order-id">订单 #{{item.id.slice(-6).toUpperCase()}}</text>
+        <text class="go-arrow">→</text>
+      </view>
+    </view>
+  </view>
+</view>

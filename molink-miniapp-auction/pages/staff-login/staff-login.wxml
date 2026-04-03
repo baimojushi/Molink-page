@@ -1,0 +1,27 @@
+<view class="page-container login-page">
+  <view class="login-header">
+    <text class="logo">Mo:link</text>
+    <text class="tagline">工作人员登录</text>
+  </view>
+
+  <view class="form glass-card">
+    <view class="form-item">
+      <text class="form-label">密钥</text>
+      <input
+        class="form-input"
+        type="text"
+        password
+        placeholder="请输入管理密钥"
+        placeholder-class="placeholder"
+        value="{{secret}}"
+        bindinput="onSecretInput"
+      />
+    </view>
+  </view>
+
+  <button
+    class="btn-primary {{loading ? 'disabled' : ''}}"
+    bindtap="login"
+    disabled="{{loading}}"
+  >{{loading ? '登录中...' : '登录'}}</button>
+</view>
