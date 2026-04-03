@@ -1,0 +1,108 @@
+<view class="page-container" wx:if="{{order}}">
+
+  <!-- 订单信息 -->
+  <view class="section glass-card">
+    <view class="section-row">
+      <text class="row-label">服务类型</text>
+      <text class="row-value">{{order.serviceLabel}}</text>
+    </view>
+    <view class="divider"></view>
+    <view class="section-row">
+      <text class="row-label">提交时间</text>
+      <text class="row-value">{{order.submitTimeFormatted}}</text>
+    </view>
+    <view class="divider" wx:if="{{order.email}}"></view>
+    <view class="section-row" wx:if="{{order.email}}">
+      <text class="row-label">邮箱</text>
+      <text class="row-value">{{order.email}}</text>
+    </view>
+    <view class="divider"></view>
+    <view class="section-row">
+      <text class="row-label">状态</text>
+      <text class="row-value status-{{order.status}}">
+        {{order.status === 'completed' ? '已完成' : order.status === 'processing' ? '处理中' : '待处理'}}
+      </text>
+    </view>
+  </view>
+
+  <!-- 藏家上传的原图 -->
+  <view class="section-title">藏家上传的图片</view>
+  <view class="source-images glass-card">
+    <view wx:if="{{order.images}}">
+      <view wx:if="{{order.images.artwork}}" class="source-item">
+        <text class="img-label">作品图</text>
+        <image
+          class="source-img"
+          src="{{order.images.artwork}}"
+          mode="aspectFill"
+          bindtap="previewSourceImage"
+          data-src="{{order.images.artwork}}"
+        />
+      </view>
+      <view wx:if="{{order.images.space}}" class="source-item">
+        <text class="img-label">空间图</text>
+        <image
+          class="source-img"
+          src="{{order.images.space}}"
+          mode="aspectFill"
+          bindtap="previewSourceImage"
+          data-src="{{order.images.space}}"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 效果图区域 -->
+  <view class="section-title">
+    <text>效果图</text>
+    <text class="count-hint">{{(order.deliveryImages || []).length}} 张</text>
+  </view>
+
+  <view class="delivery-grid" wx:if="{{(order.deliveryImages || []).length > 0}}">
+    <view
+      class="delivery-item"
+      wx:for="{{order.deliveryImages}}"
+      wx:key="*this"
+    >
+      <image
+        class="delivery-img"
+        src="{{item}}"
+        mode="aspectFill"
+        bindtap="previewDelivery"
+        data-src="{{item}}"
+      />
+      <view class="delete-btn" bindtap="removeDeliveryImage" data-index="{{index}}">✕</view>
+    </view>
+  </view>
+
+  <!-- 上传效果图按钮 -->
+  <button
+    class="btn-secondary upload-btn {{uploading ? 'disabled' : ''}} {{order.status === 'completed' ? 'hidden' : ''}}"
+    bindtap="uploadDelivery"
+    disabled="{{uploading || order.status === 'completed'}}"
+  >
+    {{uploading ? '上传中...' : '+ 上传效果图'}}
+  </button>
+
+  <!-- 交付按钮 -->
+  <view class="deliver-section" wx:if="{{order.status !== 'completed'}}">
+    <button
+      class="btn-accent {{delivering ? 'disabled' : ''}}"
+      bindtap="deliver"
+      disabled="{{delivering}}"
+    >
+      {{delivering ? '交付中...' : '交付给藏家并发送通知'}}
+    </button>
+  </view>
+
+  <!-- 已完成提示 -->
+  <view class="completed-tip" wx:else>
+    <text>✓ 已完成交付</text>
+  </view>
+
+</view>
+
+<!-- 加载中 -->
+<view class="loading-page" wx:else>
+  <text class="loading-text">加载中...</text>
+</view>

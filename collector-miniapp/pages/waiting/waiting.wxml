@@ -1,0 +1,20 @@
+<view class="page-container waiting-page">
+  <view class="content-center">
+    <!-- 动画 -->
+    <view class="loader-wrap">
+      <view class="loader">
+        <view class="dot" wx:for="{{[1,2,3,4,5,6,7,8,9,10,11,12]}}" wx:key="*this" style="transform: rotate({{item * 30}}deg) translateY(-28rpx)"></view>
+      </view>
+    </view>
+
+    <text class="waiting-title">效果图制作中</text>
+    <text class="waiting-desc">我们的设计师正在为您精心制作\n完成后将第一时间通知您</text>
+
+    <view class="info-card glass-card" wx:if="{{submitTime}}">
+      <text class="info-label">提交时间</text>
+      <text class="info-value">{{submitTime}}</text>
+    </view>
+
+    <text class="waiting-tip">您可以关闭小程序，效果图完成后\n我们会通过微信通知您</text>
+  </view>
+</view>

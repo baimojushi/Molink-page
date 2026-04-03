@@ -1,0 +1,122 @@
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0 40rpx;
+}
+
+.greeting {
+  display: flex;
+  align-items: baseline;
+}
+
+.hi {
+  font-size: 32rpx;
+  color: var(--color-text-hint);
+}
+
+.name {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.logout-btn {
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+  padding: 8rpx 0;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+}
+
+.filter-item {
+  padding: 12rpx 28rpx;
+  border-radius: 100rpx;
+  font-size: 26rpx;
+  color: var(--color-text-hint);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1rpx solid transparent;
+}
+
+.filter-item.active {
+  color: var(--color-primary);
+  background: var(--color-primary-pale);
+  border-color: var(--color-primary-light);
+  font-weight: 500;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300rpx;
+}
+
+.loading-text,
+.empty-text {
+  color: var(--color-text-hint);
+  font-size: 28rpx;
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.order-card {
+  padding: 28rpx 32rpx;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.service-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin-bottom: 6rpx;
+}
+
+.order-time {
+  display: block;
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+}
+
+.status-badge {
+  font-size: 22rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 100rpx;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16rpx;
+  border-top: 1rpx solid rgba(232, 223, 213, 0.6);
+}
+
+.order-id {
+  font-size: 24rpx;
+  color: var(--color-text-disabled);
+}
+
+.go-arrow {
+  font-size: 28rpx;
+  color: var(--color-primary-light);
+}

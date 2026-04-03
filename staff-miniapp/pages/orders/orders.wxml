@@ -1,0 +1,64 @@
+<view class="page-container">
+  <!-- 顶部 -->
+  <view class="top-bar">
+    <view class="greeting">
+      <text class="hi">你好，</text>
+      <text class="name">{{staffName}}</text>
+    </view>
+    <text class="logout-btn" bindtap="logout">退出</text>
+  </view>
+
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <view
+      class="filter-item {{filterStatus === 'all' ? 'active' : ''}}"
+      data-status="all"
+      bindtap="setFilter"
+    >全部</view>
+    <view
+      class="filter-item {{filterStatus === 'pending' ? 'active' : ''}}"
+      data-status="pending"
+      bindtap="setFilter"
+    >待处理</view>
+    <view
+      class="filter-item {{filterStatus === 'completed' ? 'active' : ''}}"
+      data-status="completed"
+      bindtap="setFilter"
+    >已完成</view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="order-list" wx:else>
+    <view wx:if="{{orders.length === 0}}" class="empty-state">
+      <text class="empty-text">暂无订单</text>
+    </view>
+
+    <view
+      class="order-card glass-card"
+      wx:for="{{orders}}"
+      wx:key="id"
+      wx:if="{{filterStatus === 'all' || item.status === filterStatus}}"
+      data-id="{{item.id}}"
+      bindtap="goToDetail"
+    >
+      <view class="card-top">
+        <view class="service-info">
+          <text class="service-name">{{item.serviceLabel}}</text>
+          <text class="order-time">{{item.submitTimeFormatted}}</text>
+        </view>
+        <view class="status-badge" style="background: {{item.statusInfo.color}}20; color: {{item.statusInfo.color}}">
+          {{item.statusInfo.label}}
+        </view>
+      </view>
+      <view class="card-bottom">
+        <text class="order-id">订单 #{{item.id.slice(-6)}}</text>
+        <text class="go-arrow">→</text>
+      </view>
+    </view>
+  </view>
+</view>

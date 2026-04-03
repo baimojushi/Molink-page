@@ -1,0 +1,37 @@
+<view class="page-container">
+  <!-- 顶部标题 -->
+  <view class="header">
+    <text class="logo">Mo:link</text>
+    <text class="tagline">艺术空间匹配服务</text>
+  </view>
+
+  <!-- 服务选择 -->
+  <view class="section-title">请选择您需要的服务</view>
+
+  <view class="service-list">
+    <view
+      class="service-card glass-card {{selectedService === item.id ? 'selected' : ''}}"
+      wx:for="{{services}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="selectService"
+    >
+      <view class="service-icon">{{item.icon}}</view>
+      <view class="service-info">
+        <text class="service-title">{{item.title}}</text>
+        <text class="service-desc">{{item.desc}}</text>
+      </view>
+      <view class="service-check {{selectedService === item.id ? 'checked' : ''}}">
+        <text wx:if="{{selectedService === item.id}}">✓</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 下一步按钮 -->
+  <view class="bottom-bar">
+    <button
+      class="btn-primary {{selectedService ? '' : 'disabled'}}"
+      bindtap="goNext"
+    >下一步</button>
+  </view>
+</view>
