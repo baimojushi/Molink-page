@@ -126,6 +126,12 @@
   color: var(--color-accent);
 }
 
+.history-link {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: var(--color-accent);
+}
+
 @media (min-width: 520px) {
   .result-header { padding: 32px 0 24px; }
   .success-icon { width: 52px; height: 52px; font-size: 22px; margin-bottom: 14px; }
@@ -141,5 +147,6 @@
   .other-order-item { padding: 10px 0; }
   .other-order-label { font-size: 13px; }
   .other-order-arrow { font-size: 13px; }
+  .history-link { margin-top: 10px; font-size: 12px; }
   .again-section { padding-bottom: 36px; }
 }

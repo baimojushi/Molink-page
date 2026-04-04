@@ -4,6 +4,7 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const path = require('path');
+const fs = require('fs');
 const { clientUpload } = require('../middleware/upload');
 const UPLOADS_DIR = path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), 'uploads');
 const { 发送订单通知到目标机 } = require('../services/email');
@@ -21,6 +22,84 @@ const 服务类型映射 = {
   'recommend_work': '根据空间推荐作品',
   'recommend_space': '根据作品推荐空间'
 };
+
+const 历史记录状态 = ['delivered', 'viewed', 'downloaded'];
+
+function 读取作品列表() {
+  const listPath = path.join(__dirname, '..', 'public', 'artworks', 'list.json');
+  return JSON.parse(fs.readFileSync(listPath, 'utf8'));
+}
+
+function 构建完整图片地址(filePath) {
+  if (!filePath) return '';
+  if (filePath.startsWith('http')) return filePath;
+  return `${SERVER_BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+}
+
+function 解析交付图片(order) {
+  let images = [];
+  try {
+    images = JSON.parse(order.delivery_images || '[]');
+  } catch (e) {}
+  return images;
+}
+
+function 记录订单埋点({ orderId, deviceUuid = null, eventType, imageIndex = null, imageUrl = null, pageName = null, stayMs = null, enteredAt = null, leftAt = null, payload = null }) {
+  if (!orderId || !eventType) return;
+  db.prepare(`
+    INSERT INTO order_events (order_id, device_uuid, event_type, image_index, image_url, page_name, stay_ms, entered_at, left_at, payload_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    orderId,
+    deviceUuid || null,
+    eventType,
+    Number.isInteger(imageIndex) ? imageIndex : null,
+    imageUrl || null,
+    pageName || null,
+    typeof stayMs === 'number' ? Math.max(0, Math.round(stayMs)) : null,
+    enteredAt || null,
+    leftAt || null,
+    payload ? JSON.stringify(payload) : null
+  );
+}
+
+function 匹配作品(code) {
+  const candidates = [];
+  const raw = String(code || '').trim();
+  if (!raw) return null;
+  candidates.push(raw);
+
+  try {
+    const parsed = JSON.parse(raw);
+    ['num', 'id', 'artwork_num', 'code', 'qrCode'].forEach(key => {
+      if (parsed && parsed[key]) candidates.push(String(parsed[key]));
+    });
+  } catch (e) {}
+
+  try {
+    const url = new URL(raw);
+    ['num', 'id', 'artwork', 'artwork_num', 'code'].forEach(key => {
+      const value = url.searchParams.get(key);
+      if (value) candidates.push(value);
+    });
+    const parts = url.pathname.split('/').filter(Boolean);
+    if (parts.length > 0) candidates.push(parts[parts.length - 1]);
+  } catch (e) {}
+
+  const artworks = 读取作品列表();
+  const normalizedCandidates = [...new Set(candidates.map(item => decodeURIComponent(String(item)).trim().toLowerCase()).filter(Boolean))];
+  return artworks.find(artwork => {
+    const exactPool = [artwork.num, artwork.id, artwork.code, artwork.qrCode, artwork.qrcode]
+      .filter(Boolean)
+      .map(value => String(value).trim().toLowerCase());
+    if (normalizedCandidates.some(candidate => exactPool.includes(candidate))) return true;
+
+    return normalizedCandidates.some(candidate => [artwork.num, artwork.name]
+      .filter(Boolean)
+      .map(value => String(value).trim().toLowerCase())
+      .some(value => value.includes(candidate) || candidate.includes(value)));
+  }) || null;
+}
 
 // ==========================================
 // 构建 AI 生图消息（图文交替数组格式）
@@ -63,9 +142,7 @@ function 构建生图消息(serviceType, artworkUrl, spaceUrl, size, notes) {
   }
 
   if (serviceType === 'recommend_work') {
-    const fs = require('fs');
-    const path = require('path');
-    const artworks = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'artworks', 'list.json'), 'utf8'));
+    const artworks = 读取作品列表();
     const messages = [{ text: '从这些作品中 （尺寸）' }];
     artworks.forEach((aw, i) => {
       messages.push({ text: `${i + 1}` });
@@ -298,9 +375,7 @@ router.post('/submit',
 
           // 国拍版：用户从作品库选择（无上传文件，有 artwork_num）
           if (!artworkUrl && req.body.artwork_num) {
-            const fs = require('fs');
-            const path = require('path');
-            const artworks = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'artworks', 'list.json'), 'utf8'));
+            const artworks = 读取作品列表();
             const found = artworks.find(a => a.num == req.body.artwork_num);
             if (found) {
               artworkUrl = `${SERVER_BASE_URL}${found.images[0]}`;
@@ -393,7 +468,7 @@ router.get('/device-status/:uuid', (req, res) => {
 // ==========================================
 router.get('/order-status/:orderId', (req, res) => {
   const order = db.prepare(`
-    SELECT id, status, delivery_images, delivery_text, delivered_at, service_type_label
+    SELECT id, status, delivery_images, delivery_text, delivered_at, service_type_label, artwork_name
     FROM orders WHERE id = ?
   `).get(req.params.orderId);
 
@@ -401,13 +476,14 @@ router.get('/order-status/:orderId', (req, res) => {
     return res.status(404).json({ error: '订单不存在' });
   }
 
-  if (order.status === 'delivered') {
+  if (历史记录状态.includes(order.status)) {
     return res.json({
-      status: 'delivered',
-      images: JSON.parse(order.delivery_images || '[]'),
+      status: order.status,
+      images: 解析交付图片(order),
       text: order.delivery_text || '',
       deliveredAt: order.delivered_at,
-      serviceTypeLabel: order.service_type_label
+      serviceTypeLabel: order.service_type_label,
+      artworkName: order.artwork_name || ''
     });
   }
 
@@ -427,28 +503,61 @@ router.get('/device-orders/:uuid', (req, res) => {
     return res.status(400).json({ error: '缺少设备标识' });
   }
 
-  const orders = db.prepare(`
-    SELECT id, service_type, service_type_label, status, delivery_token, delivery_images, delivery_text, delivered_at, created_at
-    FROM orders
-    WHERE device_uuid = ?
-    ORDER BY created_at DESC
-  `).all(deviceUuid);
+  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+  const pageSize = Math.min(Math.max(parseInt(req.query.page_size || '20', 10), 1), 50);
+  const historyOnly = req.query.history_only === '1';
+  const offset = (page - 1) * pageSize;
+  const conditions = ['device_uuid = ?'];
+  const params = [deviceUuid];
 
-  res.json({ orders });
+  if (historyOnly) {
+    conditions.push(`status IN (${历史记录状态.map(() => '?').join(',')})`);
+    params.push(...历史记录状态);
+  }
+
+  const whereClause = conditions.join(' AND ');
+  const total = db.prepare(`SELECT COUNT(*) AS count FROM orders WHERE ${whereClause}`).get(...params).count;
+  const orders = db.prepare(`
+    SELECT id, service_type, service_type_label, status, delivery_token, delivery_images, delivery_text, delivered_at, created_at, artwork_name
+    FROM orders
+    WHERE ${whereClause}
+    ORDER BY COALESCE(delivered_at, created_at) DESC
+    LIMIT ? OFFSET ?
+  `).all(...params, pageSize, offset).map(order => ({
+    ...order,
+    images: 解析交付图片(order),
+    imageUrls: 解析交付图片(order).map(file => `${SERVER_BASE_URL}/deliveries/${file}`)
+  }));
+
+  res.json({
+    orders,
+    total,
+    page,
+    pageSize,
+    hasMore: offset + orders.length < total
+  });
 });
 
 // ==========================================
 // 标记为已查收（用户在 index 页加载了交付图）
 // POST /api/client/mark-viewed/:orderId
 // ==========================================
-router.post('/mark-viewed/:orderId', (req, res) => {
-  const order = db.prepare('SELECT status FROM orders WHERE id = ?').get(req.params.orderId);
+router.post('/mark-viewed/:orderId', express.json(), (req, res) => {
+  const order = db.prepare('SELECT id, status, device_uuid FROM orders WHERE id = ?').get(req.params.orderId);
   if (!order) return res.status(404).json({ error: '订单不存在' });
 
-  // 仅在 delivered 状态时更新为 viewed
   if (order.status === 'delivered') {
     db.prepare("UPDATE orders SET status = 'viewed', viewed_at = datetime('now','localtime') WHERE id = ?").run(req.params.orderId);
   }
+
+  记录订单埋点({
+    orderId: req.params.orderId,
+    deviceUuid: (req.body && req.body.device_uuid) || order.device_uuid || null,
+    eventType: 'result_view',
+    pageName: 'result',
+    payload: { source: 'mark_viewed' }
+  });
+
   res.json({ success: true });
 });
 
@@ -456,14 +565,24 @@ router.post('/mark-viewed/:orderId', (req, res) => {
 // 标记为已下载（用户长按保存了图片）
 // POST /api/client/mark-downloaded/:orderId
 // ==========================================
-router.post('/mark-downloaded/:orderId', (req, res) => {
-  const order = db.prepare('SELECT status FROM orders WHERE id = ?').get(req.params.orderId);
+router.post('/mark-downloaded/:orderId', express.json(), (req, res) => {
+  const order = db.prepare('SELECT id, status, device_uuid FROM orders WHERE id = ?').get(req.params.orderId);
   if (!order) return res.status(404).json({ error: '订单不存在' });
 
-  // viewed 或 delivered 状态均可更新为 downloaded
   if (['delivered', 'viewed'].includes(order.status)) {
     db.prepare("UPDATE orders SET status = 'downloaded', downloaded_at = datetime('now','localtime') WHERE id = ?").run(req.params.orderId);
   }
+
+  记录订单埋点({
+    orderId: req.params.orderId,
+    deviceUuid: (req.body && req.body.device_uuid) || order.device_uuid || null,
+    eventType: 'image_download',
+    imageIndex: Number.isFinite(Number(req.body && req.body.image_index)) ? Number(req.body.image_index) : null,
+    imageUrl: (req.body && req.body.image_url) || null,
+    pageName: (req.body && req.body.page_name) || 'result',
+    payload: { source: 'mark_downloaded' }
+  });
+
   res.json({ success: true });
 });
 
@@ -472,15 +591,61 @@ router.post('/mark-downloaded/:orderId', (req, res) => {
 // GET /api/client/artworks
 // ==========================================
 router.get('/artworks', (req, res) => {
-  const fs = require('fs');
-  const path = require('path');
-  const listPath = path.join(__dirname, '..', 'public', 'artworks', 'list.json');
   try {
-    const list = JSON.parse(fs.readFileSync(listPath, 'utf8'));
-    res.json({ artworks: list });
+    const keyword = String(req.query.q || '').trim().toLowerCase();
+    let artworks = 读取作品列表();
+
+    if (keyword) {
+      artworks = artworks.filter(item => [item.num, item.id, item.name, item.author, item.medium, item.size]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(keyword));
+    }
+
+    res.json({ artworks });
   } catch (e) {
     res.status(500).json({ error: '作品列表加载失败' });
   }
+});
+
+router.get('/artworks/resolve', (req, res) => {
+  try {
+    const artwork = 匹配作品(req.query.code || '');
+    if (!artwork) {
+      return res.status(404).json({ error: '未找到对应作品' });
+    }
+    res.json({ artwork });
+  } catch (e) {
+    res.status(500).json({ error: '作品识别失败' });
+  }
+});
+
+router.post('/order-events', express.json(), (req, res) => {
+  const { order_id, event_type, device_uuid, image_index, image_url, page_name, stay_ms, entered_at, left_at, ...payload } = req.body || {};
+  if (!order_id || !event_type) {
+    return res.status(400).json({ error: '缺少必要参数' });
+  }
+
+  const order = db.prepare('SELECT id, device_uuid FROM orders WHERE id = ?').get(order_id);
+  if (!order) {
+    return res.status(404).json({ error: '订单不存在' });
+  }
+
+  记录订单埋点({
+    orderId: order_id,
+    deviceUuid: device_uuid || order.device_uuid || null,
+    eventType: event_type,
+    imageIndex: Number.isFinite(Number(image_index)) ? Number(image_index) : null,
+    imageUrl: image_url || null,
+    pageName: page_name || null,
+    stayMs: Number.isFinite(Number(stay_ms)) ? Number(stay_ms) : null,
+    enteredAt: entered_at || null,
+    leftAt: left_at || null,
+    payload
+  });
+
+  res.json({ success: true });
 });
 
 module.exports = router;

@@ -4,30 +4,69 @@
     <text class="page-title">上传图片</text>
   </view>
 
-  <!-- 作品库选择（拍卖版专属） -->
   <view wx:if="{{showArtworkSelect}}" class="upload-section">
     <view class="upload-label">选择参展作品</view>
-    <view class="upload-hint">从艺博会参展作品中选择您心仪的作品</view>
+    <view class="upload-hint">请检索或扫码本场展览中的作品</view>
 
-    <!-- 已选作品卡片 -->
-    <view wx:if="{{presetArtwork}}" class="preset-artwork-card glass-card">
-      <image class="preset-artwork-img" src="{{presetArtwork.images[0]}}" mode="aspectFill" />
-      <view class="preset-artwork-info">
-        <text class="preset-artwork-name">{{presetArtwork.name || '（无题）'}}</text>
-        <text class="preset-artwork-author">{{presetArtwork.author}}</text>
-        <text class="preset-artwork-meta">{{presetArtwork.medium}}  {{presetArtwork.size}}</text>
+    <view class="artwork-entry-row">
+      <view class="search-entry glass-card" bindtap="openArtworkPanel">
+        <view class="search-entry-main">
+          <text class="search-entry-icon">🔍</text>
+          <view class="search-entry-copy">
+            <text class="search-entry-title">作品检索</text>
+            <text class="search-entry-sub">{{artworkCount ? '共' + artworkCount + '件参展作品' : '点击展开完整作品列表'}}</text>
+          </view>
+        </view>
       </view>
-      <view class="preset-artwork-actions">
-        <view class="preset-reselect-btn" bindtap="goSelectArtwork">重新选择</view>
-        <view class="remove-btn" bindtap="clearArtwork">✕</view>
+      <view class="scan-entry glass-card" bindtap="scanArtwork">
+        <text class="scan-entry-icon">⌁</text>
+        <text class="scan-entry-text">{{scanLoading ? '识别中' : '扫码'}}</text>
       </view>
     </view>
 
-    <!-- 未选时的选择按钮 -->
-    <view wx:else class="upload-box glass-card select-artwork-box" bindtap="goSelectArtwork">
-      <text class="upload-icon">🖼</text>
-      <text class="upload-text">从作品库选择</text>
-      <text class="upload-sub-text">共60件参展作品</text>
+    <view wx:if="{{artworkPanelOpen}}" class="artwork-panel glass-card">
+      <view class="artwork-panel-top">
+        <input
+          class="artwork-search-input"
+          type="text"
+          placeholder="输入作品名称 / 编号 / 作者"
+          placeholder-class="input-placeholder"
+          value="{{artworkSearchKeyword}}"
+          bindinput="onArtworkSearchInput"
+        />
+        <view class="artwork-panel-close" bindtap="closeArtworkPanel">收起</view>
+      </view>
+      <view wx:if="{{loadingArtworks}}" class="artwork-loading">作品列表加载中...</view>
+      <scroll-view wx:else scroll-y class="artwork-results-scroll">
+        <view wx:if="{{filteredArtworks.length === 0}}" class="artwork-empty">未找到匹配作品</view>
+        <view
+          wx:for="{{filteredArtworks}}"
+          wx:key="num"
+          class="artwork-result-item"
+          data-artwork="{{item}}"
+          bindtap="chooseArtwork"
+        >
+          <image class="artwork-result-image" src="{{item.images[0]}}" mode="aspectFill" lazy-load></image>
+          <view class="artwork-result-info">
+            <text class="artwork-result-name">{{item.name || '（无题）'}}</text>
+            <text class="artwork-result-meta">{{item.author || ''}}</text>
+            <text class="artwork-result-meta">{{item.medium || ''}} {{item.size || ''}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view wx:if="{{presetArtwork}}" class="preset-artwork-card glass-card">
+      <image class="preset-artwork-img" src="{{presetArtwork.images[0]}}" mode="aspectFill" bindtap="previewImage" data-src="{{presetArtwork.images[0]}}" />
+      <view class="preset-artwork-info">
+        <text class="preset-artwork-name">{{presetArtwork.name || '（无题）'}}</text>
+        <text class="preset-artwork-author">{{presetArtwork.author}}</text>
+        <text class="preset-artwork-meta">{{presetArtwork.medium}} {{presetArtwork.size}}</text>
+      </view>
+      <view class="preset-artwork-actions">
+        <view class="preset-reselect-btn" bindtap="openArtworkPanel">重新选择</view>
+        <view class="remove-btn static-remove" bindtap="clearArtwork">✕</view>
+      </view>
     </view>
   </view>
 
@@ -36,38 +75,18 @@
     <view class="upload-hint">{{item.hint}}</view>
 
     <view class="image-preview glass-card" wx:if="{{images[item.key]}}">
-      <image
-        class="preview-img"
-        src="{{images[item.key]}}"
-        mode="aspectFill"
-        bindtap="previewImage"
-        data-src="{{images[item.key]}}"
-      />
+      <image class="preview-img" src="{{images[item.key]}}" mode="aspectFill" bindtap="previewImage" data-src="{{images[item.key]}}" />
       <view class="remove-btn" bindtap="removeImage" data-key="{{item.key}}">✕</view>
     </view>
 
     <view class="upload-box glass-card" wx:else bindtap="chooseImage" data-key="{{item.key}}">
       <text class="upload-icon">+</text>
       <text class="upload-text">拍摄 / 上传</text>
-      <text wx:if="{{item.key === 'space'}}" class="upload-privacy-tip">🔒 处理完成后自动清除</text>
+      <text wx:if="{{item.key === 'space'}}" class="upload-privacy-tip">处理完成后自动清除</text>
     </view>
     <text class="upload-photo-tip">随手拍摄，清晰即可</text>
-
-    <!-- 作品尺寸（仅作品图显示） -->
-    <view wx:if="{{item.showSize}}" class="size-row">
-      <text class="size-label">📐 作品尺寸（选填）</text>
-      <input
-        class="size-input glass-card"
-        type="text"
-        placeholder="如：68×68cm"
-        placeholder-class="input-placeholder"
-        value="{{artworkSize}}"
-        bindinput="onSizeInput"
-      />
-    </view>
   </view>
 
-  <!-- 软装优化勾选 -->
   <view wx:if="{{showExtraOptimize}}" class="extra-optimize-row" bindtap="toggleExtraOptimize">
     <view class="extra-optimize-check {{extraOptimize ? 'checked' : ''}}">
       <text wx:if="{{extraOptimize}}">✓</text>
@@ -75,28 +94,21 @@
     <text class="extra-optimize-label">顺带微调软装细节（靠枕·织物·小摆件）</text>
   </view>
 
-  <!-- 邮箱（常显，醒目） -->
   <view class="email-section">
-    <text class="size-label">📬 效果图完成后发到您邮箱（选填）</text>
+    <text class="section-inline-label">效果图完成后发到您邮箱（选填）</text>
     <input
       class="email-input glass-card"
       type="text"
-      placeholder="填邮箱，图片做好了我们发您"
-      placeholder-class="input-placeholder"
       value="{{email}}"
       bindinput="onEmailInput"
     />
   </view>
 
   <view class="bottom-bar">
-    <button
-      class="btn-primary {{submitting ? 'disabled' : ''}}"
-      bindtap="submitOrder"
-      disabled="{{submitting}}"
-    >
-      <text wx:if="{{!submitting}}">提交委托</text>
+    <button class="btn-primary {{submitting ? 'disabled' : ''}}" bindtap="submitOrder" disabled="{{submitting}}">
+      <text wx:if="{{!submitting}}">提交</text>
       <text wx:else>提交中...</text>
     </button>
-    <text class="submit-tip">提交时将询问是否接收效果图完成通知</text>
+    <text class="submit-tip">提交时询问是否接收效果图完成通知</text>
   </view>
 </view>

@@ -1,0 +1,35 @@
+<view class="page-container history-page">
+  <view class="history-header">
+    <text class="history-title">历史记录</text>
+    <text class="history-sub">按当前设备查看全部交付效果图</text>
+  </view>
+
+  <view wx:if="{{!loading && total === 0}}" class="empty-state glass-card">
+    <text class="empty-title">暂无历史记录</text>
+    <text class="empty-sub">完成交付后会在这里展示</text>
+  </view>
+
+  <view wx:else class="waterfall">
+    <view class="waterfall-column">
+      <view wx:for="{{leftColumn}}" wx:key="key" class="waterfall-card glass-card" data-tile="{{item}}" bindtap="previewTile">
+        <image class="waterfall-image" src="{{item.imageUrl}}" mode="widthFix" lazy-load></image>
+        <view class="waterfall-copy">
+          <text class="waterfall-title">{{item.title}}</text>
+          <text class="waterfall-sub">{{item.subtitle || item.serviceLabel}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="waterfall-column">
+      <view wx:for="{{rightColumn}}" wx:key="key" class="waterfall-card glass-card" data-tile="{{item}}" bindtap="previewTile">
+        <image class="waterfall-image" src="{{item.imageUrl}}" mode="widthFix" lazy-load></image>
+        <view class="waterfall-copy">
+          <text class="waterfall-title">{{item.title}}</text>
+          <text class="waterfall-sub">{{item.subtitle || item.serviceLabel}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-tip">加载中...</view>
+  <view wx:else-if="{{!hasMore && total > 0}}" class="loading-tip">已经到底了</view>
+</view>

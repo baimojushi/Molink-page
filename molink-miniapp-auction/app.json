@@ -3,6 +3,7 @@
   "pages": [
     "pages/index/index",
     "pages/upload/upload",
+    "pages/history/history",
     "pages/waiting/waiting",
     "pages/result/result",
     "pages/staff-login/staff-login",

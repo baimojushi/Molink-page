@@ -1,0 +1,97 @@
+.history-page {
+  padding-bottom: 48rpx;
+}
+
+.history-header {
+  padding: 24rpx 0 32rpx;
+}
+
+.history-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.history-sub {
+  display: block;
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+  margin-top: 8rpx;
+}
+
+.waterfall {
+  display: flex;
+  gap: 16rpx;
+  align-items: flex-start;
+}
+
+.waterfall-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.waterfall-card {
+  overflow: hidden;
+}
+
+.waterfall-image {
+  display: block;
+  width: 100%;
+}
+
+.waterfall-copy {
+  padding: 16rpx;
+}
+
+.waterfall-title {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.waterfall-sub {
+  display: block;
+  font-size: 20rpx;
+  color: var(--color-text-hint);
+  margin-top: 6rpx;
+}
+
+.empty-state {
+  padding: 64rpx 32rpx;
+  text-align: center;
+}
+
+.empty-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.empty-sub,
+.loading-tip {
+  display: block;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--color-text-hint);
+  margin-top: 12rpx;
+}
+
+.loading-tip {
+  padding: 28rpx 0;
+}
+
+@media (min-width: 520px) {
+  .history-title { font-size: 22px; }
+  .history-sub { font-size: 12px; margin-top: 4px; }
+  .waterfall { gap: 10px; }
+  .waterfall-column { gap: 10px; }
+  .waterfall-copy { padding: 10px; }
+  .waterfall-title { font-size: 13px; }
+  .waterfall-sub, .empty-sub, .loading-tip { font-size: 11px; margin-top: 4px; }
+  .empty-title { font-size: 15px; }
+}

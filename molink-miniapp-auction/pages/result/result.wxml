@@ -2,46 +2,27 @@
   <view class="result-header">
     <view class="success-icon">✓</view>
     <text class="result-title">效果图已完成</text>
-    <text class="result-sub">{{submitTime ? '提交于 ' + submitTime : ''}}</text>
+    <text class="result-sub">{{submitTime ? '交付于 ' + submitTime : ''}}</text>
   </view>
 
-  <!-- 其他待查看的订单提示 -->
   <view wx:if="{{otherDeliveredOrders.length > 0}}" class="other-orders-banner">
-    <text class="other-orders-text">还有 {{otherDeliveredOrders.length}} 个效果图等待查看</text>
+    <text class="other-orders-text">还有 {{otherDeliveredOrders.length}} 个历史效果图可查看</text>
     <view class="other-orders-list">
-      <view
-        wx:for="{{otherDeliveredOrders}}"
-        wx:key="id"
-        class="other-order-item"
-        data-id="{{item.id}}"
-        bindtap="goToNextOrder"
-      >
-        <text class="other-order-label">{{item.service_type_label}}</text>
+      <view wx:for="{{otherDeliveredOrders}}" wx:key="id" class="other-order-item" data-id="{{item.id}}" bindtap="goToNextOrder">
+        <text class="other-order-label">{{item.artwork_name || item.service_type_label}}</text>
         <text class="other-order-arrow">查看 →</text>
       </view>
     </view>
+    <view class="history-link" bindtap="openHistory">查看全部历史记录</view>
   </view>
 
   <view class="images-section" wx:if="{{deliveryImages.length > 0}}">
     <view class="section-label">您的效果图</view>
     <view class="image-list">
-      <view
-        class="image-item glass-card"
-        wx:for="{{deliveryImages}}"
-        wx:key="*this"
-      >
-        <image
-          class="delivery-img"
-          src="{{item}}"
-          mode="aspectFill"
-          bindtap="previewImage"
-          data-src="{{item}}"
-          lazy-load
-        />
+      <view class="image-item glass-card" wx:for="{{deliveryImages}}" wx:key="*this">
+        <image class="delivery-img" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-src="{{item}}" data-index="{{index}}" lazy-load />
         <view class="image-actions">
-          <button class="action-btn" bindtap="saveImage" data-src="{{item}}">
-            保存到相册
-          </button>
+          <button class="action-btn" bindtap="saveImage" data-src="{{item}}" data-index="{{index}}">保存到相册</button>
         </view>
       </view>
     </view>

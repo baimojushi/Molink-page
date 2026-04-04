@@ -1,5 +1,4 @@
 <view class="page-container">
-  <!-- 登录弹窗（未登录时必须点击） -->
   <view class="login-overlay" wx:if="{{showLoginOverlay}}">
     <view class="login-card glass-card">
       <text class="login-title">效果图永久保存</text>
@@ -11,28 +10,30 @@
     </view>
   </view>
 
-  <!-- 顶部标题：长按触发工作人员入口 -->
-  <view class="header">
-    <text
-      class="logo"
-      bindlongpress="onLogoLongPress"
-    >Mollink 墨林艺术</text>
-    <text class="tagline">艺术空间匹配服务</text>
+  <view class="header-top">
+    <view class="header-top-spacer"></view>
+    <view class="history-entry" bindtap="openHistory">
+      <text class="history-entry-text">历史记录</text>
+      <text wx:if="{{historyCount > 0}}" class="history-entry-badge">{{historyCount}}</text>
+    </view>
   </view>
 
-  <!-- 当前订单状态卡片 -->
-  <view wx:if="{{activeOrder}}" class="active-order-card {{activeOrder.delivered ? 'delivered' : 'pending'}}" bindtap="goToActiveOrder">
+  <view class="header">
+    <text class="logo" bindlongpress="onLogoLongPress">Mo:link 墨林设计</text>
+    <text class="tagline">艺博会现场艺术空间匹配服务</text>
+  </view>
+
+  <view wx:if="{{activeOrder}}" class="active-order-card pending" bindtap="goToActiveOrder">
     <view class="active-order-left">
-      <text class="active-order-icon">{{activeOrder.delivered ? '✦' : '◌'}}</text>
+      <text class="active-order-icon">◌</text>
       <view>
-        <text class="active-order-title">{{activeOrder.delivered ? '效果图已准备好' : '效果图制作中'}}</text>
-        <text class="active-order-hint">{{activeOrder.delivered ? '点击查看您的效果图' : '完成后将第一时间通知您'}}</text>
+        <text class="active-order-title">效果图制作中</text>
+        <text class="active-order-hint">完成后将第一时间通知您</text>
       </view>
     </view>
     <text class="active-order-arrow">→</text>
   </view>
 
-  <!-- 服务选择 -->
   <view class="section-title">请选择您需要的服务</view>
 
   <view class="service-list">
@@ -43,10 +44,12 @@
       data-id="{{item.id}}"
       bindtap="selectService"
     >
-      <image class="service-icon" src="{{item.iconPath}}" mode="aspectFit"></image>
-      <view class="service-info">
-        <text class="service-title">{{item.title}}</text>
-        <text class="service-desc">{{item.desc}}</text>
+      <view class="service-card-main">
+        <image class="service-icon" src="{{item.iconPath}}" mode="aspectFit"></image>
+        <view class="service-info">
+          <text class="service-title">{{item.title}}</text>
+          <text class="service-desc">{{item.desc}}</text>
+        </view>
       </view>
       <view class="service-check {{selectedService === item.id ? 'checked' : ''}}">
         <text wx:if="{{selectedService === item.id}}">✓</text>
@@ -54,7 +57,14 @@
     </view>
   </view>
 
-  <!-- 免责声明 -->
+  <view class="animation-stage glass-card {{selectedService ? 'active' : ''}}" data-animation-key="{{selectedAnimationKey}}">
+    <view class="animation-stage-inner">
+      <view class="animation-stage-placeholder {{selectedService ? 'selected' : ''}}">
+        <view wx:if="{{selectedService}}" class="animation-stage-anchor"></view>
+      </view>
+    </view>
+  </view>
+
   <view class="disclaimer">
     <text class="disclaimer-text">上传即承诺内容合法合规，不含政治敏感、违禁、侵权等违法违规内容，违规责任自负。</text>
     <text class="contact-text">Contact: mollink.art@gmail.com</text>
@@ -62,11 +72,7 @@
     <text class="privacy-link" bindtap="openTerms">· 用户协议 ·</text>
   </view>
 
-  <!-- 下一步按钮 -->
   <view class="bottom-bar">
-    <button
-      class="btn-primary {{selectedService ? '' : 'disabled'}}"
-      bindtap="goNext"
-    >下一步</button>
+    <button class="btn-primary {{selectedService ? '' : 'disabled'}}" bindtap="goNext">下一步</button>
   </view>
 </view>

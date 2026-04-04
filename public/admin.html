@@ -73,6 +73,87 @@
     }
     .filter-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 
+    .toolbar-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 0 24px 12px;
+      flex-wrap: wrap;
+    }
+    .secondary-btn {
+      padding: 10px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: var(--color-card);
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--color-text-primary);
+      font-family: inherit;
+    }
+    .secondary-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .tracking-summary {
+      margin: 14px 0;
+      padding: 12px 14px;
+      background: #faf7f3;
+      border-radius: var(--radius);
+      border: 1px solid var(--color-border);
+    }
+    .tracking-summary-main {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .tracking-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--color-border);
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+    .tracking-toggle-btn {
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid var(--color-primary-light);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--color-primary);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .events-panel {
+      margin-top: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    .events-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .events-table th,
+    .events-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: top;
+      text-align: left;
+    }
+    .events-table th {
+      background: #faf7f3;
+      color: var(--color-text-secondary);
+      font-weight: 600;
+    }
+    .events-empty,
+    .events-loading {
+      padding: 16px;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+    }
+
     /* ── 订单容器 ── */
     .orders-container { padding: 0 24px 40px; }
 
@@ -289,6 +370,11 @@
     <div class="filter-btn" onclick="筛选订单(this, 'downloaded')">已下载</div>
   </div>
 
+  <div class="toolbar-row">
+    <div style="font-size:12px;color:var(--color-text-secondary);">当前筛选结果支持一键批量下载交付图片</div>
+    <button class="secondary-btn" onclick="批量下载当前筛选()">批量下载交付图片</button>
+  </div>
+
   <div class="orders-container" id="orders-container">
     <div class="empty-state"><div class="icon">○</div><p>请输入管理密钥后进入</p></div>
   </div>
@@ -306,6 +392,8 @@
     const 展开状态 = new Set();
     // 已激活重新交付面板的订单 ID 集合
     const 重交付激活 = new Set();
+    const 埋点详情缓存 = {};
+    const 埋点展开状态 = new Set();
 
     // ══════════════════════════════════════
     // 加载 & 筛选
@@ -352,6 +440,30 @@
       if (diff < 0) return '';
       if (diff < 60) return diff + '秒';
       return Math.floor(diff / 60) + '分' + (diff % 60) + '秒';
+    }
+
+
+    function 格式化停留时长(stayMs) {
+      const ms = Number(stayMs || 0);
+      if (!ms) return '0秒';
+      const seconds = Math.round(ms / 1000);
+      if (seconds < 60) return `${seconds}秒`;
+      return `${Math.floor(seconds / 60)}分${seconds % 60}秒`;
+    }
+
+    function 事件类型文本(type) {
+      const mapping = {
+        result_view: '效果图查收',
+        image_click: '图片点击',
+        image_download: '图片下载',
+        page_stay: '停留时长'
+      };
+      return mapping[type] || type;
+    }
+
+    function 获取当前筛选订单() {
+      if (!当前筛选) return 全部订单;
+      return 全部订单.filter(order => order.status === 当前筛选);
     }
 
     function 步骤描述(order) {
@@ -436,6 +548,18 @@
           <div class="detail-row"><span class="label">当前步骤</span><span style="font-weight:600">${步骤描述(order)}</span></div>
           ${order.ai_current_step ? `<div class="detail-row"><span class="label">详细步骤</span><span style="color:var(--color-primary-dark)">${order.ai_current_step}</span></div>` : ''}
           ${order.ai_retry_count > 0 ? `<div class="detail-row"><span class="label">重试次数</span><span>${order.ai_retry_count} 次</span></div>` : ''}
+
+          <div class="tracking-summary">
+            <div class="tracking-summary-main">
+              <span class="tracking-pill">事件 ${order.event_count || 0}</span>
+              <span class="tracking-pill">查收 ${order.view_count || 0}</span>
+              <span class="tracking-pill">点击 ${order.click_count || 0}</span>
+              <span class="tracking-pill">下载 ${order.download_count || 0}</span>
+              <span class="tracking-pill">停留 ${格式化停留时长(order.stay_ms_total || 0)}</span>
+            </div>
+            <button class="tracking-toggle-btn" onclick="切换埋点详情('${order.id}')">${埋点展开状态.has(order.id) ? '收起埋点' : '展开埋点'}</button>
+            ${埋点展开状态.has(order.id) ? `<div class="events-panel" id="events-${order.id}">${渲染埋点详情(order.id)}</div>` : ''}
+          </div>
 
           <!-- 用户上传图 -->
           ${(order.artwork_image || order.space_image) ? `
@@ -847,6 +971,94 @@
       } catch (err) {
         alert('请求失败: ' + err.message);
         if (btn) { btn.disabled = false; btn.textContent = '↻ 重新生成'; }
+      }
+    }
+
+
+    function 渲染埋点详情(orderId) {
+      const events = 埋点详情缓存[orderId];
+      if (!events) return `<div class="events-loading">正在加载埋点数据...</div>`;
+      if (events.length === 0) return `<div class="events-empty">该订单暂无埋点记录</div>`;
+      return `
+        <table class="events-table">
+          <thead>
+            <tr><th>时间</th><th>事件</th><th>页面</th><th>详情</th></tr>
+          </thead>
+          <tbody>
+            ${events.map(event => `
+              <tr>
+                <td>${event.created_at || '—'}</td>
+                <td>${事件类型文本(event.event_type)}</td>
+                <td>${event.page_name || '—'}</td>
+                <td>
+                  ${event.event_type === 'page_stay' ? `<div>停留 ${格式化停留时长(event.stay_ms)}</div>` : ''}
+                  ${event.image_index !== null && event.image_index !== undefined ? `<div>图片序号 ${Number(event.image_index) + 1}</div>` : ''}
+                  ${event.device_uuid ? `<div style="margin-top:4px;color:var(--color-text-secondary);">设备 ${event.device_uuid}</div>` : ''}
+                  ${event.image_url ? `<div style="margin-top:4px;color:var(--color-text-secondary);word-break:break-all;">图片 ${event.image_url}</div>` : ''}
+                  ${event.entered_at ? `<div style="margin-top:4px;color:var(--color-text-secondary);">进入 ${event.entered_at}</div>` : ''}
+                  ${event.left_at ? `<div style="margin-top:4px;color:var(--color-text-secondary);">离开 ${event.left_at}</div>` : ''}
+                  ${event.payload && event.payload.source ? `<div style="margin-top:4px;color:var(--color-text-secondary);">来源 ${event.payload.source}</div>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    async function 切换埋点详情(orderId) {
+      if (埋点展开状态.has(orderId)) {
+        埋点展开状态.delete(orderId);
+        渲染订单列表();
+        return;
+      }
+
+      埋点展开状态.add(orderId);
+      展开状态.add(orderId);
+      渲染订单列表();
+
+      if (埋点详情缓存[orderId]) return;
+
+      try {
+        const resp = await fetch(`/api/admin/orders/${orderId}/events`, {
+          headers: { 'x-admin-secret': 管理密钥 }
+        });
+        const data = await resp.json();
+        埋点详情缓存[orderId] = data.events || [];
+      } catch (err) {
+        埋点详情缓存[orderId] = [];
+      }
+      渲染订单列表();
+    }
+
+    async function 批量下载当前筛选() {
+      const orders = 获取当前筛选订单().filter(order => Array.isArray(order.delivery_images) && order.delivery_images.length > 0);
+      if (orders.length === 0) return alert('当前筛选结果中没有可下载的交付图片');
+
+      try {
+        const resp = await fetch('/api/admin/orders/download-deliveries', {
+          method: 'POST',
+          headers: {
+            'x-admin-secret': 管理密钥,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ order_ids: orders.map(order => order.id) })
+        });
+        if (!resp.ok) {
+          const data = await resp.json();
+          return alert(data.error || '批量下载失败');
+        }
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `molink-deliveries-${Date.now()}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('批量下载失败: ' + err.message);
       }
     }
 

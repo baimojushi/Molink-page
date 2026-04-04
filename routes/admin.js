@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
+const archiver = require('archiver');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
 const { adminUpload, DELIVERIES_DIR } = require('../middleware/upload');
@@ -20,7 +21,38 @@ const UPLOADS_DIR = path.join(PERSISTENT_ROOT, 'uploads');
 // delivered → 刚交付；viewed → 用户已查收；downloaded → 用户已下载
 // 三种状态都属于"已完成交付"，重新交付必须允许全部三种
 // ==========================================
+
 const DELIVERED_STATUSES = ['delivered', 'viewed', 'downloaded'];
+
+function 安全文件名(value, fallback = '未命名作品') {
+  return String(value || fallback)
+    .trim()
+    .replace(/[\/:*?"<>|]+/g, '_')
+    .replace(/\s+/g, '_')
+    .slice(0, 80) || fallback;
+}
+
+function 格式化时间标签(value) {
+  if (!value) return 'undated';
+  return String(value).replace(/[\s:]/g, '-').replace(/[^0-9-]/g, '').slice(0, 16) || 'undated';
+}
+
+function 构建交付图片文件名(order, index, originalName, usedNames) {
+  const artworkName = 安全文件名(order.artwork_name || order.service_type_label || '未命名作品');
+  const tag = [order.id ? order.id.slice(0, 8) : 'order', 格式化时间标签(order.delivered_at || order.created_at), `img${index + 1}`]
+    .filter(Boolean)
+    .join('_');
+  const ext = path.extname(originalName || '').toLowerCase() || '.jpg';
+  let base = `${artworkName}_${tag}`;
+  let filename = `${base}${ext}`;
+  let counter = 1;
+  while (usedNames.has(filename)) {
+    filename = `${base}_${counter}${ext}`;
+    counter += 1;
+  }
+  usedNames.add(filename);
+  return filename;
+}
 
 // ==========================================
 // 管理端鉴权中间件
@@ -42,13 +74,49 @@ router.use(验证管理权限);
 // ==========================================
 router.get('/orders', (req, res) => {
   const { status } = req.query;
+  const summarySubquery = `
+    SELECT
+      order_id,
+      COUNT(*) AS event_count,
+      SUM(CASE WHEN event_type = 'result_view' THEN 1 ELSE 0 END) AS view_count,
+      SUM(CASE WHEN event_type = 'image_click' THEN 1 ELSE 0 END) AS click_count,
+      SUM(CASE WHEN event_type = 'image_download' THEN 1 ELSE 0 END) AS download_count,
+      SUM(CASE WHEN event_type = 'page_stay' THEN COALESCE(stay_ms, 0) ELSE 0 END) AS stay_ms_total,
+      MAX(created_at) AS latest_event_at
+    FROM order_events
+    GROUP BY order_id
+  `;
+
   let orders;
   if (status) {
-    orders = db.prepare('SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC').all(status);
+    orders = db.prepare(`
+      SELECT o.*,
+             COALESCE(es.event_count, 0) AS event_count,
+             COALESCE(es.view_count, 0) AS view_count,
+             COALESCE(es.click_count, 0) AS click_count,
+             COALESCE(es.download_count, 0) AS download_count,
+             COALESCE(es.stay_ms_total, 0) AS stay_ms_total,
+             es.latest_event_at
+      FROM orders o
+      LEFT JOIN (${summarySubquery}) es ON es.order_id = o.id
+      WHERE o.status = ?
+      ORDER BY o.created_at DESC
+    `).all(status);
   } else {
-    orders = db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all();
+    orders = db.prepare(`
+      SELECT o.*,
+             COALESCE(es.event_count, 0) AS event_count,
+             COALESCE(es.view_count, 0) AS view_count,
+             COALESCE(es.click_count, 0) AS click_count,
+             COALESCE(es.download_count, 0) AS download_count,
+             COALESCE(es.stay_ms_total, 0) AS stay_ms_total,
+             es.latest_event_at
+      FROM orders o
+      LEFT JOIN (${summarySubquery}) es ON es.order_id = o.id
+      ORDER BY o.created_at DESC
+    `).all();
   }
-  // delivery_images 从 JSON 字符串解析为数组，方便前端直接使用
+
   orders = orders.map(o => {
     try { o.delivery_images = o.delivery_images ? JSON.parse(o.delivery_images) : []; } catch { o.delivery_images = []; }
     return o;
@@ -185,7 +253,9 @@ router.post('/deliver/:id',
         SET status = 'delivered',
             delivery_images = ?,
             delivery_text = ?,
-            delivered_at = datetime('now','localtime')
+            delivered_at = datetime('now','localtime'),
+            viewed_at = NULL,
+            downloaded_at = NULL
         WHERE id = ?
       `).run(
         JSON.stringify(deliveryImages),
@@ -261,7 +331,9 @@ router.post('/approve/:id', async (req, res) => {
     }
 
     db.prepare(`
-      UPDATE orders SET status='delivered', delivery_images=?, delivered_at=datetime('now','localtime') WHERE id=?
+      UPDATE orders
+      SET status='delivered', delivery_images=?, delivered_at=datetime('now','localtime'), viewed_at=NULL, downloaded_at=NULL
+      WHERE id=?
     `).run(JSON.stringify(filenames), order.id);
 
     const deliveryUrl = `https://www.molink.art/d/${order.delivery_token}`;
@@ -311,6 +383,95 @@ router.post('/regenerate/:id', async (req, res) => {
 });
 
 // ==========================================
+// 获取订单埋点详情
+// GET /api/admin/orders/:id/events
+// ==========================================
+router.get('/orders/:id/events', (req, res) => {
+  const order = db.prepare('SELECT id FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) {
+    return res.status(404).json({ error: '订单不存在' });
+  }
+
+  const events = db.prepare(`
+    SELECT id, device_uuid, event_type, image_index, image_url, page_name, stay_ms, entered_at, left_at, payload_json, created_at
+    FROM order_events
+    WHERE order_id = ?
+    ORDER BY created_at DESC, id DESC
+  `).all(req.params.id).map(event => ({
+    ...event,
+    payload: event.payload_json ? (() => {
+      try { return JSON.parse(event.payload_json); } catch (e) { return null; }
+    })() : null
+  }));
+
+  res.json({ events });
+});
+
+// ==========================================
+// 批量下载交付图片
+// POST /api/admin/orders/download-deliveries
+// ==========================================
+router.post('/orders/download-deliveries', express.json(), async (req, res) => {
+  try {
+    const orderIds = Array.isArray(req.body.order_ids) ? req.body.order_ids.filter(Boolean) : [];
+    if (orderIds.length === 0) {
+      return res.status(400).json({ error: '请选择至少一个订单' });
+    }
+
+    const placeholders = orderIds.map(() => '?').join(',');
+    const orders = db.prepare(`
+      SELECT id, artwork_name, service_type_label, delivery_images, delivered_at, created_at
+      FROM orders
+      WHERE id IN (${placeholders})
+    `).all(...orderIds);
+    const usedNames = new Set();
+    const zipEntries = [];
+
+    orders.forEach(order => {
+      let images = [];
+      try { images = JSON.parse(order.delivery_images || '[]'); } catch (e) {}
+      images.forEach((filename, index) => {
+        const fullPath = path.join(DELIVERIES_DIR, filename);
+        if (!fs.existsSync(fullPath)) return;
+        zipEntries.push({
+          fullPath,
+          zipName: 构建交付图片文件名(order, index, filename, usedNames)
+        });
+      });
+    });
+
+    if (zipEntries.length === 0) {
+      return res.status(400).json({ error: '所选订单没有可下载的交付图片' });
+    }
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="molink-deliveries-${Date.now()}.zip"`);
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', error => {
+      console.error('压缩交付图片失败:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: '压缩失败' });
+      } else {
+        res.destroy(error);
+      }
+    });
+    archive.pipe(res);
+
+    zipEntries.forEach(entry => {
+      archive.file(entry.fullPath, { name: entry.zipName });
+    });
+
+    await archive.finalize();
+  } catch (error) {
+    console.error('批量下载交付图片失败:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: '批量下载失败' });
+    }
+  }
+});
+
+// ==========================================
 // 删除订单：删除订单记录及相关图片文件
 // DELETE /api/admin/orders/:id
 // ==========================================
@@ -353,6 +514,8 @@ router.delete('/orders/:id', (req, res) => {
         console.error('删除文件失败:', filePath, e);
       }
     });
+
+    db.prepare('DELETE FROM order_events WHERE order_id = ?').run(req.params.id);
 
     // 删除数据库记录
     db.prepare('DELETE FROM orders WHERE id = ?').run(req.params.id);

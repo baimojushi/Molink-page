@@ -1,13 +1,16 @@
-/* 登录弹窗 */
 .login-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
 }
+
 .login-card {
   margin: 0 48rpx;
   padding: 64rpx 48rpx;
@@ -16,45 +19,91 @@
   align-items: center;
   gap: 24rpx;
 }
+
 .login-title {
   font-size: 40rpx;
   font-weight: 700;
   color: #3d2b1f;
 }
+
 .login-desc {
   font-size: 28rpx;
   color: #7a6a5a;
   text-align: center;
 }
+
 .login-btn {
   width: 100%;
   margin-top: 16rpx;
 }
+
 .login-skip {
   font-size: 26rpx;
   color: #aaa;
   margin-top: 8rpx;
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.header-top-spacer {
+  width: 120rpx;
+  height: 1rpx;
+}
+
+.history-entry {
+  min-width: 132rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(145, 115, 85, 0.08);
+  border: 1rpx solid rgba(145, 115, 85, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+}
+
+.history-entry-text {
+  font-size: 24rpx;
+  color: var(--color-primary-dark);
+}
+
+.history-entry-badge {
+  min-width: 30rpx;
+  height: 30rpx;
+  padding: 0 8rpx;
+  border-radius: 999rpx;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60rpx 0 56rpx;
+  padding: 40rpx 0 48rpx;
 }
 
 .logo {
   font-size: 56rpx;
   font-weight: 700;
   color: var(--color-primary-dark);
-  letter-spacing: 4rpx;
+  letter-spacing: 3rpx;
 }
 
 .tagline {
   font-size: 24rpx;
   color: var(--color-text-hint);
-  margin-top: 8rpx;
-  letter-spacing: 2rpx;
+  margin-top: 12rpx;
+  letter-spacing: 1rpx;
 }
 
 .section-title {
@@ -67,16 +116,18 @@
 .service-list {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
-  padding-bottom: 160rpx;
+  gap: 24rpx;
 }
 
 .service-card {
   display: flex;
   align-items: center;
-  padding: 32rpx 28rpx;
-  transition: all 0.25s ease;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 34rpx 30rpx;
   border: 2rpx solid transparent;
+  transition: all 0.25s ease;
+  min-height: 164rpx;
 }
 
 .service-card.selected {
@@ -84,21 +135,30 @@
   background: rgba(145, 115, 85, 0.08);
 }
 
+.service-card-main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  min-width: 0;
+}
+
 .service-icon {
-  width: 52rpx;
-  height: 52rpx;
-  margin-right: 24rpx;
+  width: 56rpx;
+  height: 56rpx;
   flex-shrink: 0;
-  opacity: 0.75;
+  opacity: 0.8;
+  margin-top: 4rpx;
 }
 
 .service-info {
   flex: 1;
+  min-width: 0;
 }
 
 .service-title {
   display: block;
-  font-size: 32rpx;
+  font-size: 34rpx;
   font-weight: 600;
   color: var(--color-text-main);
   margin-bottom: 8rpx;
@@ -108,7 +168,7 @@
   display: block;
   font-size: 24rpx;
   color: var(--color-text-hint);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .service-check {
@@ -128,6 +188,51 @@
 .service-check.checked {
   background: var(--color-primary);
   border-color: var(--color-primary);
+}
+
+.animation-stage {
+  margin-top: 28rpx;
+  margin-bottom: 40rpx;
+  min-height: 300rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.22);
+  border: 2rpx dashed rgba(145, 115, 85, 0.14);
+}
+
+.animation-stage.active {
+  border-color: rgba(145, 115, 85, 0.22);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.animation-stage-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.animation-stage-placeholder {
+  width: 100%;
+  max-width: 520rpx;
+  min-height: 220rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.animation-stage-placeholder.selected {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.animation-stage-anchor {
+  width: 300rpx;
+  height: 170rpx;
+  border-radius: 20rpx;
+  background: rgba(145, 115, 85, 0.08);
 }
 
 .bottom-bar {
@@ -158,11 +263,6 @@
   border: 1rpx solid rgba(145, 115, 85, 0.2);
 }
 
-.active-order-card.delivered {
-  background: rgba(122, 158, 126, 0.15);
-  border: 1rpx solid rgba(122, 158, 126, 0.4);
-}
-
 .active-order-left {
   display: flex;
   align-items: center;
@@ -172,10 +272,6 @@
 .active-order-icon {
   font-size: 40rpx;
   color: var(--color-primary);
-}
-
-.active-order-card.delivered .active-order-icon {
-  color: var(--color-accent);
 }
 
 .active-order-title {
@@ -229,24 +325,29 @@
 }
 
 @media (min-width: 520px) {
-  .disclaimer-text { font-size: 11px; }
-}
-
-@media (min-width: 520px) {
-  .header { padding: 32px 0 28px; }
-  .logo { font-size: 26px; letter-spacing: 2px; }
-  .tagline { font-size: 13px; }
+  .header-top { margin-bottom: 4px; }
+  .history-entry { min-width: 84px; padding: 6px 10px; gap: 6px; }
+  .history-entry-text { font-size: 12px; }
+  .history-entry-badge { min-width: 18px; height: 18px; font-size: 10px; }
+  .header { padding: 26px 0 28px; }
+  .logo { font-size: 28px; letter-spacing: 2px; }
+  .tagline { font-size: 13px; margin-top: 6px; }
   .section-title { font-size: 14px; margin-bottom: 14px; }
-  .service-list { gap: 10px; padding-bottom: 100px; }
-  .service-card { padding: 14px 14px; }
-  .service-icon { width: 26px; height: 26px; margin-right: 14px; }
-  .service-title { font-size: 15px; margin-bottom: 4px; }
+  .service-list { gap: 12px; }
+  .service-card { padding: 16px 16px; gap: 14px; min-height: 88px; }
+  .service-card-main { gap: 12px; }
+  .service-icon { width: 28px; height: 28px; }
+  .service-title { font-size: 16px; margin-bottom: 4px; }
   .service-desc { font-size: 12px; }
   .service-check { width: 22px; height: 22px; font-size: 12px; }
+  .animation-stage { margin-top: 14px; margin-bottom: 22px; min-height: 160px; padding: 14px; }
+  .animation-stage-placeholder { max-width: 280px; min-height: 112px; }
+  .animation-stage-anchor { width: 160px; height: 92px; border-radius: 12px; }
   .bottom-bar { padding: 14px 24px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
   .active-order-card { padding: 14px 18px; margin-bottom: 18px; }
   .active-order-icon { font-size: 22px; }
   .active-order-title { font-size: 14px; }
   .active-order-hint { font-size: 12px; }
   .active-order-arrow { font-size: 14px; }
+  .disclaimer-text { font-size: 11px; }
 }

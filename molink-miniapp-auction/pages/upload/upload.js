@@ -16,6 +16,42 @@ const UPLOAD_CONFIG = {
   recommend_space: []
 }
 
+function normalizeArtwork(serverUrl, artwork) {
+  const images = Array.isArray(artwork.images) ? artwork.images.map(img => {
+    if (!img) return ''
+    return img.startsWith('http') ? img : `${serverUrl}${img.startsWith('/') ? '' : '/'}${img}`
+  }) : []
+
+  return Object.assign({}, artwork, { images })
+}
+
+function extractCandidates(raw) {
+  const text = String(raw || '').trim()
+  const candidates = []
+  if (!text) return candidates
+
+  candidates.push(text)
+
+  try {
+    const parsed = JSON.parse(text)
+    ;['num', 'id', 'artwork_num', 'code', 'qrCode'].forEach(key => {
+      if (parsed && parsed[key]) candidates.push(String(parsed[key]))
+    })
+  } catch (e) {}
+
+  try {
+    const url = new URL(text)
+    ;['num', 'id', 'artwork', 'artwork_num', 'code'].forEach(key => {
+      const value = url.searchParams.get(key)
+      if (value) candidates.push(value)
+    })
+    const pathname = url.pathname.split('/').filter(Boolean)
+    if (pathname.length > 0) candidates.push(pathname[pathname.length - 1])
+  } catch (e) {}
+
+  return [...new Set(candidates.filter(Boolean).map(item => decodeURIComponent(String(item)).trim()))]
+}
+
 Page({
   data: {
     service: '',
@@ -24,24 +60,165 @@ Page({
     images: {},
     artworkSize: '',
     notes: '',
-    extraOptimize: false,
+    extraOptimize: true,
     email: '',
     submitting: false,
     presetArtwork: null,
     showArtworkSelect: false,
-    serverUrl: ''
+    showExtraOptimize: false,
+    serverUrl: '',
+    artworks: [],
+    filteredArtworks: [],
+    artworkSearchKeyword: '',
+    artworkPanelOpen: false,
+    loadingArtworks: false,
+    artworkCount: 0,
+    scanLoading: false
   },
 
   onLoad(options) {
     const service = options.service
+    const showArtworkSelect = service === 'hang_in_home'
     this.setData({
       service,
       serviceLabel: SERVICE_LABELS[service],
       uploadConfig: UPLOAD_CONFIG[service] || [],
-      showNotes: service === 'recommend_space',
       showExtraOptimize: service === 'hang_in_home' || service === 'recommend_work',
-      showArtworkSelect: service === 'hang_in_home' || service === 'recommend_space',
+      showArtworkSelect,
       serverUrl: app.globalData.serverUrl
+    })
+
+    if (showArtworkSelect) {
+      this.loadArtworks()
+    }
+  },
+
+  async loadArtworks(forceRefresh = false) {
+    if (this.data.loadingArtworks) return
+    if (!forceRefresh && this.data.artworks.length > 0) {
+      this.applyArtworkFilter(this.data.artworkSearchKeyword)
+      return
+    }
+
+    this.setData({ loadingArtworks: true })
+    try {
+      const artworks = await new Promise((resolve, reject) => {
+        wx.request({
+          url: `${app.globalData.serverUrl}/api/client/artworks`,
+          success: res => {
+            if (res.statusCode === 200 && Array.isArray(res.data.artworks)) {
+              resolve(res.data.artworks)
+            } else {
+              reject(new Error('作品列表加载失败'))
+            }
+          },
+          fail: reject
+        })
+      })
+
+      const normalized = artworks.map(item => normalizeArtwork(app.globalData.serverUrl, item))
+      this.setData({
+        artworks: normalized,
+        artworkCount: normalized.length
+      })
+      this.applyArtworkFilter(this.data.artworkSearchKeyword)
+    } catch (e) {
+      wx.showToast({ title: '作品列表加载失败', icon: 'none' })
+    } finally {
+      this.setData({ loadingArtworks: false })
+    }
+  },
+
+  applyArtworkFilter(keyword = '') {
+    const normalizedKeyword = String(keyword || '').trim().toLowerCase()
+    const filtered = this.data.artworks.filter(item => {
+      if (!normalizedKeyword) return true
+      const haystack = [item.num, item.id, item.name, item.author, item.medium, item.size]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(normalizedKeyword)
+    })
+
+    this.setData({
+      artworkSearchKeyword: keyword,
+      filteredArtworks: filtered
+    })
+  },
+
+  openArtworkPanel() {
+    this.setData({ artworkPanelOpen: true })
+    this.loadArtworks()
+    this.applyArtworkFilter(this.data.artworkSearchKeyword)
+  },
+
+  closeArtworkPanel() {
+    this.setData({ artworkPanelOpen: false })
+  },
+
+  onArtworkSearchInput(e) {
+    this.applyArtworkFilter(e.detail.value)
+  },
+
+  chooseArtwork(e) {
+    const artwork = e.currentTarget.dataset.artwork
+    this.setData({
+      presetArtwork: artwork,
+      artworkPanelOpen: false,
+      artworkSearchKeyword: ''
+    })
+    this.applyArtworkFilter('')
+  },
+
+  clearArtwork() {
+    this.setData({ presetArtwork: null })
+  },
+
+  async scanArtwork() {
+    if (this.data.scanLoading) return
+    if (this.data.artworks.length === 0) {
+      await this.loadArtworks()
+    }
+
+    this.setData({ scanLoading: true })
+    wx.scanCode({
+      success: res => {
+        const candidates = extractCandidates(res.result)
+        const matched = this.data.artworks.find(item => {
+          const exactPool = [item.num, item.id, item.code, item.qrCode, item.qrcode]
+            .filter(Boolean)
+            .map(value => String(value).trim().toLowerCase())
+          if (candidates.some(candidate => exactPool.includes(candidate.toLowerCase()))) {
+            return true
+          }
+          return candidates.some(candidate => {
+            const normalized = candidate.toLowerCase()
+            return [item.num, item.name]
+              .filter(Boolean)
+              .map(value => String(value).trim().toLowerCase())
+              .some(value => value.includes(normalized) || normalized.includes(value))
+          })
+        })
+
+        if (!matched) {
+          wx.showToast({ title: '未找到对应作品，请改用检索', icon: 'none' })
+          return
+        }
+
+        this.setData({
+          presetArtwork: matched,
+          artworkPanelOpen: false,
+          artworkSearchKeyword: ''
+        })
+        this.applyArtworkFilter('')
+      },
+      fail: err => {
+        if (err && err.errMsg && err.errMsg.includes('cancel')) return
+        wx.showToast({ title: '扫码失败，请重试', icon: 'none' })
+      },
+      complete: () => {
+        this.setData({ scanLoading: false })
+      }
     })
   },
 
@@ -70,18 +247,6 @@ Page({
     })
   },
 
-  goSelectArtwork() {
-    wx.navigateTo({ url: '/pages/select-artwork/select-artwork' })
-  },
-
-  clearArtwork() {
-    this.setData({ presetArtwork: null })
-  },
-
-  toggleEmail() {
-    this.setData({ showEmail: !this.data.showEmail })
-  },
-
   onEmailInput(e) {
     this.setData({ email: e.detail.value })
   },
@@ -108,8 +273,9 @@ Page({
 
   async submitOrder() {
     if (!this.checkImages()) {
-      const msg = (this.data.showArtworkSelect && !this.data.presetArtwork)
-        ? '请先选择参展作品' : '请上传所需的图片'
+      const msg = this.data.showArtworkSelect && !this.data.presetArtwork
+        ? '请先选择参展作品'
+        : '请上传所需的图片'
       wx.showToast({ title: msg, icon: 'none' })
       return
     }
@@ -117,17 +283,15 @@ Page({
     this.setData({ submitting: true })
 
     try {
+      const filenames = {}
+      const artwork = this.data.presetArtwork
       const configs = this.data.uploadConfig
       const images = this.data.images
-      const filenames = {}
 
-      // 预设作品直接使用服务器完整 URL，无需上传
-      if (this.data.presetArtwork) {
-        const imgPath = this.data.presetArtwork.images[0]
-        filenames['artwork'] = imgPath.startsWith('http') ? imgPath : `${app.globalData.serverUrl}${imgPath.startsWith('/') ? '' : '/'}${imgPath}`
+      if (artwork && artwork.images && artwork.images[0]) {
+        filenames.artwork = artwork.images[0]
       }
 
-      // 逐张上传图片，拿回文件名
       for (const cfg of configs) {
         const filename = await new Promise((resolve, reject) => {
           wx.uploadFile({
@@ -139,7 +303,9 @@ Page({
                 const data = JSON.parse(res.data)
                 if (res.statusCode === 200) resolve(data.filename)
                 else reject(data)
-              } catch (e) { reject(e) }
+              } catch (e) {
+                reject(e)
+              }
             },
             fail: reject
           })
@@ -147,8 +313,6 @@ Page({
         filenames[cfg.key] = filename
       }
 
-      // 提交订单（带文件名）
-      const artwork = this.data.presetArtwork
       const result = await new Promise((resolve, reject) => {
         wx.request({
           url: `${app.globalData.serverUrl}/api/client/submit`,
@@ -158,11 +322,13 @@ Page({
             service_type: this.data.service,
             device_uuid: app.globalData.deviceId,
             receive_target: this.data.email || 'miniapp',
-            artwork_filename: filenames['artwork'] || '',
-            space_filename: filenames['space'] || '',
+            extra_service: this.data.extraOptimize ? '1' : '0',
+            artwork_filename: filenames.artwork || '',
+            space_filename: filenames.space || '',
             artwork_size: artwork ? (artwork.size || '') : (this.data.artworkSize || ''),
-            artwork_num: artwork ? String(artwork.num) : '',
+            artwork_num: artwork ? String(artwork.num || '') : '',
             artwork_name: artwork ? (artwork.name || '') : '',
+            notes: this.data.notes || '',
             openid: app.globalData.openid || '',
             user_nickname: app.globalData.userNickname || '',
             user_avatar: app.globalData.userAvatar || ''
@@ -184,11 +350,7 @@ Page({
       })
     } catch (e) {
       const msg = e && (e.errMsg || e.error || JSON.stringify(e))
-      wx.showModal({
-        title: '提交失败',
-        content: msg || '未知错误',
-        showCancel: false
-      })
+      wx.showModal({ title: '提交失败', content: msg || '未知错误', showCancel: false })
     } finally {
       this.setData({ submitting: false })
     }

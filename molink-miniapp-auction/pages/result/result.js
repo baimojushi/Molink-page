@@ -6,7 +6,7 @@ Page({
     orderId: '',
     deliveryImages: [],
     submitTime: '',
-    otherDeliveredOrders: []  // 该设备其他已交付的订单
+    otherDeliveredOrders: []
   },
 
   onLoad(options) {
@@ -15,32 +15,70 @@ Page({
       wx.redirectTo({ url: '/pages/index/index' })
       return
     }
+
+    this.enteredAt = Date.now()
     this.setData({ orderId })
     this.loadResult()
   },
 
+  onShow() {
+    if (!this.enteredAt) this.enteredAt = Date.now()
+  },
+
+  onHide() {
+    this.reportStayDuration()
+  },
+
+  onUnload() {
+    this.reportStayDuration()
+  },
+
+  trackEvent(eventType, payload = {}) {
+    wx.request({
+      url: `${app.globalData.serverUrl}/api/client/order-events`,
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: Object.assign({
+        order_id: this.data.orderId,
+        event_type: eventType,
+        device_uuid: app.globalData.deviceId || ''
+      }, payload),
+      fail: () => {}
+    })
+  },
+
+  reportStayDuration() {
+    if (!this.enteredAt || this.stayReported) return
+    const stayMs = Date.now() - this.enteredAt
+    this.stayReported = true
+    this.trackEvent('page_stay', {
+      stay_ms: stayMs,
+      entered_at: new Date(this.enteredAt).toISOString(),
+      left_at: new Date().toISOString(),
+      page_name: 'result'
+    })
+  },
+
   async loadResult() {
     try {
-      const res = await request(
-        `${app.globalData.serverUrl}/api/client/order-status/${this.data.orderId}`,
-        'GET', null
-      )
-      if (res.status === 'delivered' || res.status === 'viewed') {
-        const baseUrl = app.globalData.serverUrl
-        const images = (res.images || []).map(f => `${baseUrl}/deliveries/${f}`)
-        this.setData({
-          deliveryImages: images,
-          submitTime: res.deliveredAt ? formatTime(res.deliveredAt) : ''
-        })
-        if (images.length > 0) {
-          // 图片确实存在才算真正查看完，清除横幅
-          wx.removeStorageSync('lastOrderId')
-          wx.setStorageSync('lastOrderStatus', 'viewed')
-          request(`${app.globalData.serverUrl}/api/client/mark-viewed/${this.data.orderId}`, 'POST', {}).catch(() => {})
-          this.checkOtherOrders()
-        }
-      } else {
+      const res = await request(`${app.globalData.serverUrl}/api/client/order-status/${this.data.orderId}`, 'GET', null)
+      if (!['delivered', 'viewed', 'downloaded'].includes(res.status)) {
         wx.redirectTo({ url: `/pages/waiting/waiting?orderId=${this.data.orderId}` })
+        return
+      }
+
+      const baseUrl = app.globalData.serverUrl
+      const images = (res.images || []).map(file => `${baseUrl}/deliveries/${file}`)
+      this.setData({
+        deliveryImages: images,
+        submitTime: res.deliveredAt ? formatTime(res.deliveredAt) : ''
+      })
+
+      if (images.length > 0) {
+        wx.removeStorageSync('lastOrderId')
+        wx.setStorageSync('lastOrderStatus', 'viewed')
+        request(`${app.globalData.serverUrl}/api/client/mark-viewed/${this.data.orderId}`, 'POST', {}).catch(() => {})
+        this.checkOtherOrders()
       }
     } catch (e) {
       wx.showToast({ title: '加载失败，请重试', icon: 'none' })
@@ -51,18 +89,10 @@ Page({
     const deviceId = app.globalData.deviceId
     if (!deviceId) return
     try {
-      const res = await request(
-        `${app.globalData.serverUrl}/api/client/device-orders/${deviceId}`,
-        'GET', null
-      )
-      // 找出其他已交付但未查看的订单（排除当前订单）
-      const others = (res.orders || []).filter(o =>
-        o.id !== this.data.orderId && o.status === 'delivered'
-      )
-      this.setData({ otherDeliveredOrders: others })
-    } catch (e) {
-      // 静默失败
-    }
+      const res = await request(`${app.globalData.serverUrl}/api/client/device-orders/${deviceId}?page=1&page_size=20&history_only=1`, 'GET', null)
+      const others = (res.orders || []).filter(order => order.id !== this.data.orderId)
+      this.setData({ otherDeliveredOrders: others.slice(0, 5) })
+    } catch (e) {}
   },
 
   goToNextOrder(e) {
@@ -71,31 +101,44 @@ Page({
     wx.redirectTo({ url: `/pages/result/result?orderId=${orderId}` })
   },
 
+  openHistory() {
+    wx.navigateTo({ url: '/pages/history/history' })
+  },
+
   previewImage(e) {
+    const src = e.currentTarget.dataset.src
+    const index = Number(e.currentTarget.dataset.index || 0)
+    this.trackEvent('image_click', {
+      image_url: src,
+      image_index: index,
+      page_name: 'result'
+    })
+
     wx.previewImage({
-      current: e.currentTarget.dataset.src,
+      current: src,
       urls: this.data.deliveryImages
     })
   },
 
   saveImage(e) {
     const src = e.currentTarget.dataset.src
+    const imageIndex = Number(e.currentTarget.dataset.index || 0)
     wx.getSetting({
       success: res => {
         if (!res.authSetting['scope.writePhotosAlbum']) {
           wx.authorize({
             scope: 'scope.writePhotosAlbum',
-            success: () => this.doSaveImage(src),
+            success: () => this.doSaveImage(src, imageIndex),
             fail: () => wx.showToast({ title: '需要相册权限才能保存', icon: 'none' })
           })
         } else {
-          this.doSaveImage(src)
+          this.doSaveImage(src, imageIndex)
         }
       }
     })
   },
 
-  doSaveImage(src) {
+  doSaveImage(src, imageIndex = 0) {
     wx.showLoading({ title: '保存中...' })
     wx.downloadFile({
       url: src,
@@ -105,18 +148,27 @@ Page({
           success: () => {
             wx.hideLoading()
             wx.showToast({ title: '已保存到相册', icon: 'success' })
-            request(`${app.globalData.serverUrl}/api/client/mark-downloaded/${this.data.orderId}`, 'POST', {}).catch(() => {})
+            request(`${app.globalData.serverUrl}/api/client/mark-downloaded/${this.data.orderId}`, 'POST', {
+              device_uuid: app.globalData.deviceId || '',
+              image_index: imageIndex,
+              image_url: src,
+              page_name: 'result'
+            }).catch(() => {})
           },
-          fail: () => { wx.hideLoading(); wx.showToast({ title: '保存失败', icon: 'none' }) }
+          fail: () => {
+            wx.hideLoading()
+            wx.showToast({ title: '保存失败', icon: 'none' })
+          }
         })
       },
-      fail: () => { wx.hideLoading(); wx.showToast({ title: '保存失败', icon: 'none' }) }
+      fail: () => {
+        wx.hideLoading()
+        wx.showToast({ title: '保存失败', icon: 'none' })
+      }
     })
   },
 
   submitAgain() {
-    // 不清除 lastOrderId，让首页显示"可再次查看"横幅
-    // 提交新订单时会自然覆盖 lastOrderId
     wx.redirectTo({ url: '/pages/index/index' })
   }
 })
