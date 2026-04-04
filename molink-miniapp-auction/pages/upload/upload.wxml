@@ -9,18 +9,17 @@
     <view class="upload-hint">请检索或扫码本场展览中的作品</view>
 
     <view class="artwork-entry-row">
-      <view class="search-entry glass-card" bindtap="openArtworkPanel">
+      <view class="search-entry glass-card touch-card" bindtap="openArtworkPanel" hover-class="touch-card-hover">
         <view class="search-entry-main">
-          <text class="search-entry-icon">🔍</text>
+          <image class="search-entry-icon-image" src="/assets/icons/search-minimal.svg" mode="aspectFit"></image>
           <view class="search-entry-copy">
             <text class="search-entry-title">作品检索</text>
-            <text class="search-entry-sub">{{artworkCount ? '共' + artworkCount + '件参展作品' : '点击展开完整作品列表'}}</text>
+            <text class="search-entry-sub">{{artworkCount ? '点击展开完整作品列表' : '点击展开完整作品列表'}}</text>
           </view>
         </view>
       </view>
-      <view class="scan-entry glass-card" bindtap="scanArtwork">
-        <text class="scan-entry-icon">⌁</text>
-        <text class="scan-entry-text">{{scanLoading ? '识别中' : '扫码'}}</text>
+      <view class="scan-entry glass-card touch-card" bindtap="scanArtwork" hover-class="touch-card-hover">
+        <image class="scan-entry-icon-image {{scanLoading ? 'is-loading' : ''}}" src="/assets/icons/scan-qr.svg" mode="aspectFit"></image>
       </view>
     </view>
 
@@ -42,11 +41,12 @@
         <view
           wx:for="{{filteredArtworks}}"
           wx:key="num"
-          class="artwork-result-item"
+          class="artwork-result-item touch-card"
           data-artwork="{{item}}"
           bindtap="chooseArtwork"
+          hover-class="touch-card-hover"
         >
-          <image class="artwork-result-image" src="{{item.images[0]}}" mode="aspectFill" lazy-load></image>
+          <image class="artwork-result-image" src="{{item.images[0]}}" mode="aspectFill" lazy-load show-menu-by-longpress="{{false}}"></image>
           <view class="artwork-result-info">
             <text class="artwork-result-name">{{item.name || '（无题）'}}</text>
             <text class="artwork-result-meta">{{item.author || ''}}</text>
@@ -56,8 +56,8 @@
       </scroll-view>
     </view>
 
-    <view wx:if="{{presetArtwork}}" class="preset-artwork-card glass-card">
-      <image class="preset-artwork-img" src="{{presetArtwork.images[0]}}" mode="aspectFill" bindtap="previewImage" data-src="{{presetArtwork.images[0]}}" />
+    <view wx:if="{{presetArtwork}}" class="preset-artwork-card glass-card touch-card" hover-class="touch-card-hover">
+      <image class="preset-artwork-img" src="{{presetArtwork.images[0]}}" mode="aspectFill" bindtap="openArtworkPreview" data-src="{{presetArtwork.images[0]}}" show-menu-by-longpress="{{false}}" />
       <view class="preset-artwork-info">
         <text class="preset-artwork-name">{{presetArtwork.name || '（无题）'}}</text>
         <text class="preset-artwork-author">{{presetArtwork.author}}</text>
@@ -75,23 +75,20 @@
     <view class="upload-hint">{{item.hint}}</view>
 
     <view class="image-preview glass-card" wx:if="{{images[item.key]}}">
-      <image class="preview-img" src="{{images[item.key]}}" mode="aspectFill" bindtap="previewImage" data-src="{{images[item.key]}}" />
+      <image class="preview-img" src="{{images[item.key]}}" mode="aspectFill" bindtap="previewImage" data-src="{{images[item.key]}}" show-menu-by-longpress="{{false}}" />
       <view class="remove-btn" bindtap="removeImage" data-key="{{item.key}}">✕</view>
     </view>
 
-    <view class="upload-box glass-card" wx:else bindtap="chooseImage" data-key="{{item.key}}">
+    <view class="upload-box glass-card touch-card" wx:else bindtap="chooseImage" data-key="{{item.key}}" hover-class="touch-card-hover">
       <text class="upload-icon">+</text>
       <text class="upload-text">拍摄 / 上传</text>
       <text wx:if="{{item.key === 'space'}}" class="upload-privacy-tip">处理完成后自动清除</text>
     </view>
-    <text class="upload-photo-tip">随手拍摄，清晰即可</text>
   </view>
 
-  <view wx:if="{{showExtraOptimize}}" class="extra-optimize-row" bindtap="toggleExtraOptimize">
-    <view class="extra-optimize-check {{extraOptimize ? 'checked' : ''}}">
-      <text wx:if="{{extraOptimize}}">✓</text>
-    </view>
+  <view wx:if="{{showExtraOptimize}}" class="extra-optimize-row">
     <text class="extra-optimize-label">顺带微调软装细节（靠枕·织物·小摆件）</text>
+    <switch class="extra-optimize-switch" checked="{{extraOptimize}}" color="#7a9e7e" bindchange="onExtraOptimizeChange" />
   </view>
 
   <view class="email-section">
@@ -110,5 +107,12 @@
       <text wx:else>提交中...</text>
     </button>
     <text class="submit-tip">提交时询问是否接收效果图完成通知</text>
+  </view>
+
+  <view wx:if="{{showArtworkPreview}}" class="artwork-preview-mask" bindtap="closeArtworkPreview" catchtouchmove="noop">
+    <view class="artwork-preview-shell" catchtap="noop">
+      <image class="artwork-preview-image" src="{{artworkPreviewUrl}}" mode="aspectFit" show-menu-by-longpress="{{false}}"></image>
+      <view class="artwork-preview-close" bindtap="closeArtworkPreview">关闭</view>
+    </view>
   </view>
 </view>

@@ -73,7 +73,9 @@ Page({
     artworkPanelOpen: false,
     loadingArtworks: false,
     artworkCount: 0,
-    scanLoading: false
+    scanLoading: false,
+    showArtworkPreview: false,
+    artworkPreviewUrl: ''
   },
 
   onLoad(options) {
@@ -247,6 +249,24 @@ Page({
     })
   },
 
+  openArtworkPreview(e) {
+    const src = e.currentTarget.dataset.src || ''
+    if (!src) return
+    this.setData({
+      showArtworkPreview: true,
+      artworkPreviewUrl: src
+    })
+  },
+
+  closeArtworkPreview() {
+    this.setData({
+      showArtworkPreview: false,
+      artworkPreviewUrl: ''
+    })
+  },
+
+  noop() {},
+
   onEmailInput(e) {
     this.setData({ email: e.detail.value })
   },
@@ -261,6 +281,10 @@ Page({
 
   toggleExtraOptimize() {
     this.setData({ extraOptimize: !this.data.extraOptimize })
+  },
+
+  onExtraOptimizeChange(e) {
+    this.setData({ extraOptimize: !!e.detail.value })
   },
 
   checkImages() {

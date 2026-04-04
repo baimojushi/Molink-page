@@ -12,7 +12,7 @@
 
   <view class="header-top">
     <view class="header-top-spacer"></view>
-    <view class="history-entry" bindtap="openHistory">
+    <view class="history-entry touch-chip" bindtap="openHistory" hover-class="touch-chip-hover">
       <text class="history-entry-text">历史记录</text>
       <text wx:if="{{historyCount > 0}}" class="history-entry-badge">{{historyCount}}</text>
     </view>
@@ -43,6 +43,8 @@
       wx:key="id"
       data-id="{{item.id}}"
       bindtap="selectService"
+      hover-class="service-card-hover"
+      hover-stay-time="90"
     >
       <view class="service-card-main">
         <image class="service-icon" src="{{item.iconPath}}" mode="aspectFit"></image>
@@ -60,6 +62,7 @@
   <view class="animation-stage glass-card {{selectedService ? 'active' : ''}}" data-animation-key="{{selectedAnimationKey}}">
     <view class="animation-stage-inner">
       <view class="animation-stage-placeholder {{selectedService ? 'selected' : ''}}">
+        <view class="animation-stage-guide" wx:if="{{!selectedService}}">动画内容将在这里居中呈现</view>
         <view wx:if="{{selectedService}}" class="animation-stage-anchor"></view>
       </view>
     </view>
