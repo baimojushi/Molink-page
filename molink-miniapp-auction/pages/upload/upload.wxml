@@ -14,7 +14,7 @@
           <image class="search-entry-icon-image" src="/assets/icons/search-minimal.svg" mode="aspectFit"></image>
           <view class="search-entry-copy">
             <text class="search-entry-title">作品检索</text>
-            <text class="search-entry-sub">{{artworkCount ? '点击展开完整作品列表' : '点击展开完整作品列表'}}</text>
+            <text class="search-entry-sub">点击展开完整作品列表</text>
           </view>
         </view>
       </view>
@@ -64,6 +64,7 @@
         <text class="preset-artwork-meta">{{presetArtwork.medium}} {{presetArtwork.size}}</text>
       </view>
       <view class="preset-artwork-actions">
+        <view class="preset-preview-btn" bindtap="openArtworkPreview" data-src="{{presetArtwork.images[0]}}">查看大图</view>
         <view class="preset-reselect-btn" bindtap="openArtworkPanel">重新选择</view>
         <view class="remove-btn static-remove" bindtap="clearArtwork">✕</view>
       </view>

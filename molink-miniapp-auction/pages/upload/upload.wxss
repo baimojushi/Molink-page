@@ -1,4 +1,3 @@
-
 .page-container {
   min-height: 100vh;
   padding: 32rpx 20rpx 192rpx;
@@ -102,8 +101,8 @@
 }
 
 .scan-entry-icon-image {
-  width: 78rpx;
-  height: 78rpx;
+  width: 84rpx;
+  height: 84rpx;
   opacity: 0.92;
 }
 
@@ -126,12 +125,12 @@
 .artwork-search-input {
   flex: 1;
   min-width: 0;
-  height: 84rpx;
-  line-height: 84rpx;
-  padding: 0 24rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+  padding: 0 26rpx;
   border-radius: 20rpx;
   background: rgba(255, 255, 255, 0.72);
-  font-size: 26rpx;
+  font-size: 28rpx;
   box-sizing: border-box;
 }
 
@@ -236,6 +235,7 @@
   gap: 12rpx;
 }
 
+.preset-preview-btn,
 .preset-reselect-btn {
   font-size: 24rpx;
   color: var(--color-accent);
@@ -343,8 +343,8 @@
   max-width: none;
   min-width: 0;
   margin-left: -6rpx;
-  height: 84rpx;
-  line-height: 84rpx;
+  height: 96rpx;
+  line-height: 96rpx;
   padding: 0 32rpx;
   font-size: 28rpx;
   box-sizing: border-box;
@@ -424,10 +424,10 @@
   .search-entry-title { font-size: 14px; }
   .search-entry-sub { font-size: 11px; }
   .scan-entry { width: 90px; }
-  .scan-entry-icon-image { width: 44px; height: 44px; }
+  .scan-entry-icon-image { width: 48px; height: 48px; }
   .artwork-panel { margin-top: 10px; padding: 12px; }
   .artwork-panel-top { gap: 10px; margin-bottom: 10px; }
-  .artwork-search-input { height: 48px; line-height: 48px; padding: 0 14px; font-size: 13px; }
+  .artwork-search-input { height: 54px; line-height: 54px; padding: 0 14px; font-size: 13px; }
   .artwork-panel-close { font-size: 12px; }
   .artwork-results-scroll { max-height: 320px; }
   .artwork-result-item { gap: 12px; padding: 10px 0; }
@@ -437,7 +437,7 @@
   .preset-artwork-card { margin-top: 12px; gap: 12px; padding: 12px; }
   .preset-artwork-img { width: 88px; height: 88px; border-radius: 10px; }
   .preset-artwork-name { font-size: 14px; }
-  .preset-artwork-author, .preset-artwork-meta, .preset-reselect-btn { font-size: 11px; }
+  .preset-artwork-author, .preset-artwork-meta, .preset-preview-btn, .preset-reselect-btn { font-size: 11px; }
   .upload-box, .image-preview { height: 170px; }
   .upload-icon { font-size: 36px; }
   .upload-text { font-size: 13px; margin-top: 6px; }
@@ -446,7 +446,7 @@
   .extra-optimize-row { gap: 8px; margin: 12px 4px 16px; }
   .extra-optimize-label, .section-inline-label, .submit-tip { font-size: 12px; }
   .email-section { margin-bottom: 104px; }
-  .email-input { height: 48px; line-height: 48px; padding: 0 18px; font-size: 14px; border-radius: 14px; }
+  .email-input { height: 54px; line-height: 54px; padding: 0 18px; font-size: 14px; border-radius: 14px; }
   .bottom-bar { padding: 14px 20px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
   .artwork-preview-shell { gap: 12px; }
   .artwork-preview-close { min-width: 96px; padding: 10px 18px; font-size: 13px; }
