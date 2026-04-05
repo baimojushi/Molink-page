@@ -5,17 +5,19 @@ const INTRO_DURATION = 2600
 const HANG_DURATION = 2200
 const RECOMMEND_BRIDGE_DURATION = 2200
 
-const ANIMATION_ASSETS = {
-  intro: '/assets/icons/1.webp',
-  hang: '/assets/icons/2.1.webp',
-  recommendBridge: '/assets/icons/2.webp',
-  recommendLoop: '/assets/icons/2.2.webp'
+const ANIMATION_BASES = {
+  intro: 'https://molink-1404430861.cos.ap-shanghai.myqcloud.com/1.webp',
+  hang: 'https://molink-1404430861.cos.ap-shanghai.myqcloud.com/2.1.webp',
+  recommendBridge: 'https://molink-1404430861.cos.ap-shanghai.myqcloud.com/2.webp',
+  recommendLoop: 'https://molink-1404430861.cos.ap-shanghai.myqcloud.com/2.2.webp'
 }
 
 Page({
   animationTimer: null,
   currentStep: '',
   desiredService: '',
+  animationToken: 0,
+
   data: {
     services: [
       {
@@ -36,8 +38,9 @@ Page({
     showLoginOverlay: false,
     loginLoading: false,
     historyCount: 0,
-    animationSrc: ANIMATION_ASSETS.intro,
-    animationVisible: true,
+    animationSlotA: '',
+    animationSlotB: '',
+    activeAnimationSlot: 'A',
     animationLoop: false
   },
 
@@ -45,7 +48,7 @@ Page({
     if (!app.globalData.openid) {
       this.setData({ showLoginOverlay: true })
     }
-    this.startAnimationStep('intro')
+    this.startAnimationStep('intro', { forceReplay: true })
   },
 
   onShow() {
@@ -64,30 +67,49 @@ Page({
     }
   },
 
-  startAnimationStep(stepName) {
+  buildAnimationSrc(stepName, forceReplay = false) {
+    const base = ANIMATION_BASES[stepName]
+    if (!base) return ''
+    if (!forceReplay) return base
+    this.animationToken += 1
+    const connector = base.includes('?') ? '&' : '?'
+    return `${base}${connector}play=${Date.now()}_${this.animationToken}`
+  },
+
+  switchAnimationSource(src, loop) {
+    const nextSlot = this.data.activeAnimationSlot === 'A' ? 'B' : 'A'
+    const patch = {
+      animationLoop: loop,
+      activeAnimationSlot: nextSlot
+    }
+
+    if (nextSlot === 'A') {
+      patch.animationSlotA = src
+    } else {
+      patch.animationSlotB = src
+    }
+
+    this.setData(patch)
+  },
+
+  startAnimationStep(stepName, options = {}) {
+    const { forceReplay = false } = options
+
     this.clearAnimationTimer()
     this.currentStep = stepName
 
     const config = {
-      intro: { src: ANIMATION_ASSETS.intro, loop: false, duration: INTRO_DURATION },
-      hang: { src: ANIMATION_ASSETS.hang, loop: false, duration: HANG_DURATION },
-      recommendBridge: { src: ANIMATION_ASSETS.recommendBridge, loop: false, duration: RECOMMEND_BRIDGE_DURATION },
-      recommendLoop: { src: ANIMATION_ASSETS.recommendLoop, loop: true, duration: 0 }
+      intro: { duration: INTRO_DURATION, loop: false },
+      hang: { duration: HANG_DURATION, loop: false },
+      recommendBridge: { duration: RECOMMEND_BRIDGE_DURATION, loop: false },
+      recommendLoop: { duration: 0, loop: true }
     }[stepName]
 
     if (!config) return
 
-    this.setData({
-      animationVisible: false
-    })
-
-    setTimeout(() => {
-      this.setData({
-        animationSrc: config.src,
-        animationLoop: config.loop,
-        animationVisible: true
-      })
-    }, 20)
+    const replay = forceReplay || stepName === 'hang' || stepName === 'recommendLoop'
+    const src = this.buildAnimationSrc(stepName, replay)
+    this.switchAnimationSource(src, config.loop)
 
     if (config.loop) return
 
@@ -100,11 +122,11 @@ Page({
   resolveAnimationStep(stepName) {
     if (stepName === 'intro') {
       if (this.desiredService === 'hang_in_home') {
-        this.startAnimationStep('hang')
+        this.startAnimationStep('hang', { forceReplay: true })
         return
       }
       if (this.desiredService === 'recommend_work') {
-        this.startAnimationStep('recommendBridge')
+        this.startAnimationStep('recommendBridge', { forceReplay: true })
         return
       }
       this.currentStep = 'introDone'
@@ -113,7 +135,7 @@ Page({
 
     if (stepName === 'hang') {
       if (this.desiredService === 'recommend_work') {
-        this.startAnimationStep('recommendLoop')
+        this.startAnimationStep('recommendLoop', { forceReplay: true })
         return
       }
       this.currentStep = 'hangDone'
@@ -122,10 +144,10 @@ Page({
 
     if (stepName === 'recommendBridge') {
       if (this.desiredService === 'hang_in_home') {
-        this.startAnimationStep('hang')
+        this.startAnimationStep('hang', { forceReplay: true })
         return
       }
-      this.startAnimationStep('recommendLoop')
+      this.startAnimationStep('recommendLoop', { forceReplay: true })
     }
   },
 
@@ -136,25 +158,34 @@ Page({
 
     if (serviceId === 'hang_in_home') {
       if (this.currentStep === 'recommendLoop') {
-        this.startAnimationStep('hang')
+        this.startAnimationStep('hang', { forceReplay: true })
         return
       }
       if (['intro', 'hang', 'recommendBridge'].includes(this.currentStep)) {
         return
       }
-      this.startAnimationStep('hang')
+      this.startAnimationStep('hang', { forceReplay: true })
       return
     }
 
     if (serviceId === 'recommend_work') {
-      if (this.currentStep === 'recommendLoop') return
-      if (['intro', 'hang', 'recommendBridge'].includes(this.currentStep)) return
-      if (this.currentStep === 'hangDone') {
-        this.startAnimationStep('recommendLoop')
+      if (this.currentStep === 'recommendLoop') {
+        this.startAnimationStep('recommendLoop', { forceReplay: true })
         return
       }
-      this.startAnimationStep('recommendBridge')
+      if (['intro', 'hang', 'recommendBridge'].includes(this.currentStep)) {
+        return
+      }
+      if (this.currentStep === 'hangDone') {
+        this.startAnimationStep('recommendLoop', { forceReplay: true })
+        return
+      }
+      this.startAnimationStep('recommendBridge', { forceReplay: true })
     }
+  },
+
+  onAnimationError(e) {
+    console.log('animation load failed', e, this.data.activeAnimationSlot === 'A' ? this.data.animationSlotA : this.data.animationSlotB)
   },
 
   async doWxLogin() {

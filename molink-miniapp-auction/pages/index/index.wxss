@@ -1,6 +1,6 @@
 .page-container {
   min-height: 100vh;
-  padding: 32rpx 20rpx 248rpx;
+  padding: 32rpx 20rpx calc(268rpx + env(safe-area-inset-bottom));
   background: linear-gradient(160deg, #f5efe9 0%, #efe5db 100%);
   box-sizing: border-box;
 }
@@ -220,25 +220,47 @@
 }
 
 .animation-stage {
-  margin-top: 20rpx;
-  margin-bottom: 72rpx;
-  min-height: 284rpx;
+  margin-top: 26rpx;
+  margin-bottom: 76rpx;
+  min-height: 356rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  contain: paint;
 }
 
 .animation-stage-inner {
-  width: 100%;
-  min-height: 284rpx;
+  position: relative;
+  width: 380rpx;
+  height: 380rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  contain: paint;
 }
 
 .animation-media {
-  width: 332rpx;
-  height: 332rpx;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: scale(0.988);
+  transition: opacity 220ms ease, transform 220ms ease;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+.animation-media.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.animation-media.is-idle {
+  opacity: 0;
+  transform: scale(0.994);
 }
 
 .bottom-bar {
@@ -300,7 +322,7 @@
 }
 
 .disclaimer {
-  padding: 0 4rpx 40rpx;
+  padding: 0 4rpx 48rpx;
 }
 
 .disclaimer-text {
@@ -331,7 +353,7 @@
 }
 
 @media (min-width: 520px) {
-  .page-container { padding: 18px 18px 146px; }
+  .page-container { padding: 18px 18px calc(158px + env(safe-area-inset-bottom)); }
   .header-top { margin-bottom: 4px; }
   .history-entry { min-width: 84px; padding: 6px 10px; gap: 6px; }
   .history-entry-text { font-size: 12px; }
@@ -347,9 +369,8 @@
   .service-title { font-size: 16px; margin-bottom: 4px; }
   .service-desc { font-size: 12px; }
   .service-check { width: 22px; height: 22px; font-size: 12px; }
-  .animation-stage { margin-top: 12px; margin-bottom: 42px; min-height: 156px; }
-  .animation-stage-inner { min-height: 156px; }
-  .animation-media { width: 186px; height: 186px; }
+  .animation-stage { margin-top: 14px; margin-bottom: 44px; min-height: 196px; }
+  .animation-stage-inner { width: 214px; height: 214px; }
   .bottom-bar { padding: 14px 24px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
   .active-order-card { padding: 14px 18px; margin-bottom: 16px; }
   .active-order-icon { font-size: 22px; }

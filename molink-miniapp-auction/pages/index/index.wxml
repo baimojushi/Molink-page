@@ -61,7 +61,22 @@
 
   <view class="animation-stage">
     <view class="animation-stage-inner">
-      <image wx:if="{{animationVisible && animationSrc}}" class="animation-media {{animationLoop ? 'looping' : ''}}" src="{{animationSrc}}" mode="aspectFit"></image>
+      <image
+        wx:if="{{animationSlotA}}"
+        class="animation-media layer-a {{activeAnimationSlot === 'A' ? 'is-active' : 'is-idle'}}"
+        src="{{animationSlotA}}"
+        mode="aspectFit"
+        webp="{{true}}"
+        binderror="onAnimationError"
+      ></image>
+      <image
+        wx:if="{{animationSlotB}}"
+        class="animation-media layer-b {{activeAnimationSlot === 'B' ? 'is-active' : 'is-idle'}}"
+        src="{{animationSlotB}}"
+        mode="aspectFit"
+        webp="{{true}}"
+        binderror="onAnimationError"
+      ></image>
     </view>
   </view>
 
