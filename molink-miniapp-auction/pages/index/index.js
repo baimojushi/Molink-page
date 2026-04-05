@@ -17,6 +17,7 @@ Page({
   currentStep: '',
   desiredService: '',
   animationToken: 0,
+  entranceStarted: false,
 
   data: {
     services: [
@@ -41,23 +42,55 @@ Page({
     animationSlotA: '',
     animationSlotB: '',
     activeAnimationSlot: 'A',
-    animationLoop: false
+    animationLoop: false,
+    cardIntroStep: 0,
+    headerIntroDone: false
   },
 
   onLoad() {
     if (!app.globalData.openid) {
       this.setData({ showLoginOverlay: true })
+      return
     }
-    this.startAnimationStep('intro', { forceReplay: true })
+    this.startEntranceIfNeeded()
   },
 
   onShow() {
     this.checkActiveOrder()
     this.loadHistoryCount()
+    if (!this.data.showLoginOverlay) {
+      this.startEntranceIfNeeded()
+    }
   },
 
   onUnload() {
     this.clearAnimationTimer()
+  },
+
+  startEntranceIfNeeded() {
+    if (this.entranceStarted) return
+    this.entranceStarted = true
+    this.playEntranceMotion()
+    this.startAnimationStep('intro', { forceReplay: true })
+  },
+
+  playEntranceMotion() {
+    this.setData({
+      cardIntroStep: 0,
+      headerIntroDone: false
+    })
+
+    setTimeout(() => {
+      this.setData({ cardIntroStep: 1 })
+    }, 80)
+
+    setTimeout(() => {
+      this.setData({ cardIntroStep: 2 })
+    }, 260)
+
+    setTimeout(() => {
+      this.setData({ headerIntroDone: true })
+    }, 720)
   },
 
   clearAnimationTimer() {
@@ -154,7 +187,7 @@ Page({
   syncAnimationWithSelection(serviceId) {
     this.desiredService = serviceId
 
-    if (!serviceId) return
+    if (!serviceId || !this.entranceStarted) return
 
     if (serviceId === 'hang_in_home') {
       if (this.currentStep === 'recommendLoop') {
@@ -185,7 +218,11 @@ Page({
   },
 
   onAnimationError(e) {
-    console.log('animation load failed', e, this.data.activeAnimationSlot === 'A' ? this.data.animationSlotA : this.data.animationSlotB)
+    console.log(
+      'animation load failed',
+      e,
+      this.data.activeAnimationSlot === 'A' ? this.data.animationSlotA : this.data.animationSlotB
+    )
   },
 
   async doWxLogin() {
@@ -193,6 +230,7 @@ Page({
     try {
       await app.wxLogin('', '')
       this.setData({ showLoginOverlay: false })
+      this.startEntranceIfNeeded()
     } catch (e) {
       wx.showToast({ title: '登录失败，请重试', icon: 'none' })
     } finally {
@@ -202,6 +240,7 @@ Page({
 
   skipLogin() {
     this.setData({ showLoginOverlay: false })
+    this.startEntranceIfNeeded()
   },
 
   async checkActiveOrder() {

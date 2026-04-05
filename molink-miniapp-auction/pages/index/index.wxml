@@ -18,9 +18,9 @@
     </view>
   </view>
 
-  <view class="header">
-    <text class="logo" bindlongpress="onLogoLongPress">Mo:link 墨林设计</text>
-    <text class="tagline">外滩艺博会作品-家居匹配服务</text>
+  <view class="header {{headerIntroDone ? 'intro-done' : ''}}">
+    <text class="logo intro-fade-up" bindlongpress="onLogoLongPress">Mo:link 墨林设计</text>
+    <text class="tagline intro-fade-up">外滩艺博会作品-家居匹配服务</text>
   </view>
 
   <view wx:if="{{activeOrder}}" class="active-order-card pending" bindtap="goToActiveOrder">
@@ -38,7 +38,7 @@
 
   <view class="service-list">
     <view
-      class="service-card glass-card {{selectedService === item.id ? 'selected' : ''}}"
+      class="service-card glass-card {{selectedService === item.id ? 'selected' : ''}} {{cardIntroStep >= index + 1 ? 'card-entered' : 'card-pre-enter'}}"
       wx:for="{{services}}"
       wx:key="id"
       data-id="{{item.id}}"
