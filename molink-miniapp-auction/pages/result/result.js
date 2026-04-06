@@ -89,7 +89,8 @@ Page({
     const deviceId = app.globalData.deviceId
     if (!deviceId) return
     try {
-      const res = await request(`${app.globalData.serverUrl}/api/client/device-orders/${deviceId}?page=1&page_size=20&history_only=1`, 'GET', null)
+      const query = app.buildIdentityQuery({ page: 1, page_size: 20, history_only: 1 })
+      const res = await request(`${app.globalData.serverUrl}/api/client/device-orders/${deviceId}?${query}`, 'GET', null)
       const others = (res.orders || []).filter(order => order.id !== this.data.orderId)
       this.setData({ otherDeliveredOrders: others.slice(0, 5) })
     } catch (e) {}

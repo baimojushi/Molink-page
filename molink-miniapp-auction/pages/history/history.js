@@ -65,8 +65,9 @@ Page({
 
     try {
       const deviceId = app.globalData.deviceId
+      const query = app.buildIdentityQuery({ page, page_size: this.data.pageSize, history_only: 1 })
       const res = await request(
-        `${app.globalData.serverUrl}/api/client/device-orders/${deviceId}?page=${page}&page_size=${this.data.pageSize}&history_only=1`,
+        `${app.globalData.serverUrl}/api/client/device-orders/${deviceId}?${query}`,
         'GET',
         null
       )

@@ -6,6 +6,8 @@ const SERVICE_LABELS = {
   recommend_space: '一画一宅'
 }
 
+const COMPLETION_TEMPLATE_ID = 'WBedF813hIJYRHpG0Gki9vU40Z3EoaKDmrXVC8lD4sY'
+
 const UPLOAD_CONFIG = {
   hang_in_home: [
     { key: 'space', label: '上传空间图片', hint: '请拍摄或上传您的居室照片' }
@@ -295,6 +297,25 @@ Page({
     return true
   },
 
+  async requestCompletionSubscribe() {
+    if (!app.globalData.openid || !wx.requestSubscribeMessage) {
+      return { accepted: false, templateId: '' }
+    }
+
+    return new Promise(resolve => {
+      wx.requestSubscribeMessage({
+        tmplIds: [COMPLETION_TEMPLATE_ID],
+        success: res => {
+          resolve({
+            accepted: res && res[COMPLETION_TEMPLATE_ID] === 'accept',
+            templateId: COMPLETION_TEMPLATE_ID
+          })
+        },
+        fail: () => resolve({ accepted: false, templateId: '' })
+      })
+    })
+  },
+
   async submitOrder() {
     if (!this.checkImages()) {
       const msg = this.data.showArtworkSelect && !this.data.presetArtwork
@@ -307,6 +328,7 @@ Page({
     this.setData({ submitting: true })
 
     try {
+      const subscribeResult = await this.requestCompletionSubscribe()
       const filenames = {}
       const artwork = this.data.presetArtwork
       const configs = this.data.uploadConfig
@@ -355,7 +377,9 @@ Page({
             notes: this.data.notes || '',
             openid: app.globalData.openid || '',
             user_nickname: app.globalData.userNickname || '',
-            user_avatar: app.globalData.userAvatar || ''
+            user_avatar: app.globalData.userAvatar || '',
+            subscribe_completion: subscribeResult.accepted ? '1' : '0',
+            subscribe_template_id: subscribeResult.accepted ? subscribeResult.templateId : ''
           },
           success: res => {
             if (res.statusCode === 200) resolve(res.data)

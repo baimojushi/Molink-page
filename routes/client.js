@@ -63,6 +63,46 @@ function 记录订单埋点({ orderId, deviceUuid = null, eventType, imageIndex 
   );
 }
 
+function 绑定微信号与设备(openid, deviceUuid) {
+  const normalizedOpenid = String(openid || '').trim();
+  const normalizedDeviceUuid = String(deviceUuid || '').trim();
+  if (!normalizedOpenid || !normalizedDeviceUuid) return;
+
+  db.prepare(`
+    INSERT INTO user_devices (openid, device_uuid, first_seen, last_seen)
+    VALUES (?, ?, datetime('now','localtime'), datetime('now','localtime'))
+    ON CONFLICT(openid, device_uuid) DO UPDATE SET
+      last_seen = datetime('now','localtime')
+  `).run(normalizedOpenid, normalizedDeviceUuid);
+}
+
+function 构建身份查询条件(deviceUuid, openid, historyOnly) {
+  const conditions = [];
+  const params = [];
+  const normalizedOpenid = String(openid || '').trim();
+  const normalizedDeviceUuid = String(deviceUuid || '').trim();
+
+  if (normalizedOpenid) {
+    conditions.push(`(
+      openid = ?
+      OR device_uuid IN (
+        SELECT device_uuid FROM user_devices WHERE openid = ?
+      )
+    )`);
+    params.push(normalizedOpenid, normalizedOpenid);
+  } else {
+    conditions.push('device_uuid = ?');
+    params.push(normalizedDeviceUuid);
+  }
+
+  if (historyOnly) {
+    conditions.push(`status IN (${历史记录状态.map(() => '?').join(',')})`);
+    params.push(...历史记录状态);
+  }
+
+  return { whereClause: conditions.join(' AND '), params };
+}
+
 function 匹配作品(code) {
   const candidates = [];
   const raw = String(code || '').trim();
@@ -222,11 +262,11 @@ function 构建生图消息(serviceType, artworkUrl, spaceUrl, size, notes) {
 }
 
 // ==========================================
-// 微信登录：code 换 openid，保存用户信息
+// 微信登录：code 换 openid，保存用户信息，并绑定当前设备
 // POST /api/client/wx-login
 // ==========================================
-router.post('/wx-login', async (req, res) => {
-  const { code, nickname, avatar } = req.body;
+router.post('/wx-login', express.json(), async (req, res) => {
+  const { code, nickname, avatar, device_uuid } = req.body || {};
   if (!code) return res.status(400).json({ error: '缺少code' });
 
   try {
@@ -242,7 +282,6 @@ router.post('/wx-login', async (req, res) => {
 
     const { openid } = data;
 
-    // 存入/更新用户表
     db.prepare(`
       INSERT INTO users (openid, nickname, avatar)
       VALUES (?, ?, ?)
@@ -250,6 +289,17 @@ router.post('/wx-login', async (req, res) => {
         nickname = COALESCE(excluded.nickname, users.nickname),
         avatar   = COALESCE(excluded.avatar,   users.avatar)
     `).run(openid, nickname || null, avatar || null);
+
+    if (device_uuid) {
+      绑定微信号与设备(openid, device_uuid);
+      db.prepare(`
+        UPDATE orders
+        SET openid = COALESCE(NULLIF(openid, ''), ?),
+            user_nickname = COALESCE(user_nickname, ?),
+            user_avatar = COALESCE(user_avatar, ?)
+        WHERE device_uuid = ?
+      `).run(openid, nickname || null, avatar || null, device_uuid);
+    }
 
     res.json({ success: true, openid, nickname: nickname || '', avatar: avatar || '' });
   } catch (e) {
@@ -282,9 +332,13 @@ router.post('/upload-image',
 router.post('/submit',
   async (req, res) => {
     try {
-      const { service_type, receive_target, extra_service, device_uuid, openid, user_nickname, user_avatar, artwork_size, notes } = req.body;
+      const { service_type, receive_target, extra_service, device_uuid, openid, user_nickname, user_avatar, artwork_size, notes, subscribe_completion, subscribe_template_id } = req.body;
 
       // 参数验证
+      if (openid && device_uuid) {
+        绑定微信号与设备(openid, device_uuid);
+      }
+
       if (!service_type || !服务类型映射[service_type]) {
         return res.status(400).json({ error: '无效的服务类型' });
       }
@@ -334,8 +388,8 @@ router.post('/submit',
       const { artwork_num, artwork_name } = req.body;
 
       const stmt = db.prepare(`
-        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar, artwork_size, artwork_num, artwork_name, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (id, device_uuid, service_type, service_type_label, receive_method, receive_target, extra_service, artwork_image, space_image, delivery_token, openid, user_nickname, user_avatar, artwork_size, artwork_num, artwork_name, notes, subscribe_completion, subscribe_template_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
@@ -355,7 +409,9 @@ router.post('/submit',
         artwork_size || null,
         artwork_num || null,
         artwork_name || null,
-        notes || null
+        notes || null,
+        subscribe_completion === '1' || subscribe_completion === 1 || subscribe_completion === true ? 1 : 0,
+        subscribe_template_id || null
       );
 
       // 获取刚插入的完整订单记录（含 created_at）
@@ -494,11 +550,12 @@ router.get('/order-status/:orderId', (req, res) => {
 });
 
 // ==========================================
-// 查询设备所有历史订单
-// GET /api/client/device-orders/:uuid
+// 查询设备/微信账号可见的历史订单
+// GET /api/client/device-orders/:uuid?openid=xxx
 // ==========================================
 router.get('/device-orders/:uuid', (req, res) => {
   const deviceUuid = req.params.uuid;
+  const openid = String(req.query.openid || '').trim();
   if (!deviceUuid) {
     return res.status(400).json({ error: '缺少设备标识' });
   }
@@ -507,18 +564,11 @@ router.get('/device-orders/:uuid', (req, res) => {
   const pageSize = Math.min(Math.max(parseInt(req.query.page_size || '20', 10), 1), 50);
   const historyOnly = req.query.history_only === '1';
   const offset = (page - 1) * pageSize;
-  const conditions = ['device_uuid = ?'];
-  const params = [deviceUuid];
+  const { whereClause, params } = 构建身份查询条件(deviceUuid, openid, historyOnly);
 
-  if (historyOnly) {
-    conditions.push(`status IN (${历史记录状态.map(() => '?').join(',')})`);
-    params.push(...历史记录状态);
-  }
-
-  const whereClause = conditions.join(' AND ');
   const total = db.prepare(`SELECT COUNT(*) AS count FROM orders WHERE ${whereClause}`).get(...params).count;
   const orders = db.prepare(`
-    SELECT id, service_type, service_type_label, status, delivery_token, delivery_images, delivery_text, delivered_at, created_at, artwork_name
+    SELECT id, service_type, service_type_label, status, delivery_token, delivery_images, delivery_text, delivered_at, created_at, artwork_name, openid, device_uuid
     FROM orders
     WHERE ${whereClause}
     ORDER BY COALESCE(delivered_at, created_at) DESC
@@ -534,7 +584,8 @@ router.get('/device-orders/:uuid', (req, res) => {
     total,
     page,
     pageSize,
-    hasMore: offset + orders.length < total
+    hasMore: offset + orders.length < total,
+    identityMode: openid ? 'wechat' : 'device'
   });
 });
 

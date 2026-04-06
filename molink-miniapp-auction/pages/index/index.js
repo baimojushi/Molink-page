@@ -230,6 +230,7 @@ Page({
     try {
       await app.wxLogin('', '')
       this.setData({ showLoginOverlay: false })
+      this.loadHistoryCount()
       this.startEntranceIfNeeded()
     } catch (e) {
       wx.showToast({ title: '登录失败，请重试', icon: 'none' })
@@ -266,16 +267,17 @@ Page({
   },
 
   async loadHistoryCount() {
-    const deviceId = app.globalData.deviceId
-    if (!deviceId) return
+  const deviceId = app.globalData.deviceId
+  if (!deviceId) return
 
-    try {
-      const res = await request(`${app.globalData.serverUrl}/api/client/device-orders/${deviceId}?page=1&page_size=1&history_only=1`, 'GET', null)
-      this.setData({ historyCount: res.total || 0 })
-    } catch (e) {
-      this.setData({ historyCount: 0 })
-    }
-  },
+  try {
+    const query = app.buildIdentityQuery({ page: 1, page_size: 1, history_only: 1 })
+    const res = await request(`${app.globalData.serverUrl}/api/client/device-orders/${deviceId}?${query}`, 'GET', null)
+    this.setData({ historyCount: res.total || 0 })
+  } catch (e) {
+    this.setData({ historyCount: 0 })
+  }
+},
 
   goToActiveOrder() {
     const { activeOrder } = this.data

@@ -1,4 +1,3 @@
-// database.js —— 数据库初始化与表结构定义
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
@@ -44,6 +43,16 @@ db.exec(`
 `);
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS user_devices (
+    openid TEXT NOT NULL,
+    device_uuid TEXT NOT NULL,
+    first_seen TEXT DEFAULT (datetime('now','localtime')),
+    last_seen TEXT DEFAULT (datetime('now','localtime')),
+    PRIMARY KEY (openid, device_uuid)
+  );
+`);
+
+db.exec(`
   CREATE TABLE IF NOT EXISTS order_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id TEXT NOT NULL,
@@ -81,7 +90,9 @@ const upgradeFields = [
   'notes TEXT',
   'ai_execution_ids TEXT',
   'ai_result_urls TEXT',
-  'ai_dim_fix_count INTEGER DEFAULT 0'
+  'ai_dim_fix_count INTEGER DEFAULT 0',
+  'subscribe_completion INTEGER DEFAULT 0',
+  'subscribe_template_id TEXT'
 ];
 
 for (const column of upgradeFields) {
@@ -108,7 +119,10 @@ for (const column of orderEventUpgradeFields) {
 
 try {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_device_uuid ON orders(device_uuid)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_openid ON orders(openid)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_user_devices_openid ON user_devices(openid)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_user_devices_device_uuid ON user_devices(device_uuid)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_order_events_order_id ON order_events(order_id)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_order_events_created_at ON order_events(created_at)`);
 } catch (e) {}

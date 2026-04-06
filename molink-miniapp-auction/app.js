@@ -51,7 +51,7 @@ App({
             url: `${this.globalData.serverUrl}/api/client/wx-login`,
             method: 'POST',
             header: { 'Content-Type': 'application/json' },
-            data: { code: loginRes.code, nickname, avatar },
+            data: { code: loginRes.code, nickname, avatar, device_uuid: this.globalData.deviceId },
             success: res => {
               if (res.statusCode === 200 && res.data.openid) {
                 const { openid, nickname: nick, avatar: ava } = res.data
@@ -72,6 +72,17 @@ App({
         fail: reject
       })
     })
+  },
+
+  buildIdentityQuery(extra = {}) {
+    const params = Object.assign({}, extra)
+    if (this.globalData.openid) {
+      params.openid = this.globalData.openid
+    }
+    return Object.keys(params)
+      .filter(key => params[key] !== undefined && params[key] !== null && params[key] !== '')
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(String(params[key]))}`)
+      .join('&')
   },
 
   isLoggedIn() {
