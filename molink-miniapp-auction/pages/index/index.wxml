@@ -1,12 +1,12 @@
 <view class="page-container">
   <view class="login-overlay" wx:if="{{showLoginOverlay}}">
     <view class="login-card glass-card">
-      <text class="login-title">效果图永久保存</text>
-      <text class="login-desc">登录后绑定微信账号，随时查看与下载</text>
+      <text class="login-title">登录后可跨设备查看全部历史订单</text>
+      <text class="login-desc">同一微信号登录后，可查看该微信号及其登录设备上的全部历史订单；不登录则仅查看当前设备订单。</text>
       <button class="btn-primary login-btn" bindtap="doWxLogin" disabled="{{loginLoading}}">
-        {{loginLoading ? '登录中...' : '微信一键登录'}}
+        {{loginLoading ? '登录中...' : '微信登录并绑定'}}
       </button>
-      <text class="login-skip" bindtap="skipLogin">暂不登录</text>
+      <text class="login-skip" bindtap="skipLogin">仅查看当前设备订单</text>
     </view>
   </view>
 
@@ -18,9 +18,9 @@
     </view>
   </view>
 
-  <view class="header">
-    <text class="logo" bindlongpress="onLogoLongPress">Mo:link 墨林设计</text>
-    <text class="tagline">外滩艺博会作品-家居匹配服务</text>
+  <view class="header {{headerIntroDone ? 'intro-done' : ''}}">
+    <text class="logo intro-fade-up" bindlongpress="onLogoLongPress">Mo:link 墨林设计</text>
+    <text class="tagline intro-fade-up">外滩艺博会作品-家居匹配服务</text>
   </view>
 
   <view wx:if="{{activeOrder}}" class="active-order-card pending" bindtap="goToActiveOrder">
@@ -38,7 +38,7 @@
 
   <view class="service-list">
     <view
-      class="service-card glass-card {{selectedService === item.id ? 'selected' : ''}}"
+      class="service-card glass-card {{selectedService === item.id ? 'selected' : ''}} {{cardIntroStep >= index + 1 ? 'card-entered' : 'card-pre-enter'}}"
       wx:for="{{services}}"
       wx:key="id"
       data-id="{{item.id}}"

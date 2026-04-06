@@ -31,12 +31,15 @@
   font-size: 40rpx;
   font-weight: 700;
   color: #3d2b1f;
+  text-align: center;
+  line-height: 1.35;
 }
 
 .login-desc {
   font-size: 28rpx;
   color: #7a6a5a;
   text-align: center;
+  line-height: 1.7;
 }
 
 .login-btn {
@@ -113,6 +116,7 @@
   font-weight: 700;
   color: var(--color-primary-dark);
   letter-spacing: 3rpx;
+  line-height: 1.12;
 }
 
 .tagline {
@@ -120,6 +124,23 @@
   color: var(--color-text-hint);
   margin-top: 12rpx;
   letter-spacing: 1rpx;
+  line-height: 1.45;
+}
+
+.intro-fade-up {
+  opacity: 0;
+  transform: translateY(18rpx);
+  transition: opacity 820ms ease, transform 1180ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.header.intro-done .intro-fade-up {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.header.intro-done .tagline {
+  transition-delay: 140ms;
 }
 
 .section-title {
@@ -142,8 +163,23 @@
   gap: 22rpx;
   padding: 28rpx 28rpx;
   border: 2rpx solid transparent;
-  transition: all 0.25s ease;
   min-height: 148rpx;
+  transition:
+    transform 760ms cubic-bezier(0.2, 0.9, 0.2, 1.06),
+    opacity 320ms ease,
+    border-color 250ms ease,
+    background 250ms ease,
+    box-shadow 250ms ease;
+}
+
+.card-pre-enter {
+  opacity: 0;
+  transform: translateX(92rpx);
+}
+
+.card-entered {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .service-card.selected {
@@ -220,9 +256,8 @@
 }
 
 .animation-stage {
-  margin-top: 26rpx;
-  margin-bottom: 76rpx;
-  min-height: 356rpx;
+  margin: 0;
+  min-height: 430rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,8 +266,8 @@
 
 .animation-stage-inner {
   position: relative;
-  width: 380rpx;
-  height: 380rpx;
+  width: 430rpx;
+  height: 430rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -359,18 +394,19 @@
   .history-entry-text { font-size: 12px; }
   .history-entry-badge { min-width: 18px; height: 18px; font-size: 10px; }
   .header { padding: 22px 0 24px; }
-  .logo { font-size: 28px; letter-spacing: 2px; }
-  .tagline { font-size: 13px; margin-top: 6px; }
+  .logo { font-size: 28px; letter-spacing: 2px; line-height: 1.12; }
+  .tagline { font-size: 13px; margin-top: 6px; line-height: 1.45; }
   .section-title { font-size: 14px; margin-bottom: 12px; }
   .service-list { gap: 10px; }
   .service-card { padding: 14px 16px; gap: 14px; min-height: 80px; }
+  .card-pre-enter { transform: translateX(48px); }
   .service-card-main { gap: 12px; }
   .service-icon { width: 28px; height: 28px; }
   .service-title { font-size: 16px; margin-bottom: 4px; }
   .service-desc { font-size: 12px; }
   .service-check { width: 22px; height: 22px; font-size: 12px; }
-  .animation-stage { margin-top: 14px; margin-bottom: 44px; min-height: 196px; }
-  .animation-stage-inner { width: 214px; height: 214px; }
+  .animation-stage { margin: 0; min-height: 238px; }
+  .animation-stage-inner { width: 246px; height: 246px; }
   .bottom-bar { padding: 14px 24px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
   .active-order-card { padding: 14px 18px; margin-bottom: 16px; }
   .active-order-icon { font-size: 22px; }
