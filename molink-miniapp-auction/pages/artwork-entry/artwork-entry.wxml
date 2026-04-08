@@ -1,0 +1,16 @@
+<view
+  class="entry-page"
+  catchtouchmove="noop"
+  bindtouchstart="onTouchStart"
+  bindtouchmove="onTouchMove"
+  bindtouchend="onTouchEnd"
+>
+  <image class="entry-hero" src="{{heroImage}}" mode="aspectFill" bindload="onHeroLoad" binderror="onHeroError"></image>
+
+  <view class="entry-bottom-fade"></view>
+
+  <view class="entry-gesture" style="transform: translateY(-{{swipeOffset}}rpx);" bindtap="enterUpload">
+    <text class="entry-arrow">》</text>
+    <text class="entry-hint">{{hintText}}</text>
+  </view>
+</view>

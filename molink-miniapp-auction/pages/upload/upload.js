@@ -1,4 +1,5 @@
 const app = getApp()
+const { resolveEntryPreset } = require('../../utils/qr-entry-config')
 
 const SERVICE_LABELS = {
   hang_in_home: '作品挂进家',
@@ -19,10 +20,14 @@ const UPLOAD_CONFIG = {
 }
 
 function normalizeArtwork(serverUrl, artwork) {
-  const images = Array.isArray(artwork.images) ? artwork.images.map(img => {
-    if (!img) return ''
-    return img.startsWith('http') ? img : `${serverUrl}${img.startsWith('/') ? '' : '/'}${img}`
-  }) : []
+  const images = Array.isArray(artwork.images)
+    ? artwork.images.map(img => {
+        if (!img) return ''
+        return img.startsWith('http')
+          ? img
+          : `${serverUrl}${img.startsWith('/') ? '' : '/'}${img}`
+      })
+    : []
 
   return Object.assign({}, artwork, { images })
 }
@@ -37,7 +42,9 @@ function extractCandidates(raw) {
   try {
     const parsed = JSON.parse(text)
     ;['num', 'id', 'artwork_num', 'code', 'qrCode'].forEach(key => {
-      if (parsed && parsed[key]) candidates.push(String(parsed[key]))
+      if (parsed && parsed[key]) {
+        candidates.push(String(parsed[key]))
+      }
     })
   } catch (e) {}
 
@@ -48,10 +55,48 @@ function extractCandidates(raw) {
       if (value) candidates.push(value)
     })
     const pathname = url.pathname.split('/').filter(Boolean)
-    if (pathname.length > 0) candidates.push(pathname[pathname.length - 1])
+    if (pathname.length > 0) {
+      candidates.push(pathname[pathname.length - 1])
+    }
   } catch (e) {}
 
   return [...new Set(candidates.filter(Boolean).map(item => decodeURIComponent(String(item)).trim()))]
+}
+
+function normalizeText(value) {
+  return String(value || '').replace(/[《》()（）·\s-]/g, '').toLowerCase()
+}
+
+function matchPresetArtwork(artworks, preset) {
+  if (!preset || !Array.isArray(artworks) || artworks.length === 0) return null
+
+  const artworkNum = String(preset.artworkNum || '').trim()
+  if (artworkNum) {
+    const exact = artworks.find(item => String(item.num || '').trim() === artworkNum)
+    if (exact) return exact
+  }
+
+  const targetName = normalizeText(preset.artworkName)
+  const targetAuthor = normalizeText(preset.artworkAuthor)
+  const targetVariant = normalizeText(preset.artworkVariant)
+
+  const ranked = artworks
+    .map(item => {
+      const name = normalizeText(item.name)
+      const author = normalizeText(item.author)
+      let score = 0
+
+      if (targetName && name === targetName) score += 4
+      else if (targetName && name.includes(targetName)) score += 3
+
+      if (targetAuthor && author === targetAuthor) score += 2
+      if (targetVariant && name.includes(targetVariant)) score += 2
+
+      return { item, score }
+    })
+    .sort((a, b) => b.score - a.score)
+
+  return ranked[0] && ranked[0].score > 0 ? ranked[0].item : null
 }
 
 Page({
@@ -77,34 +122,48 @@ Page({
     artworkCount: 0,
     scanLoading: false,
     showArtworkPreview: false,
-    artworkPreviewUrl: ''
+    artworkPreviewUrl: '',
+    qrEntryMode: false,
+    qrEntryTip: ''
   },
 
   onLoad(options) {
-    const service = options.service
+    const entryPreset = resolveEntryPreset(options)
+    const service = options.service || entryPreset.service || 'hang_in_home'
     const showArtworkSelect = service === 'hang_in_home'
+
+    this.entryPreset = options.entryKey || options.scene || options.artworkNum ? entryPreset : null
+
     this.setData({
       service,
       serviceLabel: SERVICE_LABELS[service],
       uploadConfig: UPLOAD_CONFIG[service] || [],
       showExtraOptimize: service === 'hang_in_home' || service === 'recommend_work',
       showArtworkSelect,
-      serverUrl: app.globalData.serverUrl
+      serverUrl: app.globalData.serverUrl,
+      qrEntryMode: !!this.entryPreset,
+      qrEntryTip: this.entryPreset ? '已从小程序码自动带入参展作品' : ''
     })
 
     if (showArtworkSelect) {
-      this.loadArtworks()
+      this.loadArtworks().then(() => {
+        if (this.entryPreset) {
+          this.applyEntryPreset(this.entryPreset)
+        }
+      })
     }
   },
 
   async loadArtworks(forceRefresh = false) {
     if (this.data.loadingArtworks) return
+
     if (!forceRefresh && this.data.artworks.length > 0) {
       this.applyArtworkFilter(this.data.artworkSearchKeyword)
       return
     }
 
     this.setData({ loadingArtworks: true })
+
     try {
       const artworks = await new Promise((resolve, reject) => {
         wx.request({
@@ -131,6 +190,21 @@ Page({
     } finally {
       this.setData({ loadingArtworks: false })
     }
+  },
+
+  applyEntryPreset(preset) {
+    const matched = matchPresetArtwork(this.data.artworks, preset)
+    if (!matched) {
+      wx.showToast({ title: '未匹配到指定作品，请手动确认', icon: 'none' })
+      return
+    }
+
+    this.setData({
+      presetArtwork: matched,
+      artworkPanelOpen: false,
+      artworkSearchKeyword: ''
+    })
+    this.applyArtworkFilter('')
   },
 
   applyArtworkFilter(keyword = '') {
@@ -180,11 +254,13 @@ Page({
 
   async scanArtwork() {
     if (this.data.scanLoading) return
+
     if (this.data.artworks.length === 0) {
       await this.loadArtworks()
     }
 
     this.setData({ scanLoading: true })
+
     wx.scanCode({
       success: res => {
         const candidates = extractCandidates(res.result)
@@ -192,9 +268,11 @@ Page({
           const exactPool = [item.num, item.id, item.code, item.qrCode, item.qrcode]
             .filter(Boolean)
             .map(value => String(value).trim().toLowerCase())
+
           if (candidates.some(candidate => exactPool.includes(candidate.toLowerCase()))) {
             return true
           }
+
           return candidates.some(candidate => {
             const normalized = candidate.toLowerCase()
             return [item.num, item.name]
@@ -254,6 +332,7 @@ Page({
   openArtworkPreview(e) {
     const src = e.currentTarget.dataset.src || ''
     if (!src) return
+
     this.setData({
       showArtworkPreview: true,
       artworkPreviewUrl: src
@@ -371,9 +450,9 @@ Page({
             extra_service: this.data.extraOptimize ? '1' : '0',
             artwork_filename: filenames.artwork || '',
             space_filename: filenames.space || '',
-            artwork_size: artwork ? (artwork.size || '') : (this.data.artworkSize || ''),
+            artwork_size: artwork ? artwork.size || '' : this.data.artworkSize || '',
             artwork_num: artwork ? String(artwork.num || '') : '',
-            artwork_name: artwork ? (artwork.name || '') : '',
+            artwork_name: artwork ? artwork.name || '' : '',
             notes: this.data.notes || '',
             openid: app.globalData.openid || '',
             user_nickname: app.globalData.userNickname || '',
@@ -392,13 +471,14 @@ Page({
       wx.setStorageSync('lastOrderId', result.orderId)
       wx.setStorageSync('lastOrderStatus', 'pending')
       app.globalData.currentOrderId = result.orderId
-
-      wx.redirectTo({
-        url: `/pages/waiting/waiting?orderId=${result.orderId}`
-      })
+      wx.redirectTo({ url: `/pages/waiting/waiting?orderId=${result.orderId}` })
     } catch (e) {
       const msg = e && (e.errMsg || e.error || JSON.stringify(e))
-      wx.showModal({ title: '提交失败', content: msg || '未知错误', showCancel: false })
+      wx.showModal({
+        title: '提交失败',
+        content: msg || '未知错误',
+        showCancel: false
+      })
     } finally {
       this.setData({ submitting: false })
     }
