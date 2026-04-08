@@ -31,11 +31,21 @@ Page({
     total: 0,
     orders: [],
     leftColumn: [],
-    rightColumn: []
+    rightColumn: [],
+    showLoginOverlay: false,
+    loginLoading: false
   },
 
   onLoad() {
+    this.setData({ showLoginOverlay: !app.globalData.openid })
     this.refreshHistory()
+  },
+
+  onShow() {
+    if (app.globalData.openid && this.data.showLoginOverlay) {
+      this.setData({ showLoginOverlay: false })
+      this.refreshHistory()
+    }
   },
 
   onPullDownRefresh() {
@@ -44,6 +54,23 @@ Page({
 
   onReachBottom() {
     this.loadHistory()
+  },
+
+  async doWxLogin() {
+    this.setData({ loginLoading: true })
+    try {
+      await app.wxLogin('', '')
+      this.setData({ showLoginOverlay: false })
+      await this.refreshHistory()
+    } catch (e) {
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
+    } finally {
+      this.setData({ loginLoading: false })
+    }
+  },
+
+  skipLogin() {
+    this.setData({ showLoginOverlay: false })
   },
 
   async refreshHistory() {

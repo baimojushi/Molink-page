@@ -36,8 +36,6 @@ Page({
     ],
     selectedService: null,
     activeOrder: null,
-    showLoginOverlay: false,
-    loginLoading: false,
     historyCount: 0,
     animationSlotA: '',
     animationSlotB: '',
@@ -48,19 +46,13 @@ Page({
   },
 
   onLoad() {
-    if (!app.globalData.openid) {
-      this.setData({ showLoginOverlay: true })
-      return
-    }
     this.startEntranceIfNeeded()
   },
 
   onShow() {
     this.checkActiveOrder()
     this.loadHistoryCount()
-    if (!this.data.showLoginOverlay) {
-      this.startEntranceIfNeeded()
-    }
+    this.startEntranceIfNeeded()
   },
 
   onUnload() {
@@ -223,24 +215,6 @@ Page({
       e,
       this.data.activeAnimationSlot === 'A' ? this.data.animationSlotA : this.data.animationSlotB
     )
-  },
-
-  async doWxLogin() {
-    this.setData({ loginLoading: true })
-    try {
-      await app.wxLogin('', '')
-      this.setData({ showLoginOverlay: false })
-      this.startEntranceIfNeeded()
-    } catch (e) {
-      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
-    } finally {
-      this.setData({ loginLoading: false })
-    }
-  },
-
-  skipLogin() {
-    this.setData({ showLoginOverlay: false })
-    this.startEntranceIfNeeded()
   },
 
   async checkActiveOrder() {

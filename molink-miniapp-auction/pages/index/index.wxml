@@ -1,15 +1,4 @@
 <view class="page-container">
-  <view class="login-overlay" wx:if="{{showLoginOverlay}}">
-    <view class="login-card glass-card">
-      <text class="login-title">登录后可跨设备查看全部历史订单</text>
-      <text class="login-desc">同一微信号登录后，可查看该微信号及其登录设备上的全部历史订单；不登录则仅查看当前设备订单。</text>
-      <button class="btn-primary login-btn" bindtap="doWxLogin" disabled="{{loginLoading}}">
-        {{loginLoading ? '登录中...' : '微信登录并绑定'}}
-      </button>
-      <text class="login-skip" bindtap="skipLogin">仅查看当前设备订单</text>
-    </view>
-  </view>
-
   <view class="header-top">
     <view class="header-top-spacer"></view>
     <view class="history-entry touch-chip" bindtap="openHistory" hover-class="touch-chip-hover">
