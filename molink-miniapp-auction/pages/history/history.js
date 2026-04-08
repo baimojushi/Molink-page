@@ -32,18 +32,20 @@ Page({
     orders: [],
     leftColumn: [],
     rightColumn: [],
-    showLoginOverlay: false,
-    loginLoading: false
+    showLoginCard: false,
+    loginLoading: false,
+    dismissedLoginCard: false
   },
 
   onLoad() {
-    this.setData({ showLoginOverlay: !app.globalData.openid })
+    this.syncLoginCard()
     this.refreshHistory()
   },
 
   onShow() {
-    if (app.globalData.openid && this.data.showLoginOverlay) {
-      this.setData({ showLoginOverlay: false })
+    const prev = this.data.showLoginCard
+    this.syncLoginCard()
+    if (prev !== this.data.showLoginCard) {
       this.refreshHistory()
     }
   },
@@ -56,22 +58,14 @@ Page({
     this.loadHistory()
   },
 
-  async doWxLogin() {
-    this.setData({ loginLoading: true })
-    try {
-      await app.wxLogin('', '')
-      this.setData({ showLoginOverlay: false })
-      await this.refreshHistory()
-    } catch (e) {
-      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
-    } finally {
-      this.setData({ loginLoading: false })
-    }
+
+  syncLoginCard() {
+    const loggedIn = !!app.globalData.openid
+    this.setData({
+      showLoginCard: !loggedIn && !this.data.dismissedLoginCard
+    })
   },
 
-  skipLogin() {
-    this.setData({ showLoginOverlay: false })
-  },
 
   async refreshHistory() {
     this.setData({
@@ -133,6 +127,31 @@ Page({
     } finally {
       this.setData({ loading: false })
     }
+  },
+
+
+  async doWxLogin() {
+    if (this.data.loginLoading) return
+    this.setData({ loginLoading: true })
+    try {
+      await app.wxLogin('', '')
+      this.setData({
+        showLoginCard: false,
+        dismissedLoginCard: false
+      })
+      await this.refreshHistory()
+    } catch (e) {
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
+    } finally {
+      this.setData({ loginLoading: false })
+    }
+  },
+
+  skipLoginCard() {
+    this.setData({
+      showLoginCard: false,
+      dismissedLoginCard: true
+    })
   },
 
   trackEvent(orderId, eventType, payload = {}) {
