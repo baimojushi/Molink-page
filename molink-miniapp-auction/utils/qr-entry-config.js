@@ -4,11 +4,19 @@ const ENTRY_PRESETS = {
   'garden-orange': {
     key: 'garden-orange',
     service: 'hang_in_home',
-    artworkNum: '37',
+    artworkNum: '38',
     artworkName: '《花园系列》',
     artworkAuthor: '施歌',
     artworkVariant: '橙色',
     heroImagePath: '/assets/qr-entry/garden-orange-hero.jpg',
+    brandText: 'Mo:link',
+    titleText: '施歌 · 花园系列',
+    subtitleText: '橙色作品 / No. 38',
+    bodyLines: [
+      '上滑后将直接进入',
+      '作品挂进家',
+      '并自动选好当前作品'
+    ],
     hintText: '上滑挂进自己家'
   }
 }
@@ -31,6 +39,13 @@ function normalizeOptionMap(options = {}) {
   return Object.assign({}, sceneMap, options)
 }
 
+function normalizeBodyLines(value, fallback = []) {
+  if (Array.isArray(value) && value.length) return value
+  const text = String(value || '').trim()
+  if (!text) return fallback
+  return text.split('|').map(item => String(item || '').trim()).filter(Boolean)
+}
+
 function resolveEntryPreset(options = {}) {
   const merged = normalizeOptionMap(options)
   const entryKey = merged.entryKey || merged.entry || merged.preset || DEFAULT_ENTRY_KEY
@@ -44,6 +59,10 @@ function resolveEntryPreset(options = {}) {
     artworkVariant: merged.artworkVariant || merged.variant || preset.artworkVariant,
     service: merged.service || preset.service,
     heroImagePath: merged.heroImagePath || merged.heroImage || preset.heroImagePath,
+    brandText: merged.brandText || preset.brandText,
+    titleText: merged.titleText || preset.titleText,
+    subtitleText: merged.subtitleText || preset.subtitleText,
+    bodyLines: normalizeBodyLines(merged.bodyLines || merged.lines, preset.bodyLines),
     hintText: merged.hintText || preset.hintText,
     lockArtwork: String(merged.lockArtwork || '') === '1' || merged.lockArtwork === 1
   })

@@ -1,5 +1,5 @@
 page {
-  background: #000;
+  background: #fff3df;
 }
 
 .entry-page {
@@ -7,7 +7,24 @@ page {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #000;
+  background: #fff3df;
+}
+
+.entry-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #fff3df;
+}
+
+.entry-hero-wrap {
+  position: absolute;
+  top: 13.74%;
+  left: 10%;
+  width: 58.6%;
+  height: 55.39%;
+  z-index: 1;
+  overflow: hidden;
 }
 
 .entry-hero {
@@ -15,41 +32,130 @@ page {
   inset: 0;
   width: 100%;
   height: 100%;
+  display: block;
+  border-radius: 26rpx;
+  box-shadow: 0 8rpx 22rpx rgba(0, 0, 0, 0.10);
 }
 
-.entry-bottom-fade {
+.entry-hero-frost {
+  opacity: 0.16;
+  transform: scale(1.03);
+  filter: blur(10rpx) saturate(82%) brightness(1.02);
+  border-radius: 32rpx;
+}
+
+.entry-hero-glass-tint {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 34vh;
-  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.18) 36%, rgba(255,255,255,0.72) 76%, rgba(255,255,255,0.96) 100%);
+  inset: 0;
+  border-radius: 32rpx;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 38%, rgba(224, 228, 231, 0.14) 100%),
+    linear-gradient(180deg, rgba(208, 210, 214, 0.10) 0%, rgba(208, 210, 214, 0.04) 52%, rgba(255, 255, 255, 0.08) 100%);
+  pointer-events: none;
+}
+
+.entry-hero-glass-sheen {
+  position: absolute;
+  top: -8%;
+  left: -10%;
+  width: 60%;
+  height: 118%;
+  border-radius: 32rpx;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 24%, rgba(255, 255, 255, 0) 72%);
+  transform: rotate(8deg);
+  pointer-events: none;
+}
+
+.entry-brand {
+  position: absolute;
+  top: 28rpx;
+  left: 12rpx;
+  width: 100%;
+  padding-right: 0rpx;
+  box-sizing: border-box;
+  font-size: 64rpx;
+  line-height: 1;
+  font-weight: 200;
+  letter-spacing: 33rpx;
+  text-align: center;
+  color: rgba(92, 77, 56, 0.38);
+  z-index: 2;
+}
+
+.entry-copy-card {
+  position: absolute;
+  top: 59.7%;
+  left: 42%;
+  width: 47%;
+  min-height: 25.3%;
+  box-sizing: border-box;
+  padding: 34rpx 22rpx 30rpx;
+  z-index: 2;
+  border-radius: 34rpx;
+  background: rgba(196, 230, 199, 0.20);
+  box-shadow:
+    2px 4px 7.4px -1px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40),
+    inset 1px 0 0 rgba(255, 255, 255, 0.32),
+    inset 0 -1px 26px rgba(0, 0, 0, 0.06),
+    inset -1px 0 26px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(40px) brightness(100%) saturate(91.2%) hue-rotate(-3.6deg);
+  -webkit-backdrop-filter: blur(40px) brightness(100%) saturate(91.2%) hue-rotate(-3.6deg);
+}
+
+.entry-copy-title {
+  display: block;
+  font-size: 44rpx;
+  line-height: 1.18;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+  color: #373737;
+}
+
+.entry-copy-body {
+  margin-top: 24rpx;
+}
+
+.entry-copy-line {
+  display: block;
+  font-size: 23rpx;
+  line-height: 1.4;
+  font-weight: 300;
+  text-align: right;
+  color: #2b2b2b;
 }
 
 .entry-gesture {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(56rpx + env(safe-area-inset-bottom));
+  left: 50%;
+  bottom: calc(24rpx + env(safe-area-inset-bottom));
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 12rpx;
   transition: transform 180ms ease;
 }
 
 .entry-arrow {
-  font-size: 54rpx;
-  line-height: 1;
-  color: rgba(255,255,255,0.96);
-  transform: rotate(-90deg);
-  text-shadow: 0 10rpx 22rpx rgba(0,0,0,0.16);
+  width: 0;
+  height: 0;
+  border-left: 50rpx solid transparent;
+  border-right: 50rpx solid transparent;
+  border-bottom: 30rpx solid rgba(166, 160, 150, 0.96);
 }
 
 .entry-hint {
-  font-size: 28rpx;
-  letter-spacing: 4rpx;
-  color: rgba(255,255,255,0.98);
-  text-shadow: 0 8rpx 18rpx rgba(0,0,0,0.18);
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.2;
+  font-weight: 300;
+  text-align: center;
+  color: #8a857d;
+}
+
+@supports (padding: max(0px)) {
+  .entry-gesture {
+    bottom: calc(24rpx + env(safe-area-inset-bottom));
+  }
 }

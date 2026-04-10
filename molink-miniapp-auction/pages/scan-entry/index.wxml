@@ -1,0 +1,92 @@
+<view class="page-shell">
+  <view class="next-page-preview" style="{{previewLayerStyle}}">
+    <view class="preview-safe-top"></view>
+
+    <view class="preview-header">
+      <text class="preview-service-tag">作品挂进家</text>
+      <text class="preview-page-title">上传图片</text>
+      <text class="preview-page-copy">请检索或扫码本场展览中的作品</text>
+    </view>
+
+    <view class="preview-select-row glass-panel">
+      <view class="preview-search-wrap">
+        <view class="preview-search-icon"></view>
+        <view class="preview-search-copy">
+          <text class="preview-search-title">作品检索</text>
+          <text class="preview-search-subtitle">点击展开完整作品列表</text>
+        </view>
+      </view>
+
+      <view class="preview-scan-wrap">
+        <view class="preview-scan-corner tl"></view>
+        <view class="preview-scan-corner tr"></view>
+        <view class="preview-scan-corner bl"></view>
+        <view class="preview-scan-corner br"></view>
+      </view>
+    </view>
+
+    <view wx:if="{{heroImage}}" class="preview-artwork glass-panel">
+      <image class="preview-artwork-image" src="{{heroImage}}" mode="aspectFill" show-menu-by-longpress="{{false}}"></image>
+      <view class="preview-artwork-copy">
+        <text class="preview-artwork-tag">已匹配作品</text>
+        <text class="preview-artwork-title">{{artTitle}}</text>
+        <text class="preview-artwork-num">作品编号 {{artworkNum}}</text>
+      </view>
+    </view>
+
+    <view class="preview-placeholder glass-panel"></view>
+    <view class="preview-placeholder glass-panel preview-placeholder-sm"></view>
+
+    <view class="preview-submit-wrap">
+      <view class="preview-submit">提交</view>
+    </view>
+  </view>
+
+  <view
+    class="current-page"
+    style="{{currentLayerStyle}}"
+    bindtouchstart="onTouchStart"
+    bindtouchmove="onTouchMove"
+    bindtouchend="onTouchEnd"
+    bindtouchcancel="onTouchCancel"
+  >
+    <view class="safe-top"></view>
+
+    <view class="hero-stage">
+      <view class="hero-image-shell">
+        <image
+          wx:if="{{heroImage}}"
+          class="hero-image"
+          src="{{heroImage}}"
+          mode="aspectFill"
+          show-menu-by-longpress="{{false}}"
+          lazy-load
+        ></image>
+
+        <view wx:else class="hero-image-fallback">
+          <text class="hero-image-fallback-text">{{loading ? '作品加载中' : '作品图片待更新'}}</text>
+        </view>
+
+        <text class="brand-mask">Mo:link</text>
+      </view>
+
+      <view class="info-card">
+        <view class="info-card-gloss"></view>
+        <text class="art-title">{{artTitle}}</text>
+
+        <view class="copy-list">
+          <text class="copy-line" wx:for="{{artLines}}" wx:key="index">
+            {{item}}
+          </text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{errorText}}" class="error-tip">{{errorText}}</view>
+
+    <view class="swipe-cta" style="{{hintStyle}}" bindtap="goNext">
+      <view class="swipe-arrow"></view>
+      <text class="swipe-text">上滑挂进自己家</text>
+    </view>
+  </view>
+</view>

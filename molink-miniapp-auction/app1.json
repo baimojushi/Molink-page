@@ -1,7 +1,7 @@
 {
   "pages": [
+    "pages/artwork-entry/artwork-entry",
     "pages/index/index",
-    "pages/scan-entry/index",
     "pages/upload/upload",
     "pages/history/history",
     "pages/waiting/waiting",

@@ -1,16 +1,30 @@
 <view
   class="entry-page"
-  catchtouchmove="noop"
-  bindtouchstart="onTouchStart"
-  bindtouchmove="onTouchMove"
-  bindtouchend="onTouchEnd"
+  catchtouchstart="onTouchStart"
+  catchtouchmove="onTouchMove"
+  catchtouchend="onTouchEnd"
+  catchtouchcancel="onTouchEnd"
 >
-  <image class="entry-hero" src="{{heroImage}}" mode="aspectFill" bindload="onHeroLoad" binderror="onHeroError"></image>
+  <view class="entry-stage">
+    <view class="entry-hero-wrap">
+      <image style="width: 441rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx" class="entry-hero" src="{{heroImage}}" mode="scaleToFill" />
+      <view class="entry-hero-glass-tint"></view>
+      <view class="entry-hero-glass-sheen"></view>
+      <text class="entry-brand" style="width: 441rpx; display: block; box-sizing: border-box; left: 12rpx; top: 28rpx; height: 82rpx">Mo:link</text>
+    </view>
 
-  <view class="entry-bottom-fade"></view>
+    <view class="entry-copy-card">
+      <text class="entry-copy-title">{{displayTitle}}</text>
+      <view class="entry-copy-body">
+        <block wx:for="{{descriptionLines}}" wx:key="*this">
+          <text class="entry-copy-line" style="margin-top: {{index === 0 ? 0 : 18}}rpx;">{{item}}</text>
+        </block>
+      </view>
+    </view>
 
-  <view class="entry-gesture" style="transform: translateY(-{{swipeOffset}}rpx);" bindtap="enterUpload">
-    <text class="entry-arrow">》</text>
-    <text class="entry-hint">{{hintText}}</text>
+    <view class="entry-gesture" style="transform: translateX(-50%) translateY(-{{swipeOffset}}px);">
+      <view class="entry-arrow"></view>
+      <text class="entry-hint">{{hintText}}</text>
+    </view>
   </view>
 </view>

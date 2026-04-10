@@ -1,5 +1,4 @@
 const app = getApp()
-const { resolveEntryPreset } = require('../../utils/qr-entry-config')
 
 const SERVICE_LABELS = {
   hang_in_home: '作品挂进家',
@@ -35,6 +34,7 @@ function normalizeArtwork(serverUrl, artwork) {
 function extractCandidates(raw) {
   const text = String(raw || '').trim()
   const candidates = []
+
   if (!text) return candidates
 
   candidates.push(text)
@@ -42,9 +42,7 @@ function extractCandidates(raw) {
   try {
     const parsed = JSON.parse(text)
     ;['num', 'id', 'artwork_num', 'code', 'qrCode'].forEach(key => {
-      if (parsed && parsed[key]) {
-        candidates.push(String(parsed[key]))
-      }
+      if (parsed && parsed[key]) candidates.push(String(parsed[key]))
     })
   } catch (e) {}
 
@@ -54,49 +52,70 @@ function extractCandidates(raw) {
       const value = url.searchParams.get(key)
       if (value) candidates.push(value)
     })
+
     const pathname = url.pathname.split('/').filter(Boolean)
-    if (pathname.length > 0) {
-      candidates.push(pathname[pathname.length - 1])
-    }
+    if (pathname.length > 0) candidates.push(pathname[pathname.length - 1])
   } catch (e) {}
 
   return [...new Set(candidates.filter(Boolean).map(item => decodeURIComponent(String(item)).trim()))]
 }
 
-function normalizeText(value) {
-  return String(value || '').replace(/[《》()（）·\s-]/g, '').toLowerCase()
-}
+function resolveArtworkNumFromOptions(options = {}) {
+  const sceneMap = parseSceneMap(options.scene)
+  const direct = [
+    options.artworkNum,
+    options.artwork_num,
+    sceneMap.artworkNum,
+    sceneMap.artwork_num,
+    sceneMap.num,
+    sceneMap.id
+  ].find(Boolean)
 
-function matchPresetArtwork(artworks, preset) {
-  if (!preset || !Array.isArray(artworks) || artworks.length === 0) return null
+  if (direct) return String(direct).trim()
 
-  const artworkNum = String(preset.artworkNum || '').trim()
-  if (artworkNum) {
-    const exact = artworks.find(item => String(item.num || '').trim() === artworkNum)
-    if (exact) return exact
+  if (options.scene && /^\d+$/.test(String(options.scene))) {
+    return String(options.scene).trim()
   }
 
-  const targetName = normalizeText(preset.artworkName)
-  const targetAuthor = normalizeText(preset.artworkAuthor)
-  const targetVariant = normalizeText(preset.artworkVariant)
+  return ''
+}
 
-  const ranked = artworks
-    .map(item => {
-      const name = normalizeText(item.name)
-      const author = normalizeText(item.author)
-      let score = 0
+function parseSceneMap(scene) {
+  const raw = safeDecode(scene)
+  if (!raw) return {}
 
-      if (targetName && name === targetName) score += 4
-      else if (targetName && name.includes(targetName)) score += 3
+  if (!raw.includes('=') && !raw.includes('&')) {
+    return { artworkNum: raw }
+  }
 
-      if (targetAuthor && author === targetAuthor) score += 2
-      if (targetVariant && name.includes(targetVariant)) score += 2
+  return raw.split('&').reduce((accumulator, pair) => {
+    const [key, value] = pair.split('=')
+    if (key) {
+      accumulator[key] = value ? safeDecode(value) : ''
+    }
+    return accumulator
+  }, {})
+}
 
-      return { item, score }
-    })
-    .sort((a, b) => b.score - a.score)
+function safeDecode(value) {
+  if (!value) return ''
+  try {
+    return decodeURIComponent(value)
+  } catch (error) {
+    return value
+  }
+}
 
-  return ranked[0] && ranked[0].score > 0 ? ranked[0].item : null
+function findArtworkByNum(list, artworkNum) {
+  const target = String(artworkNum || '').trim()
+  if (!target) return null
+
+  return list.find(item => {
+    return [item.num, item.id, item.code, item.qrCode, item.qrcode]
+      .filter(Boolean)
+      .map(value => String(value).trim())
+      .includes(target)
+  }) || null
 }
 
 Page({
@@ -123,16 +142,13 @@ Page({
     scanLoading: false,
     showArtworkPreview: false,
     artworkPreviewUrl: '',
-    qrEntryMode: false,
-    qrEntryTip: ''
+    initialArtworkNum: ''
   },
 
   onLoad(options) {
-    const entryPreset = resolveEntryPreset(options)
-    const service = options.service || entryPreset.service || 'hang_in_home'
+    const service = options.service
     const showArtworkSelect = service === 'hang_in_home'
-
-    this.entryPreset = options.entryKey || options.scene || options.artworkNum ? entryPreset : null
+    const initialArtworkNum = showArtworkSelect ? resolveArtworkNumFromOptions(options) : ''
 
     this.setData({
       service,
@@ -141,15 +157,12 @@ Page({
       showExtraOptimize: service === 'hang_in_home' || service === 'recommend_work',
       showArtworkSelect,
       serverUrl: app.globalData.serverUrl,
-      qrEntryMode: !!this.entryPreset,
-      qrEntryTip: this.entryPreset ? '已从小程序码自动带入参展作品' : ''
+      initialArtworkNum
     })
 
     if (showArtworkSelect) {
       this.loadArtworks().then(() => {
-        if (this.entryPreset) {
-          this.applyEntryPreset(this.entryPreset)
-        }
+        this.applyInitialArtworkPreset(initialArtworkNum)
       })
     }
   },
@@ -159,6 +172,7 @@ Page({
 
     if (!forceRefresh && this.data.artworks.length > 0) {
       this.applyArtworkFilter(this.data.artworkSearchKeyword)
+      this.applyInitialArtworkPreset(this.data.initialArtworkNum)
       return
     }
 
@@ -180,11 +194,14 @@ Page({
       })
 
       const normalized = artworks.map(item => normalizeArtwork(app.globalData.serverUrl, item))
+
       this.setData({
         artworks: normalized,
         artworkCount: normalized.length
       })
+
       this.applyArtworkFilter(this.data.artworkSearchKeyword)
+      this.applyInitialArtworkPreset(this.data.initialArtworkNum, normalized)
     } catch (e) {
       wx.showToast({ title: '作品列表加载失败', icon: 'none' })
     } finally {
@@ -192,11 +209,18 @@ Page({
     }
   },
 
-  applyEntryPreset(preset) {
-    const matched = matchPresetArtwork(this.data.artworks, preset)
-    if (!matched) {
-      wx.showToast({ title: '未匹配到指定作品，请手动确认', icon: 'none' })
-      return
+  applyInitialArtworkPreset(artworkNum, artworkList) {
+    const target = String(artworkNum || '').trim()
+    if (!target) return false
+
+    const matched = findArtworkByNum(artworkList || this.data.artworks, target)
+    if (!matched) return false
+
+    if (
+      this.data.presetArtwork &&
+      String(this.data.presetArtwork.num || '').trim() === String(matched.num || '').trim()
+    ) {
+      return true
     }
 
     this.setData({
@@ -204,17 +228,21 @@ Page({
       artworkPanelOpen: false,
       artworkSearchKeyword: ''
     })
+
     this.applyArtworkFilter('')
+    return true
   },
 
   applyArtworkFilter(keyword = '') {
     const normalizedKeyword = String(keyword || '').trim().toLowerCase()
     const filtered = this.data.artworks.filter(item => {
       if (!normalizedKeyword) return true
+
       const haystack = [item.num, item.id, item.name, item.author, item.medium, item.size]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
+
       return haystack.includes(normalizedKeyword)
     })
 
@@ -243,13 +271,20 @@ Page({
     this.setData({
       presetArtwork: artwork,
       artworkPanelOpen: false,
-      artworkSearchKeyword: ''
+      artworkSearchKeyword: '',
+      initialArtworkNum: artwork && artwork.num ? String(artwork.num) : this.data.initialArtworkNum
     })
     this.applyArtworkFilter('')
   },
 
   clearArtwork() {
-    this.setData({ presetArtwork: null })
+    this.setData({
+      presetArtwork: null,
+      initialArtworkNum: '',
+      artworkSearchKeyword: '',
+      artworkPanelOpen: false
+    })
+    this.applyArtworkFilter('')
   },
 
   async scanArtwork() {
@@ -290,8 +325,10 @@ Page({
         this.setData({
           presetArtwork: matched,
           artworkPanelOpen: false,
-          artworkSearchKeyword: ''
+          artworkSearchKeyword: '',
+          initialArtworkNum: matched.num ? String(matched.num) : this.data.initialArtworkNum
         })
+
         this.applyArtworkFilter('')
       },
       fail: err => {
@@ -306,6 +343,7 @@ Page({
 
   chooseImage(e) {
     const key = e.currentTarget.dataset.key
+
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
@@ -370,9 +408,11 @@ Page({
 
   checkImages() {
     if (this.data.showArtworkSelect && !this.data.presetArtwork) return false
+
     for (const cfg of this.data.uploadConfig) {
       if (!this.data.images[cfg.key]) return false
     }
+
     return true
   },
 
@@ -400,6 +440,7 @@ Page({
       const msg = this.data.showArtworkSelect && !this.data.presetArtwork
         ? '请先选择参展作品'
         : '请上传所需的图片'
+
       wx.showToast({ title: msg, icon: 'none' })
       return
     }
@@ -435,6 +476,7 @@ Page({
             fail: reject
           })
         })
+
         filenames[cfg.key] = filename
       }
 
@@ -450,9 +492,9 @@ Page({
             extra_service: this.data.extraOptimize ? '1' : '0',
             artwork_filename: filenames.artwork || '',
             space_filename: filenames.space || '',
-            artwork_size: artwork ? artwork.size || '' : this.data.artworkSize || '',
+            artwork_size: artwork ? (artwork.size || '') : (this.data.artworkSize || ''),
             artwork_num: artwork ? String(artwork.num || '') : '',
-            artwork_name: artwork ? artwork.name || '' : '',
+            artwork_name: artwork ? (artwork.name || '') : '',
             notes: this.data.notes || '',
             openid: app.globalData.openid || '',
             user_nickname: app.globalData.userNickname || '',
@@ -471,14 +513,13 @@ Page({
       wx.setStorageSync('lastOrderId', result.orderId)
       wx.setStorageSync('lastOrderStatus', 'pending')
       app.globalData.currentOrderId = result.orderId
-      wx.redirectTo({ url: `/pages/waiting/waiting?orderId=${result.orderId}` })
+
+      wx.redirectTo({
+        url: `/pages/waiting/waiting?orderId=${result.orderId}`
+      })
     } catch (e) {
       const msg = e && (e.errMsg || e.error || JSON.stringify(e))
-      wx.showModal({
-        title: '提交失败',
-        content: msg || '未知错误',
-        showCancel: false
-      })
+      wx.showModal({ title: '提交失败', content: msg || '未知错误', showCancel: false })
     } finally {
       this.setData({ submitting: false })
     }
