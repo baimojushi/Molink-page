@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database');
-const etaService = require('../services/eta');
 const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
@@ -49,11 +48,9 @@ const autodl = require('../services/autodl');
 const { parseArtworkSizeToMeters } = require('../services/artworkDimensions');
 const { buildJobFromOrder } = require('../services/hangingJob');
 const { buildOrderProgress } = require('../services/hangingProgressCopy');
+const { parsePaginationQuery } = require('../services/pagination');
 const { buildThinking, resolveUserSupplementRenders, validateWallpaperOptIn, buildSupplementRenderJobsFromOrder } = require('../services/hangingThinking');
 const { getWxMiniappCredentials, describeWxMiniappConfig } = require('../services/wxMiniappConfig');
-const { buildPublicOrderFailure } = require('../services/orderFailurePublic');
-const { buildWallPreferenceState, applyWallPreferenceState } = require('../services/wallPreferencePublic');
-const { parsePaginationQuery } = require('../services/pagination');
 
 const SERVER_BASE_URL = String(process.env.PUBLIC_BASE_URL || process.env.SERVER_BASE_URL || process.env.APP_BASE_URL || 'https://www.molink.art').replace(/\/+$/, '');
 const WX_MEDIA_CHECK_MAX_BYTES = 10 * 1024 * 1024;
@@ -93,8 +90,7 @@ function 映射客户端订单状态(status) {
   if (status === 'content_reviewing') return 'content_reviewing';
   if (status === 人工推荐等待状态) return 'pending';
   if (挂画处理中状态.includes(status)) return 'pending';
-  if (挂画需人工状态.includes(status)) return 'failed';
-  if (status === 'failed') return 'failed';
+  if (挂画需人工状态.includes(status)) return 'pending';
   return status;
 }
 
@@ -235,8 +231,6 @@ function 作品展览响应字段(artwork) {
     exhibition_id: artwork.exhibition_id || '',
     exhibition_name: artwork.exhibition_name || '',
     exhibition_status: artwork.exhibition_status || '',
-    collection_advisor_name: artwork.exhibition_collection_advisor_name || '',
-    collection_advisor_wechat: artwork.exhibition_collection_advisor_wechat || '',
     can_order: artwork.exhibition_status !== 'archived',
     order_disabled_message: artwork.exhibition_status === 'archived' ? '该展览已结束，暂不支持在线下单' : ''
   };
@@ -1913,8 +1907,7 @@ router.get('/device-status/:uuid', (req, res) => {
   // 查找该设备最新一笔未完成或已交付的订单（排除已被用户主动重置的）
   let order = db.prepare(`
     SELECT id, service_type, service_type_label, status, delivery_token, delivery_images, delivery_result_records_json, delivery_text, delivered_at, created_at,
-           content_review_status, content_review_trace_ids_json, content_review_reject_reason,
-           ai_current_step, hanging_status, hanging_exit_code, hanging_failure_context_json, hanging_not_recommended_json,
+           content_review_status, content_review_trace_ids_json,
            primary_wall_rerender_status, primary_wall_rerender_job_id
     FROM orders
     WHERE device_uuid = ?
@@ -1929,8 +1922,7 @@ router.get('/device-status/:uuid', (req, res) => {
   if (检查并处理内容安全审核超时(order)) {
     order = db.prepare(`
       SELECT id, service_type, service_type_label, status, delivery_token, delivery_images, delivery_result_records_json, delivery_text, delivered_at, created_at,
-             content_review_status, content_review_trace_ids_json, content_review_reject_reason,
-             ai_current_step, hanging_status, hanging_exit_code, hanging_failure_context_json, hanging_not_recommended_json,
+             content_review_status, content_review_trace_ids_json,
              primary_wall_rerender_status, primary_wall_rerender_job_id
       FROM orders WHERE id = ?
     `).get(order.id);
@@ -1946,18 +1938,6 @@ router.get('/device-status/:uuid', (req, res) => {
       serviceType: order.service_type || '',
       serviceTypeLabel: order.service_type_label,
       deliveryToken: order.delivery_token
-    });
-  }
-
-  if (clientStatus === 'failed') {
-    return res.json({
-      hasActiveOrder: true,
-      status: 'failed',
-      orderId: order.id,
-      serviceType: order.service_type || '',
-      serviceTypeLabel: order.service_type_label,
-      deliveryToken: order.delivery_token,
-      failure: buildPublicOrderFailure(order)
     });
   }
 
@@ -1989,20 +1969,14 @@ router.get('/device-status/:uuid', (req, res) => {
 // ==========================================
 router.get('/order-status/:orderId', (req, res) => {
   const readOrder = () => db.prepare(`
-    SELECT o.id, o.status, o.delivery_token, o.delivery_images, o.delivery_result_records_json, o.delivery_text, o.delivered_at, o.created_at,
-           o.service_type, o.service_type_label, o.artwork_name, o.exhibition_id,
-           o.content_review_status, o.content_review_trace_ids_json, o.content_review_reject_reason, o.content_review_rejected_at,
-           o.ai_current_step, o.ai_progress_pct, o.ai_advisor_progress,
-           o.hanging_status, o.hanging_job_id, o.hanging_exit_code, o.hanging_failure_context_json, o.hanging_not_recommended_json, o.ai_engine,
-           o.hanging_candidate_records_json,
-           o.primary_wall_rerender_status, o.primary_wall_rerender_job_id,
-           e.name AS exhibition_name,
-           e.status AS exhibition_status,
-           e.collection_advisor_name,
-           e.collection_advisor_wechat
-    FROM orders o
-    LEFT JOIN exhibitions e ON e.id = o.exhibition_id
-    WHERE o.id = ?
+    SELECT id, status, delivery_images, delivery_result_records_json, delivery_text, delivered_at, created_at,
+           service_type, service_type_label, artwork_name,
+           content_review_status, content_review_trace_ids_json, content_review_reject_reason, content_review_rejected_at,
+           ai_current_step, ai_progress_pct, ai_advisor_progress,
+           hanging_status, hanging_job_id, hanging_exit_code, ai_engine,
+           hanging_candidate_records_json,
+           primary_wall_rerender_status, primary_wall_rerender_job_id
+    FROM orders WHERE id = ?
   `).get(req.params.orderId);
 
   let order = readOrder();
@@ -2029,22 +2003,8 @@ router.get('/order-status/:orderId', (req, res) => {
   const out = {
     status: clientStatus,
     rawStatus: order.status,
-    orderId: order.id,
-    deliveryToken: order.delivery_token || '',
     serviceType: order.service_type || '',
     serviceTypeLabel: order.service_type_label,
-    exhibition_id: order.exhibition_id || '',
-    exhibition_name: order.exhibition_name || '',
-    exhibition_status: order.exhibition_status || '',
-    collection_advisor_name: order.collection_advisor_name || '',
-    collection_advisor_wechat: order.collection_advisor_wechat || '',
-    exhibition: {
-      id: order.exhibition_id || '',
-      name: order.exhibition_name || '',
-      status: order.exhibition_status || '',
-      collection_advisor_name: order.collection_advisor_name || '',
-      collection_advisor_wechat: order.collection_advisor_wechat || ''
-    },
     currentStep: progress.message || '',
     progress: {
       pct: progress.pct ?? null,
@@ -2073,12 +2033,8 @@ router.get('/order-status/:orderId', (req, res) => {
     auditRejectReason: order.content_review_reject_reason || '',
     auditRejectedAt: order.content_review_rejected_at || '',
     auditTimeout: order.status === 'audit_timeout',
-    auditTimeoutReason: order.status === 'audit_timeout' ? (order.content_review_reject_reason || order.ai_current_step || '') : '',
-    failure: buildPublicOrderFailure(order)
+    auditTimeoutReason: order.status === 'audit_timeout' ? (order.content_review_reject_reason || order.ai_current_step || '') : ''
   };
-
-  const eta = etaService.getClientSnapshot(order.hanging_job_id || '', Date.now());
-  if (eta) out.eta = eta;
 
   if (历史记录状态.includes(clientStatus)) {
     out.images = 解析交付图片(order);
@@ -2119,8 +2075,7 @@ router.get('/hanging-thinking/:orderId', (req, res) => {
   if (!order) return res.status(404).json({ error: '订单不存在' });
   const thinking = buildThinking(order);
   if (!thinking) return res.json({ ok: true, ready: false, thinking: null });
-  const preferenceState = buildWallPreferenceState(db, order);
-  res.json({ ok: true, ready: true, thinking: applyWallPreferenceState(thinking, preferenceState) });
+  res.json({ ok: true, ready: true, thinking });
 });
 
 // ==========================================
@@ -2186,15 +2141,14 @@ router.post('/wall-preferences', express.json(), (req, res) => {
     const tone = wallpaperToneByWall[wallId] || null;
     const supplementRequestKey = `${orderId}:${wallId}:wallpaper=${wallpaperEnabled ? tone.join(',') : 'off'}:soft=${order.service_type !== 'recommend_space' && !!order.extra_service ? 'on' : 'off'}`;
     const existing = db.prepare(`
-      SELECT supplement_job_id, supplement_status, supplement_error_code FROM user_wall_preferences
+      SELECT supplement_job_id FROM user_wall_preferences
       WHERE order_id = ? AND supplement_request_key = ? AND supplement_job_id != ''
       ORDER BY created_at DESC, rowid DESC LIMIT 1
     `).get(orderId, supplementRequestKey);
-    const existingFailed = existing && String(existing.supplement_status || '').toLowerCase() === 'failed';
     const failedCurrentPrimaryJob = wallId === String(thinking.primary_wall_id || '') &&
       existing && existing.supplement_job_id === order.primary_wall_rerender_job_id &&
       order.primary_wall_rerender_status === 'failed';
-    if (existing && existing.supplement_job_id && !existingFailed && !failedCurrentPrimaryJob) {
+    if (existing && existing.supplement_job_id && !failedCurrentPrimaryJob) {
       supplementJobsByWall[wallId] = { job_id: existing.supplement_job_id, request_key: supplementRequestKey };
       continue;
     }
@@ -2213,9 +2167,8 @@ router.post('/wall-preferences', express.json(), (req, res) => {
   const insert = db.prepare(`
     INSERT INTO user_wall_preferences (
       id, order_id, chosen_wall_id, chosen_feature_vector_json, rejected_feature_vectors_json,
-      rank_at_choice, wallpaper_opt_in, wallpaper_tone_rgb, supplement_request_key, supplement_job_id,
-      supplement_status, supplement_error_code
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      rank_at_choice, wallpaper_opt_in, wallpaper_tone_rgb, supplement_request_key, supplement_job_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const primaryJobToEnqueue = jobsToEnqueue.find(job => job.primary_wall_rerender === true) || null;
   const primaryWallId = String(thinking.primary_wall_id || '');
@@ -2239,9 +2192,7 @@ router.post('/wall-preferences', express.json(), (req, res) => {
         wallpaperOptIn[wallId] ? 1 : 0,
         wallpaperOptIn[wallId] ? JSON.stringify(wallpaperToneByWall[wallId]) : null,
         supplement.request_key || '',
-        supplement.job_id || '',
-        supplement.job_id ? 'pending' : 'selected',
-        ''
+        supplement.job_id || ''
       );
     });
     if (primaryJobToEnqueue) {
@@ -2286,11 +2237,7 @@ router.post('/wall-preferences', express.json(), (req, res) => {
     primary_wall_rerender_status: primaryJobToEnqueue
       ? 'pending'
       : (primaryRerenderJobId ? (order.primary_wall_rerender_status || 'idle') : 'idle'),
-    artifact_ready: Boolean(order.hanging_result_zip_url),
-    supplement_status_by_wall: Object.fromEntries(normalizedSelected.map(wallId => [
-      wallId,
-      supplementJobsByWall[wallId] && supplementJobsByWall[wallId].job_id ? 'pending' : 'selected'
-    ]))
+    artifact_ready: Boolean(order.hanging_result_zip_url)
   });
 });
 
@@ -2474,29 +2421,8 @@ router.get('/exhibitions', (req, res) => {
 });
 
 router.post('/exhibitions/locate', express.json(), (req, res) => {
-  const body = req.body || {};
-  const demoId = String(body.demo_exhibition_id || '').trim();
-  if (demoId) {
-    const exhibition = getExhibitionById(demoId, { includeCounts: false });
-    if (!exhibition || exhibition.status !== 'live') return res.status(404).json({ error: '演示展览不存在' });
-    return res.json({ enabled: true, demo: true, exhibition, distance_m: 0 });
-  }
-  const lat = Number(body.lat);
-  const lng = Number(body.lng);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return res.status(400).json({ error: '缺少有效坐标' });
-  const radians = value => value * Math.PI / 180;
-  const distance = item => {
-    const dLat = radians(Number(item.geo_lat) - lat);
-    const dLng = radians(Number(item.geo_lng) - lng);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(lat)) * Math.cos(radians(Number(item.geo_lat))) * Math.sin(dLng / 2) ** 2;
-    return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  };
-  const matches = listExhibitions({ status: 'live', includeCounts: false })
-    .filter(item => Number.isFinite(Number(item.geo_lat)) && Number.isFinite(Number(item.geo_lng)))
-    .map(item => ({ exhibition: item, distance_m: Math.round(distance(item)) }))
-    .filter(item => item.distance_m <= Math.max(1, Number(item.exhibition.geo_radius_m) || 400))
-    .sort((a, b) => a.distance_m - b.distance_m);
-  res.json({ enabled: true, exhibition: matches[0] ? matches[0].exhibition : null, distance_m: matches[0] ? matches[0].distance_m : null });
+  // TODO(geo-entry): 微信地理位置接口资质到位后，按 geo_lat/geo_lng/geo_radius_m 计算围栏命中。
+  res.json({ enabled: false, exhibition: null });
 });
 
 router.get('/artworks', (req, res) => {
