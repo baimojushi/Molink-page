@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mo:link · LLM 槽位调试</title>
+  <style>
+    :root { --bg:#f7f3ee; --card:#fffaf4; --text:#2d2924; --muted:#82776b; --line:#e8ded2; --green:#7a9e7e; --green-2:#66896a; --fixed:#9b8370; --free:#7a9e7e; --danger:#b65f4b; --blue:#687f9f; --amber:#b8893d; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    header { padding:24px 32px; background:#5f4d3f; color:white; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    h1 { margin:0; font-size:22px; }
+    h3 { margin-bottom:10px; }
+    nav { display:flex; gap:10px; flex-wrap:wrap; }
+    nav a { color:white; text-decoration:none; background:rgba(255,255,255,.14); padding:8px 12px; border-radius:999px; font-size:13px; }
+    nav a.active { background:rgba(255,255,255,.28); }
+    main { padding:24px; display:grid; grid-template-columns:340px 1fr; gap:18px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 12px 32px rgba(80,67,55,.07); }
+    label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    input, select, textarea { width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:white; color:var(--text); font:inherit; }
+    textarea { min-height:88px; resize:vertical; line-height:1.55; }
+    textarea.prompt-target { min-height:150px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; font-size:12px; }
+    textarea.prompt-target.drop-active { outline:2px solid var(--green); background:#fbfff8; }
+    button { border:0; border-radius:999px; padding:10px 15px; background:var(--green); color:white; cursor:pointer; font-weight:600; }
+    button.secondary { background:#efe6db; color:#5f4d3f; }
+    button.danger { background:#f5ddd6; color:#8f3f30; }
+    button.small { padding:6px 10px; font-size:12px; }
+    .row { display:flex; gap:10px; align-items:flex-end; margin-bottom:12px; }
+    .row > * { flex:1; }
+    .orders { max-height:520px; overflow:auto; display:flex; flex-direction:column; gap:8px; }
+    .order { border:1px solid var(--line); background:white; border-radius:14px; padding:11px; cursor:pointer; }
+    .order.active { outline:2px solid var(--green); }
+    .order strong { display:block; font-size:13px; }
+    .order span { display:block; font-size:12px; color:var(--muted); margin-top:4px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .slot-list { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 16px; }
+    .slot-pill { border:1px solid var(--line); background:white; color:var(--text); border-radius:999px; padding:7px 10px; cursor:pointer; font-size:13px; }
+    .slot-pill.active { background:var(--green); color:white; border-color:var(--green); }
+    .run { border:1px solid var(--line); background:white; border-radius:14px; padding:12px; margin-bottom:10px; }
+    .run .meta { font-size:12px; color:var(--muted); margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap; }
+    .run .text { line-height:1.7; white-space:pre-wrap; padding:8px 0; }
+    .fixed { border-left:4px solid var(--fixed); }
+    .free { border-left:4px solid var(--free); }
+    .override { border-left:4px solid var(--danger); }
+    .hint { color:var(--muted); font-size:12px; line-height:1.6; }
+    .counts { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .metric { background:white; border:1px solid var(--line); border-radius:12px; padding:10px; min-width:110px; }
+    .metric strong { display:block; font-size:20px; }
+    details { margin-top:10px; border-top:1px solid var(--line); padding-top:10px; }
+    summary { cursor:pointer; color:#5f4d3f; font-weight:700; font-size:13px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#fbf7f1; border:1px solid var(--line); border-radius:12px; padding:10px; max-height:280px; overflow:auto; font-size:12px; line-height:1.5; }
+    .tag { display:inline-flex; align-items:center; margin:2px 4px 2px 0; padding:3px 8px; border-radius:999px; background:#efe6db; color:#5f4d3f; font-size:12px; }
+    .tag.warn { background:#f5ddd6; color:#8f3f30; }
+    .subgrid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+    .manager { border:1px solid var(--line); background:#fffdf8; border-radius:16px; padding:14px; margin:12px 0 18px; }
+    .field-toolbar { display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:end; margin-bottom:10px; }
+    .field-palette { position:sticky; top:0; z-index:5; border:1px solid var(--line); background:#fffaf4; border-radius:14px; padding:10px; max-height:300px; overflow:auto; }
+    .field-groups { display:flex; flex-direction:column; gap:12px; }
+    .field-phase { border:1px solid #eadfd3; background:#fffdf8; border-radius:14px; padding:10px; }
+    .field-phase-title { font-size:13px; color:#5f4d3f; font-weight:800; margin:0 0 8px; display:flex; justify-content:space-between; gap:10px; }
+    .field-phase-title small { color:var(--muted); font-weight:500; }
+    .field-type-block { margin-top:8px; }
+    .field-type-title { font-size:12px; color:var(--muted); margin:4px 0; font-weight:700; }
+    .field-chip { display:inline-flex; align-items:center; gap:7px; border:1px solid #dbcdbf; background:white; color:#5f4d3f; border-radius:999px; padding:5px 7px 5px 10px; margin:3px; font-size:12px; cursor:grab; user-select:none; max-width:100%; vertical-align:middle; }
+    .field-chip:hover { border-color:var(--green); box-shadow:0 2px 8px rgba(122,158,126,.18); transform:translateY(-1px); }
+    .field-chip .field-cn { font-weight:700; white-space:nowrap; }
+    .field-chip .field-path { font-size:11px; color:#78695d; background:#fbf7f1; border-radius:999px; padding:1px 6px; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .field-chip .x { border:0; background:#efe6db; color:#8a7665; border-radius:50%; width:18px; height:18px; padding:0; line-height:18px; font-weight:700; cursor:pointer; }
+    .field-chip.dynamic { border-style:dashed; }
+    .field-chip.used { background:#f5fbf4; border-color:#c7dfca; }
+    .field-sample { display:block; color:var(--muted); font-size:11px; margin-top:3px; max-width:360px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .used-field-panel { margin-top:10px; border:1px dashed #dccdbf; background:#fffdf8; border-radius:12px; padding:10px; }
+    .used-field-panel-title { color:#5f4d3f; font-weight:800; font-size:12px; margin-bottom:6px; }
+    .run.selected { outline:2px solid var(--green); background:#fbfff8; }
+    .field-chip.hidden { display:none; }
+    .focus-indicator { font-size:12px; color:var(--muted); margin:6px 0 0; }
+    .prompt-tools { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:8px 0; }
+    .validation { border:1px solid var(--line); border-radius:12px; background:#fbf7f1; padding:10px; font-size:12px; line-height:1.5; margin-top:10px; }
+    .validation.ok { border-color:#c7dfca; background:#f5fbf4; }
+    .validation.warn { border-color:#e8c7bc; background:#fff6f1; }
+    .config-list { max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:12px; background:white; padding:8px; }
+    .config-item { display:flex; justify-content:space-between; gap:8px; align-items:center; border-bottom:1px solid #f0e7dd; padding:8px 0; font-size:12px; }
+    .config-item:last-child { border-bottom:0; }
+    .badge { display:inline-flex; align-items:center; border-radius:999px; padding:2px 7px; font-size:11px; background:#efe6db; color:#5f4d3f; }
+    .badge.active { background:#e1f0df; color:#527553; }
+    .badge.gray { background:#edf0f7; color:#536987; }
+    .used-fields { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+    .full-width { grid-column:1 / -1; }
+    .template-help { background:#fbf7f1; border:1px dashed #dccdbf; border-radius:12px; padding:10px; color:var(--muted); font-size:12px; line-height:1.6; margin:8px 0; }
+    @media(max-width:900px){ main{grid-template-columns:1fr;} .grid{grid-template-columns:1fr;} .subgrid{grid-template-columns:1fr 1fr;} .field-toolbar{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mo:link LLM 槽位调试</h1>
+    <nav>
+      <a id="ordersLink" href="/admin">订单管理</a>
+      <a id="analyticsLink" href="/admin/analytics">数据看板</a>
+      <a id="artworksLink" href="/admin/artworks">作品库</a>
+      <a class="active" id="llmDebugLink" href="/admin/llm-debug">LLM Prompt调试</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="row"><div><label>管理密钥</label><input id="secret" type="password" placeholder="ADMIN_SECRET"></div></div>
+      <div class="row"><div><label>搜索订单</label><input id="q" placeholder="订单号 / 作品名"></div><button class="secondary" onclick="loadOrders()">搜索</button></div>
+      <div class="orders" id="orders"></div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+      <button class="secondary" onclick="loadDatasetSnapshot()">刷新数据资产概览</button>
+      <div class="counts" id="counts"></div>
+      <p class="hint">人工管理建议：先选择订单和槽位，再用字段标签插入 Prompt；保存为新版本后，重跑当前槽位观察 ChatML、lint 和输出变化。</p>
+    </section>
+
+    <section class="card">
+      <h2 id="title" style="margin-top:0">请选择一个挂画订单</h2>
+      <div class="slot-list" id="slots"></div>
+
+      <section class="manager">
+        <h3 style="margin-top:0">字段标签库与 Prompt 配置</h3>
+        <div class="field-toolbar">
+          <div><label>筛选字段</label><input id="fieldSearch" placeholder="搜索字段名、路径或说明，例如 高度 / previous / light"></div>
+          <button class="secondary" onclick="restoreHiddenFields()">恢复隐藏标签</button>
+          <button class="secondary" onclick="copyUsedFields()">复制已用字段</button>
+        </div>
+        <div class="field-palette" id="fieldPalette"></div>
+        <p class="focus-indicator" id="focusIndicator">字段按“产出阶段 → 字段类型”排序；早产出的字段在前，越靠后的字段越依赖 GPU/Hanging/Render 或前序槽位输出。点击或拖动标签会插入当前聚焦的 Prompt 输入框。</p>
+
+        <div class="grid" style="margin-top:14px">
+          <div>
+            <div class="row">
+              <div><label>Task</label><select id="configTask"><option>delivery_main</option><option>waiting_progress</option><option>install_guide</option></select></div>
+              <div><label>Slot</label><select id="configSlot"></select></div>
+            </div>
+            <div class="row">
+              <div><label>Mode</label><select id="configMode"><option value="llm_free">llm_free 自由生成</option><option value="fixed_polish">fixed_polish 固定润色</option></select></div>
+              <div><label>gray_ratio</label><input id="configGray" type="number" min="0" max="1" step="0.01" value="1"></div>
+            </div>
+            <div><label>version_label</label><input id="configVersion" placeholder="例如 waiting_s3_no_repeat_v2"></div>
+            <div class="prompt-tools"><button onclick="saveSlotConfig()">保存为新槽位版本</button><button class="secondary" onclick="runSlot()">用当前配置重跑</button><button class="secondary" onclick="fillRecommendedUserTemplate()">填入推荐 User JSON 模板</button><button class="secondary" onclick="formatUserPromptTemplate()">格式化 User JSON</button></div>
+            <div class="validation" id="promptValidation">还没有校验 Prompt 字段。</div>
+          </div>
+          <div>
+            <label>历史版本 / 回滚</label>
+            <div class="config-list" id="configList"><p class="hint">加载中…</p></div>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px">
+          <div>
+            <label>System Prompt（写身份、边界、禁区；不要堆业务事实）</label>
+            <textarea id="systemPromptEditor" class="prompt-target" placeholder="定义顾问语气、禁用表达、槽位职责。字段标签可少量用于动态边界。"></textarea>
+          </div>
+          <div>
+            <label>fixed_seed_text / 槽位种子文案（只作为写作底稿，不等于 User JSON）</label>
+            <textarea id="seedTextEditor" class="prompt-target" placeholder="fixed_polish 模式下可写固定底稿；建议在 User JSON 中通过 writing_seed 引用它。"></textarea>
+          </div>
+          <div class="full-width">
+            <label>User Prompt JSON 模板（真实发给模型的 user 消息；字段标签主要应拖到这里）</label>
+            <textarea id="userPromptTemplateEditor" class="prompt-target" style="min-height:260px" placeholder="这里应是 JSON 模板，例如 {\n  \"slot\": \"{{slot}}\",\n  \"facts_for_this_slot\": { \"position\": \"{{allowed_facts.best_plan.wall_position_zh}}\" }\n}"></textarea>
+            <div class="template-help">点击某条真实生成记录后，这里会载入该次实际发送给 LLM 的 User Prompt，并尽量把已使用字段还原为 {{字段路径}} 标签。字段当前不产出时会渲染为空值，字段键名仍保留，便于保存成跨订单通用的 prompt 格式。</div>
+            <div class="used-field-panel">
+              <div class="used-field-panel-title">当前 Prompt 已使用字段（可拖动复用，点 × 从编辑区移除）</div>
+              <div id="usedFieldChips" class="used-fields"><span class="tag">尚未使用字段标签</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid">
+        <div>
+          <h3>槽位重跑</h3>
+          <div class="row">
+            <div><label>Task</label><select id="task"><option>delivery_main</option><option>waiting_progress</option><option>install_guide</option></select></div>
+            <div><label>Slot</label><select id="slot"></select></div>
+          </div>
+          <button onclick="runSlot()">重跑当前槽位</button>
+          <div class="run" id="latestRun" style="display:none;margin-top:12px"></div>
+
+          <h3>订单级固定直出覆盖</h3>
+          <textarea id="overrideText" class="prompt-target" placeholder="某单某槽位需要钉死输出时写在这里；可拖入字段标签后手动改写"></textarea>
+          <div class="row"><input id="overrideReason" placeholder="覆盖原因"><button class="secondary" onclick="saveOverride()">保存覆盖</button></div>
+        </div>
+        <div>
+          <h3>人工标注</h3>
+          <input id="runId" placeholder="run_id，可点下方 run 自动填入">
+          <div class="subgrid">
+            <input id="scoreTone" type="number" min="1" max="5" placeholder="语气">
+            <input id="scoreConsultant" type="number" min="1" max="5" placeholder="呈现非裁决">
+            <input id="scoreNoFabrication" type="number" min="1" max="5" placeholder="不编造">
+            <input id="scoreNumbers" type="number" min="1" max="5" placeholder="数字口径">
+            <input id="scoreRefusal" type="number" min="1" max="5" placeholder="拒绝措辞">
+            <input id="scoreSpaceFacts" type="number" min="1" max="5" placeholder="空间特征命中">
+          </div>
+          <textarea id="comment" placeholder="标注备注" style="margin-top:10px"></textarea>
+          <button onclick="annotateRun()">保存人工标注</button>
+
+          <h3>偏好对</h3>
+          <div class="row"><input id="chosenRun" placeholder="chosen_run_id"><input id="rejectedRun" placeholder="rejected_run_id"></div>
+          <button class="secondary" onclick="savePreference()">保存 DPO 偏好对</button>
+        </div>
+      </div>
+      <h3>Runs</h3>
+      <div id="runs"></div>
+    </section>
+  </main>
+
+<script src="/admin-exhibition-scope.js"></script>
+  <script>
+  const qs = new URLSearchParams(location.search);
+  const presetSecret = qs.get('secret') || localStorage.getItem('molink_admin_secret') || localStorage.getItem('adminSecret') || '';
+  const hiddenFieldKey = 'molink_llm_hidden_field_tags_v1';
+  let currentOrderId = '';
+  let currentOrder = null;
+  let currentRuns = [];
+  let slotDefs = [];
+  let slotConfigs = [];
+  let fieldCatalog = [];
+  let annotationsByRun = new Map();
+  let currentAvailableFields = null;
+  let focusedPromptTarget = null;
+  let hiddenFields = new Set(JSON.parse(localStorage.getItem(hiddenFieldKey) || '[]'));
+
+  document.getElementById('secret').value = presetSecret;
+  function secret(){ const v=document.getElementById('secret').value.trim(); localStorage.setItem('molink_admin_secret', v); localStorage.setItem('adminSecret', v); return v; }
+  function headers(){ return { 'x-admin-secret': secret(), 'content-type':'application/json' }; }
+  function withSecret(url){ const s=secret(); return s ? `${url}?secret=${encodeURIComponent(s)}` : url; }
+  function syncLinks(){ document.getElementById('ordersLink').href=withSecret('/admin'); document.getElementById('analyticsLink').href=withSecret('/admin/analytics'); document.getElementById('artworksLink').href=withSecret('/admin/artworks'); document.getElementById('llmDebugLink').href=withSecret('/admin/llm-debug'); }
+  async function api(url, opts={}){ syncLinks(); const r=await fetch(url, Object.assign({headers:headers()}, opts)); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||`HTTP ${r.status}`); return j; }
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function escapeAttr(s){ return escapeHtml(s).replace(/`/g,'&#96;'); }
+  function pretty(value){ try { return JSON.stringify(typeof value === 'string' ? JSON.parse(value || '{}') : (value || {}), null, 2); } catch(e){ return String(value || ''); } }
+  function token(path){ return `{{${path}}}`; }
+  function slotModeClass(run){ const mode=run.mode || (run.fixed_source_id ? 'fixed_polish' : 'llm_free'); if(mode==='override') return 'override'; return mode==='fixed_polish' ? 'fixed' : 'free'; }
+  function lintTagsFor(run){ const anns=annotationsByRun.get(run.id)||[]; const auto=anns.find(a=>a.annotator_type==='auto_lint') || anns.find(a=>Array.isArray(a.violation_tags)&&a.violation_tags.length); return auto && Array.isArray(auto.violation_tags) ? auto.violation_tags : []; }
+
+  function renderRun(run, compact=false){
+    const tags=lintTagsFor(run);
+    const mode=run.mode || (run.fixed_source_id ? 'fixed_polish' : 'llm_free');
+    const gray=run.gray_ratio==null?'':`灰度 ${Number(run.gray_ratio).toFixed(2)} / bucket ${run.gray_bucket==null?'—':Number(run.gray_bucket).toFixed(4)} / ${run.gray_applied ? '命中' : '未命中'}`;
+    const selectedPaths = getRunSelectedPaths(run);
+    const selected = selectedPaths.length ? `<div class="used-fields">${selectedPaths.map(p=>fieldChipHtml(describeField(p), {used:true, removeTitle:'从当前 Prompt 移除这个字段'})).join('')}</div>` : '';
+    return `<div class="run ${slotModeClass(run)}" data-run-id="${escapeAttr(run.id)}" onclick="selectRun('${escapeAttr(run.id)}')"><div class="meta"><span>${escapeHtml(run.id)}</span><span>${escapeHtml(run.task)}/${escapeHtml(run.slot)}</span><span>${escapeHtml(run.source)}</span><span>${escapeHtml(mode)}</span><span>${escapeHtml(run.model||'fallback')}</span><span>${escapeHtml(run.prompt_version||'')}</span><span>${escapeHtml(gray)}</span><span>${escapeHtml(run.created_at||'')}</span></div><div class="text">${escapeHtml(run.output_text||'')}</div><div>${tags.length?tags.map(t=>`<span class="tag warn">${escapeHtml(t)}</span>`).join(''):'<span class="tag">auto lint passed</span>'}</div>${selected}${compact?'':`<details><summary>查看 ChatML / Input / Lint / Metadata</summary><h4>System Prompt</h4><pre>${escapeHtml(run.system_prompt||'')}</pre><h4>User Prompt</h4><pre>${escapeHtml(run.user_prompt||'')}</pre><h4>Input Fields JSON</h4><pre>${escapeHtml(pretty(run.input_fields || run.input_fields_json))}</pre><h4>Run Metadata</h4><pre>${escapeHtml(pretty({id:run.id, task:run.task, slot:run.slot, source:run.source, mode, fixed_source_id:run.fixed_source_id, slot_config_id:run.slot_config_id, gray_ratio:run.gray_ratio, gray_bucket:run.gray_bucket, gray_applied:run.gray_applied, latency_ms:run.latency_ms, error_text:run.error_text}))}</pre></details>`}</div>`;
+  }
+
+  async function loadFieldCatalog(){
+    try { const data = await api('/api/admin/llm-debug/field-catalog'); fieldCatalog = data.fields || []; }
+    catch(e) { console.warn('field catalog unavailable', e); fieldCatalog = []; }
+    renderFieldPalette();
+  }
+  async function loadSlots(){ const data=await api('/api/admin/llm-debug/slots'); slotDefs=data.slots||[]; renderSlotOptions(); }
+  async function loadSlotConfigs(){ const data=await api('/api/admin/llm-debug/slot-configs'); slotConfigs=data.configs||[]; renderConfigList(); loadActiveConfigToEditor(); }
+
+  function renderSlotOptions(){
+    const options = slotDefs.map(s=>`<option value="${escapeAttr(s.slot)}">${escapeHtml(s.slot)} ${escapeHtml(s.name)}</option>`).join('');
+    document.getElementById('slot').innerHTML=options;
+    document.getElementById('configSlot').innerHTML=options;
+    document.getElementById('slots').innerHTML=slotDefs.map(s=>`<button class="slot-pill" data-slot="${escapeAttr(s.slot)}">${escapeHtml(s.slot)} ${escapeHtml(s.name)}</button>`).join('');
+    document.querySelectorAll('.slot-pill').forEach(btn=>btn.addEventListener('click',()=>pickSlot(btn.dataset.slot)));
+  }
+  function currentTask(){ return document.getElementById('task').value; }
+  function currentSlot(){ return document.getElementById('slot').value; }
+  function syncConfigSelectors(){ document.getElementById('configTask').value=currentTask(); document.getElementById('configSlot').value=currentSlot(); }
+  function pickSlot(slot){
+    document.getElementById('slot').value=slot;
+    document.getElementById('configSlot').value=slot;
+    document.querySelectorAll('.slot-pill').forEach(b=>b.classList.toggle('active', b.dataset.slot===slot));
+    loadActiveConfigToEditor();
+    chooseBestAvailableFields();
+    renderFieldPalette();
+  }
+
+  async function loadOrders(){ const q=encodeURIComponent(document.getElementById('q').value.trim()); const data=await api(`/api/admin/llm-debug/orders?q=${q}&limit=50`); const box=document.getElementById('orders'); box.innerHTML=(data.orders||[]).map(o=>`<div class="order ${o.id===currentOrderId?'active':''}" onclick="loadOrder('${escapeAttr(o.id)}')"><strong>${escapeHtml(o.artwork_name||o.service_type_label||o.id)}</strong><span>${escapeHtml(o.id)}</span><span>${escapeHtml(o.status||'')} / ${escapeHtml(o.hanging_status||'')}</span></div>`).join('') || '<p class="hint">暂无订单</p>'; }
+  async function loadOrder(id){
+    currentOrderId=id;
+    await loadOrders();
+    const data=await api(`/api/admin/llm-debug/order/${encodeURIComponent(id)}`);
+    currentOrder = data.order || null;
+    currentRuns = data.runs || [];
+    document.getElementById('title').textContent=`${data.order.artwork_name || data.order.service_type_label || '订单'} · ${id}`;
+    annotationsByRun = new Map();
+    (data.annotations||[]).forEach(a=>{ const list=annotationsByRun.get(a.run_id)||[]; list.push(a); annotationsByRun.set(a.run_id,list); });
+    renderRuns(currentRuns);
+    chooseBestAvailableFields();
+    renderFieldPalette();
+  }
+  function renderRuns(runs){ document.getElementById('runs').innerHTML=runs.map(r=>renderRun(r)).join('') || '<p class="hint">暂无 run。可以先重跑一个槽位。</p>'; }
+  function selectRun(id){
+    document.getElementById('runId').value=id;
+    if(!document.getElementById('chosenRun').value) document.getElementById('chosenRun').value=id; else document.getElementById('rejectedRun').value=id;
+    document.querySelectorAll('.run').forEach(el=>el.classList.toggle('selected', el.dataset.runId===id));
+    const run=currentRuns.find(r=>r.id===id) || null;
+    if(run){
+      const inputFields = parseJsonMaybe(run.input_fields || run.input_fields_json, run.input_fields || null) || {};
+      currentAvailableFields = run.available_fields || inputFields || currentAvailableFields;
+      if(run.task) { document.getElementById('task').value=run.task; document.getElementById('configTask').value=run.task; }
+      if(run.slot) { document.getElementById('slot').value=run.slot; document.getElementById('configSlot').value=run.slot; document.querySelectorAll('.slot-pill').forEach(b=>b.classList.toggle('active', b.dataset.slot===run.slot)); }
+      renderConfigList();
+      document.getElementById('configMode').value = run.mode && ['llm_free','fixed_polish'].includes(run.mode) ? run.mode : document.getElementById('configMode').value;
+      document.getElementById('configVersion').value = `from_${String(run.id||'run').slice(0,10)}_${new Date().toISOString().slice(0,10)}`;
+      document.getElementById('systemPromptEditor').value = run.system_prompt || '';
+      document.getElementById('seedTextEditor').value = inputFields.seed_text || '';
+      const templated = buildTemplateFromRunPrompt(run, inputFields);
+      document.getElementById('userPromptTemplateEditor').value = templated || (run.user_prompt || '');
+      focusedPromptTarget = document.getElementById('userPromptTemplateEditor');
+      document.getElementById('focusIndicator').textContent = `已载入真实生成记录 ${run.id} 的 User Prompt，可在此基础上重编辑并保存新版本。`;
+      validatePromptFields();
+      renderFieldPalette();
+      document.getElementById('userPromptTemplateEditor').scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+
+
+  function parseJsonMaybe(value, fallback=null){
+    if(value && typeof value === 'object') return value;
+    try { return JSON.parse(value || ''); } catch(e) { return fallback; }
+  }
+  function normalizeComparable(value){
+    if(value === undefined) return '__undefined__';
+    try { return JSON.stringify(value); } catch(e) { return String(value); }
+  }
+  function getPathValue(obj, path){
+    if(!obj || !path) return undefined;
+    const parts=String(path).replace(/\[(\d+)\]/g,'.$1').split('.').filter(Boolean);
+    let cur=obj;
+    for(const part of parts){
+      if(cur == null) return undefined;
+      cur = Array.isArray(cur) && /^\d+$/.test(part) ? cur[Number(part)] : cur[part];
+    }
+    return cur;
+  }
+  function formatExampleValue(value, fallback=''){
+    if(value === undefined || value === null || value === '') return fallback || '当前订单为空，保存后会按空值渲染';
+    if(typeof value === 'string') return value.length > 90 ? `${value.slice(0,90)}…` : value;
+    try {
+      const s=JSON.stringify(value);
+      return s.length > 120 ? `${s.slice(0,120)}…` : s;
+    } catch(e) { return String(value); }
+  }
+  function getRunSelectedPaths(run){
+    const input=parseJsonMaybe(run && (run.input_fields || run.input_fields_json), run && run.input_fields) || {};
+    const direct=Array.isArray(run && run.selected_field_paths) ? run.selected_field_paths : [];
+    const fromInput=Array.isArray(input.selected_field_paths) ? input.selected_field_paths : [];
+    return Array.from(new Set([...direct, ...fromInput].filter(Boolean)));
+  }
+  function candidatePromptPaths(input, preferred=[]){
+    const paths=new Set(preferred.filter(Boolean));
+    fieldCatalog.forEach(f=>paths.add(f.path));
+    flattenPaths(input || {}).forEach(f=>paths.add(f.path));
+    return Array.from(paths);
+  }
+  function buildTemplateFromRunPrompt(run, input){
+    const raw=String(run && run.user_prompt || '').trim();
+    if(!raw) return '';
+    const preferred=getRunSelectedPaths(run);
+    const paths=candidatePromptPaths(input, preferred).map(path=>({ path, value:getPathValue(input, path) })).filter(x=>x.value !== undefined && x.path !== 'selected_field_paths');
+    const byValue=new Map();
+    for(const item of paths){
+      const key=normalizeComparable(item.value);
+      if(!byValue.has(key)) byValue.set(key, []);
+      byValue.get(key).push(item.path);
+    }
+    const scorePath=(path)=>{
+      let score=0;
+      if(preferred.includes(path)) score+=1000;
+      if(path.startsWith('allowed_facts.')) score+=120;
+      if(path.startsWith('previous_slot_outputs')) score+=90;
+      if(path.startsWith('best_plan.')) score+=50;
+      return score - path.length/1000;
+    };
+    const pickPathForValue=(value)=>{
+      const list=byValue.get(normalizeComparable(value)) || [];
+      if(!list.length) return '';
+      return list.slice().sort((a,b)=>scorePath(b)-scorePath(a))[0];
+    };
+    const replaceNode=(node)=>{
+      const exactPath=pickPathForValue(node);
+      if(exactPath) return token(exactPath);
+      if(Array.isArray(node)) return node.map(replaceNode);
+      if(node && typeof node === 'object') {
+        const out={};
+        for(const [k,v] of Object.entries(node)) out[k]=replaceNode(v);
+        return out;
+      }
+      return node;
+    };
+    const parsed=parseJsonMaybe(raw, null);
+    if(parsed !== null && typeof parsed === 'object') {
+      return JSON.stringify(replaceNode(parsed), null, 2);
+    }
+    let text=raw;
+    const replacements=paths.slice().sort((a,b)=>normalizeComparable(b.value).length-normalizeComparable(a.value).length);
+    for(const item of replacements){
+      if(item.value == null || typeof item.value === 'object') continue;
+      const val=String(item.value);
+      if(!val || val.length < 2) continue;
+      text=text.split(val).join(token(item.path));
+    }
+    return text;
+  }
+  function flattenPaths(obj, prefix='', out=[]){
+    if(!obj || typeof obj !== 'object') return out;
+    for(const [key,value] of Object.entries(obj)){
+      const path = prefix ? `${prefix}.${key}` : key;
+      if(value && typeof value === 'object' && !Array.isArray(value)){
+        out.push({path, dynamic:true, valueType:'object', sampleValue:value});
+        flattenPaths(value, path, out);
+      } else if(Array.isArray(value)) {
+        out.push({path, dynamic:true, valueType:'array', sampleValue:value});
+        value.slice(0,3).forEach((item,idx)=>{
+          const itemPath = `${path}.${idx}`;
+          out.push({path:itemPath, dynamic:true, valueType:Array.isArray(item)?'array':(item && typeof item==='object'?'object':typeof item), sampleValue:item});
+          if(item && typeof item === 'object') flattenPaths(item, itemPath, out);
+        });
+      } else {
+        out.push({path, dynamic:true, valueType:typeof value, sampleValue:value});
+      }
+    }
+    return out;
+  }
+
+  const FIELD_LABEL_OVERRIDES = {
+    task:'任务类型', char_limit:'字数上限', source:'输入来源', state:'叙事包状态', progress_pct:'进度百分比', facts:'叙事事实包', copy_hints:'文案提示', fired:'已触发规则', constraints:'约束列表', stage_text:'阶段提示文案', advisor_progress:'顾问进度文案', selected_field_paths:'已选择字段路径', user_prompt_template_mode:'User Prompt 模板类型',
+    'artwork.name':'作品名称', 'artwork.author':'艺术家', 'artwork.size':'作品尺寸', 'artwork.visual_complexity':'作品视觉复杂度',
+    'best_plan.wall_position_zh':'推荐位置', 'best_plan.center_height_cm':'画心高度', 'best_plan.height_finalized':'高度已确认', 'best_plan.height_rule_label':'高度规则', 'best_plan.risk_level':'风险等级', 'best_plan.reason_tags':'推荐原因标签', 'best_plan.composition_zh':'构图说明', 'best_plan.cleanup_required':'需要清理', 'best_plan.cleanup_note':'清理说明', 'best_plan.clearance_note':'安全避让说明', 'best_plan.bottom_edge_cm':'底边高度', 'best_plan.top_edge_cm':'顶边高度', 'best_plan.nail_height_cm':'钉点高度',
+    alternatives_count:'备选数量', not_recommended:'落选方案', soft_risk:'软风险说明', light_analysis:'光线分析', light_components:'光线因素', light_penalty_band:'光线风险档位', light_risk_band:'光线风险等级'
+  };
+  const FIELD_SEGMENT_LABELS = {
+    allowed_facts:'允许使用事实', artwork:'作品', progress:'进度', best_plan:'首选方案', candidates_count:'候选数量', not_recommended:'落选墙面', name:'名称', author:'艺术家', size:'尺寸', status:'状态', current_step:'当前步骤', pct:'进度百分比', advisor_progress:'顾问进度', bundle_state:'叙事包状态', wall_id:'墙面ID', wall_position_zh:'位置', score:'评分', risk_level:'风险等级', reason_tags:'原因标签', center_height_cm:'画心高度', bottom_edge_cm:'底边高度', top_edge_cm:'顶边高度', nail_height_cm:'钉点高度', height_finalized:'高度已确认', height_rule_label:'高度规则', axis_centering:'轴线对齐', above_furniture_label_zh:'邻近家具', structural_clearance:'安全间距', elements:'避让对象', label_zh:'对象名称', edge_clearance_cm:'边缘间距', clearance_cm:'间距', min_clearance_cm:'最小间距', passed:'是否通过', primary_reason:'首要原因', reason:'原因', retry_hint:'重试建议', wall_zh:'墙面名称', light_components:'光线因素', light_analysis:'光线分析', light_penalty_band:'光线风险档位', light_risk_band:'光线风险等级', artwork_analysis:'作品视觉分析', has_frame:'是否有框', confidence:'置信度', frame_style:'装裱形式', artwork_surface_style:'画面表面', visual_complexity:'视觉复杂度', mood_register:'情绪气质', previous_slot_outputs:'前序槽位列表', previous_slot_outputs_map:'前序槽位映射', previous_slot_outputs_text:'前序槽位全文', text:'正文', slot:'槽位', constraints:'约束', facts:'事实包', copy_hints:'文案提示', fired:'触发规则'
+  };
+  const FIELD_EXAMPLES = {
+    task:'delivery_main', slot:'S3', slot_label:'S3 位置评估', slot_stage:'EVALUATING', slot_layer:'L2', slot_char_limit:'130', mode:'llm_free', seed_text:'我会把这幅作品放回您的真实空间里看。', instructions:'说明为什么首选位置更稳妥。', cross_slot_policy:'只补充本槽位的新信息。',
+    'allowed_facts.artwork.name':'山水册页', 'allowed_facts.artwork.author':'某位艺术家', 'allowed_facts.artwork.size':'80 × 60 cm', 'allowed_facts.best_plan.wall_position_zh':'边柜上方', 'allowed_facts.best_plan.center_height_cm':'145', 'allowed_facts.best_plan.bottom_edge_cm':'118', 'allowed_facts.best_plan.top_edge_cm':'172', 'allowed_facts.best_plan.above_furniture_label_zh':'边柜', 'allowed_facts.best_plan.axis_centering':'与边柜中心线接近', 'allowed_facts.best_plan.reason_tags':'["比例更稳", "留白更完整"]', 'allowed_facts.best_plan.risk_level':'low', 'allowed_facts.best_plan.light_penalty_band':'low', 'allowed_facts.not_recommended.0.wall_zh':'右侧墙面', 'allowed_facts.not_recommended.0.primary_reason':'靠近门洞，留白不足', 'previous_slot_outputs_text':'S1: 我已经看过墙面留白和空间比例。'
+  };
+  function pathWithoutArrayIndex(path){ return String(path||'').replace(/\.\d+(?=\.|$)/g, '.0'); }
+  function dynamicLabel(path){
+    const normalized = pathWithoutArrayIndex(path);
+    if(FIELD_LABEL_OVERRIDES[path]) return FIELD_LABEL_OVERRIDES[path];
+    if(FIELD_LABEL_OVERRIDES[normalized]) return FIELD_LABEL_OVERRIDES[normalized];
+    const parts=String(path||'').split('.').filter(Boolean);
+    const last=parts[parts.length-1] || path;
+    if(/^\d+$/.test(last)) return `第${Number(last)+1}项`;
+    const tail2=parts.slice(-2).join('.');
+    if(FIELD_LABEL_OVERRIDES[tail2]) return FIELD_LABEL_OVERRIDES[tail2];
+    return FIELD_SEGMENT_LABELS[last] || last.replace(/_/g,' ');
+  }
+  function fieldExample(path, sample){
+    const actual = getPathValue(currentAvailableFields || {}, path);
+    if(actual !== undefined) return formatExampleValue(actual);
+    if(sample !== undefined) return formatExampleValue(sample);
+    const normalized = pathWithoutArrayIndex(path);
+    return FIELD_EXAMPLES[path] || FIELD_EXAMPLES[normalized] || '当前订单为空，保存后会按空值渲染';
+  }
+  function catalogByPath(){ const m=new Map(); fieldCatalog.forEach(f=>m.set(f.path, f)); return m; }
+  function classifyDynamicField(path){
+    if(path.includes('previous_slot_outputs')) return { phase:'07 前序槽位输出', phase_order:7, type:'动态上下文', type_order:0, label:dynamicLabel(path), description:'来自当前 SSE 请求中已经生成的前序槽位。用于承接语气和避免重复。' };
+    if(path.includes('light_')) return { phase:'05 光线与渲染复核', phase_order:5, type:'光线字段', type_order:0, label:dynamicLabel(path), description:'来自 GPU 候选光线分析或渲染前复核。只有字段存在时才适合写具体光线判断。' };
+    if(path.includes('structural_clearance') || path.includes('_edge_cm') || path.includes('height_cm')) return { phase:'04 安装几何与结构安全', phase_order:4, type:'安装/安全字段', type_order:1, label:dynamicLabel(path), description:'来自 Hanging 安装几何或结构避让计算。用于安装高度、安全间距和避让说明。' };
+    if(path.includes('best_plan') || path.includes('candidates')) return { phase:'03 空间语义与候选生成', phase_order:3, type:'候选/位置字段', type_order:1, label:dynamicLabel(path), description:'来自 GPU hanging 候选结果。用于说明首选墙面、推荐理由和候选强弱。' };
+    if(path.includes('progress')) return { phase:'02 订单处理进度', phase_order:2, type:'进度字段', type_order:0, label:dynamicLabel(path), description:'来自业务端处理进度或 GPU 状态。用于等待页表达当前正在复核什么。' };
+    if(path.includes('artwork')) return { phase:'01 用户提交与作品基础信息', phase_order:1, type:'作品字段', type_order:0, label:dynamicLabel(path), description:'来自用户所选作品、作品库或作品图分析。用于称呼作品和解释作品气质。' };
+    return { phase:'00 槽位控制与写作边界', phase_order:0, type:'动态字段', type_order:9, label:dynamicLabel(path), description:'当前订单输入中可用的动态字段；插入后会按订单实际值渲染。' };
+  }
+  function describeField(path){
+    const item=catalogByPath().get(path);
+    if(item) return item;
+    return Object.assign({ path, dynamic:true }, classifyDynamicField(path));
+  }
+  function allAvailableFields(){
+    const byPath = new Map();
+    fieldCatalog.forEach(f=>byPath.set(f.path, Object.assign({dynamic:false}, f)));
+    flattenPaths(currentAvailableFields || {}).forEach(f=>{
+      const base = byPath.get(f.path);
+      if(base) byPath.set(f.path, Object.assign({}, base, {sampleValue:f.sampleValue, valueType:f.valueType}));
+      else byPath.set(f.path, Object.assign(describeField(f.path), f, {label: dynamicLabel(f.path)}));
+    });
+    return Array.from(byPath.values()).sort((a,b)=>(Number(a.phase_order ?? 99)-Number(b.phase_order ?? 99)) || (Number(a.type_order ?? 99)-Number(b.type_order ?? 99)) || String(a.label||a.path).localeCompare(String(b.label||b.path),'zh-CN'));
+  }
+  function chooseBestAvailableFields(){
+    const run = currentRuns.find(r=>r.task===currentTask() && r.slot===currentSlot() && r.input_fields) || currentRuns.find(r=>r.input_fields);
+    currentAvailableFields = run ? (run.available_fields || run.input_fields) : currentAvailableFields;
+  }
+  function fieldTooltip(f){
+    return `${f.label || f.path}\n英文路径：${f.path}\n产出阶段：${f.phase || '未分类'}\n字段类型：${f.type || '未分类'}\n说明：${f.description || '当前订单输入中可用的动态字段。'}\n示例值：${fieldExample(f.path, f.sampleValue)}`;
+  }
+  function fieldChipHtml(f, opts={}){
+    const used = opts.used ? ' used' : '';
+    const sample = opts.showSample ? `<span class="field-sample">示例：${escapeHtml(fieldExample(f.path, f.sampleValue))}</span>` : '';
+    return `<span class="field-chip ${f.dynamic?'dynamic':''}${used}" draggable="true" data-path="${escapeAttr(f.path)}" title="${escapeAttr(fieldTooltip(f))}"><span class="field-cn">${escapeHtml(f.label||dynamicLabel(f.path)||f.path)}</span><span class="field-path">${escapeHtml(f.path)}</span>${sample}<button class="x" data-remove="${escapeAttr(f.path)}" title="${escapeAttr(opts.removeTitle || '隐藏这个字段标签')}">×</button></span>`;
+  }
+  function renderFieldPalette(){
+    const q=String(document.getElementById('fieldSearch') && document.getElementById('fieldSearch').value || '').trim().toLowerCase();
+    const fields=allAvailableFields().filter(f=>!hiddenFields.has(f.path)).filter(f=>!q || [f.path,f.label,f.phase,f.type,f.description].join(' ').toLowerCase().includes(q));
+    const phases = new Map();
+    fields.forEach(f=>{
+      const phase=f.phase||'99 其他字段';
+      if(!phases.has(phase)) phases.set(phase, { order:Number(f.phase_order ?? 99), items:[] });
+      phases.get(phase).items.push(f);
+    });
+    const html = Array.from(phases.entries()).sort((a,b)=>a[1].order-b[1].order).map(([phase,data])=>{
+      const typeMap=new Map();
+      data.items.forEach(f=>{ const t=f.type||'其他字段'; if(!typeMap.has(t)) typeMap.set(t,{order:Number(f.type_order ?? 99), items:[]}); typeMap.get(t).items.push(f); });
+      const typeHtml=Array.from(typeMap.entries()).sort((a,b)=>a[1].order-b[1].order).map(([type,box])=>`<div class="field-type-block"><div class="field-type-title">${escapeHtml(type)}</div>${box.items.map(f=>fieldChipHtml(f)).join('')}</div>`).join('');
+      return `<section class="field-phase"><div class="field-phase-title"><span>${escapeHtml(phase)}</span><small>${data.items.length} 个字段</small></div>${typeHtml}</section>`;
+    }).join('') || '<p class="hint">没有匹配字段。可清空筛选或恢复隐藏标签。</p>';
+    const paletteEl = document.getElementById('fieldPalette');
+    paletteEl.innerHTML = `<div class="field-groups">${html}</div>`;
+    paletteEl.querySelectorAll('.field-chip').forEach(chip=>{
+      chip.addEventListener('click', ev=>{ if(ev.target && ev.target.dataset && ev.target.dataset.remove) return; insertFieldToken(chip.dataset.path); });
+      chip.addEventListener('dragstart', ev=>{ ev.dataTransfer.setData('text/plain', token(chip.dataset.path)); ev.dataTransfer.effectAllowed='copy'; });
+    });
+    paletteEl.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ev=>{ ev.stopPropagation(); hideField(btn.dataset.remove); }));
+    validatePromptFields();
+  }
+  function hideField(path){ hiddenFields.add(path); localStorage.setItem(hiddenFieldKey, JSON.stringify(Array.from(hiddenFields))); renderFieldPalette(); }
+  function restoreHiddenFields(){ hiddenFields = new Set(); localStorage.removeItem(hiddenFieldKey); renderFieldPalette(); }
+  function installPromptTargets(){
+    document.querySelectorAll('.prompt-target').forEach(el=>{
+      el.addEventListener('focus', ()=>{ focusedPromptTarget=el; document.getElementById('focusIndicator').textContent=`当前插入目标：${el.previousElementSibling ? el.previousElementSibling.textContent : el.id}`; });
+      el.addEventListener('input', validatePromptFields);
+      el.addEventListener('dragover', ev=>{ ev.preventDefault(); el.classList.add('drop-active'); });
+      el.addEventListener('dragleave', ()=>el.classList.remove('drop-active'));
+      el.addEventListener('drop', ev=>{ ev.preventDefault(); el.classList.remove('drop-active'); insertAtCursor(el, ev.dataTransfer.getData('text/plain')); });
+    });
+    focusedPromptTarget = document.getElementById('systemPromptEditor');
+  }
+  function insertAtCursor(el, text){
+    if(!el || !text) return;
+    const start=el.selectionStart || 0, end=el.selectionEnd || 0;
+    el.value = el.value.slice(0,start) + text + el.value.slice(end);
+    const pos = start + text.length;
+    el.focus(); el.setSelectionRange(pos,pos); validatePromptFields();
+  }
+  function insertFieldToken(path){ insertAtCursor(focusedPromptTarget || document.getElementById('systemPromptEditor'), token(path)); }
+  function usedPromptFields(){
+    const text = [document.getElementById('systemPromptEditor').value, document.getElementById('seedTextEditor').value, document.getElementById('userPromptTemplateEditor').value, document.getElementById('overrideText').value].join('\n');
+    const re=/\{\{\s*([a-zA-Z0-9_.$\[\]-]+)\s*\}\}/g; const paths=[]; let m;
+    while((m=re.exec(text))) paths.push(String(m[1]).replace(/\[(\d+)\]/g,'.$1'));
+    return Array.from(new Set(paths));
+  }
+  function validatePromptFields(){
+    const box=document.getElementById('promptValidation'); if(!box) return;
+    const used=usedPromptFields();
+    const available=new Set(allAvailableFields().map(f=>f.path));
+    const missing=used.filter(p=>!available.has(p));
+    box.className = `validation ${missing.length?'warn':'ok'}`;
+    box.innerHTML = `${missing.length ? `有 ${missing.length} 个字段不在完整字段标签表中：${missing.map(escapeHtml).join('、')}` : '字段校验通过。完整字段表包含当前订单未产出的字段；保存后，字段缺失会按空值渲染，User Prompt 的键名仍会保留。'}<div class="used-fields">${used.map(p=>`<span class="tag ${missing.includes(p)?'warn':''}">${escapeHtml(describeField(p).label||dynamicLabel(p))} · ${escapeHtml(p)}</span>`).join('') || '<span class="tag">尚未使用字段标签</span>'}</div>`;
+    renderUsedFieldChips();
+  }
+  function renderUsedFieldChips(){
+    const box=document.getElementById('usedFieldChips'); if(!box) return;
+    const used=usedPromptFields();
+    box.innerHTML = used.length ? used.map(p=>fieldChipHtml(describeField(p), {used:true, removeTitle:'从当前 Prompt 移除这个字段'})).join('') : '<span class="tag">尚未使用字段标签</span>';
+    box.querySelectorAll('.field-chip').forEach(chip=>{
+      chip.addEventListener('click', ev=>{ if(ev.target && ev.target.dataset && ev.target.dataset.remove) return; insertFieldToken(chip.dataset.path); });
+      chip.addEventListener('dragstart', ev=>{ ev.dataTransfer.setData('text/plain', token(chip.dataset.path)); ev.dataTransfer.effectAllowed='copy'; });
+    });
+    box.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ev=>{ ev.stopPropagation(); removeFieldFromPrompts(btn.dataset.remove); }));
+  }
+  function removeFieldFromPrompts(path){
+    const pattern = new RegExp('\\{\\{\\s*' + String(path).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\\\./g,'\\.') + '\\s*\\}\\}', 'g');
+    document.querySelectorAll('.prompt-target').forEach(el=>{ el.value = String(el.value || '').replace(pattern, ''); });
+    validatePromptFields();
+  }
+  function copyUsedFields(){ navigator.clipboard && navigator.clipboard.writeText(usedPromptFields().join('\n')); alert('已复制已用字段路径'); }
+
+
+  function defaultUserPromptTemplateForSlot(slot){
+    const common = {
+      task: '{{task}}',
+      slot: '{{slot}}',
+      slot_label: '{{slot_label}}',
+      stage: '{{slot_stage}}',
+      layer: '{{slot_layer}}',
+      char_limit: '{{slot_char_limit}}',
+      writing_instruction: '{{instructions}}',
+      cross_slot_policy: '{{cross_slot_policy}}',
+      previous_outputs: '{{previous_slot_outputs_text}}',
+      artwork: {
+        name: '{{allowed_facts.artwork.name}}',
+        author: '{{allowed_facts.artwork.author}}',
+        size: '{{allowed_facts.artwork.size}}'
+      }
+    };
+    const bySlot = {
+      S0: { writing_seed: '{{seed_text}}' },
+      S1: { progress: '{{allowed_facts.progress}}', candidates_count: '{{allowed_facts.candidates_count}}' },
+      S2: { furniture_context: '{{allowed_facts.best_plan.above_furniture_label_zh}}', axis_centering: '{{allowed_facts.best_plan.axis_centering}}' },
+      S3: { recommended_position: '{{allowed_facts.best_plan.wall_position_zh}}', reason_tags: '{{allowed_facts.best_plan.reason_tags}}', center_height_cm: '{{allowed_facts.best_plan.center_height_cm}}' },
+      S4: { structural_clearance: '{{allowed_facts.best_plan.structural_clearance}}', bottom_edge_cm: '{{allowed_facts.best_plan.bottom_edge_cm}}', top_edge_cm: '{{allowed_facts.best_plan.top_edge_cm}}' },
+      S5: { light_components: '{{allowed_facts.best_plan.light_components}}', light_penalty_band: '{{allowed_facts.best_plan.light_penalty_band}}' },
+      S6: { not_recommended: '{{allowed_facts.not_recommended}}', writing_seed: '{{seed_text}}' },
+      S7: { recommended_position: '{{allowed_facts.best_plan.wall_position_zh}}', previous_outputs: '{{previous_slot_outputs_text}}' },
+      S8: { writing_seed: '{{seed_text}}', previous_outputs: '{{previous_slot_outputs_text}}' }
+    };
+    return JSON.stringify(Object.assign({}, common, { facts_for_this_slot: bySlot[slot] || {} }), null, 2);
+  }
+  function fillRecommendedUserTemplate(){
+    const el=document.getElementById('userPromptTemplateEditor');
+    if(el.value.trim() && !confirm('当前 User JSON 模板已有内容，是否覆盖为推荐模板？')) return;
+    el.value = defaultUserPromptTemplateForSlot(currentSlot());
+    el.focus(); validatePromptFields();
+  }
+  function formatUserPromptTemplate(){
+    const el=document.getElementById('userPromptTemplateEditor');
+    try { el.value = JSON.stringify(JSON.parse(el.value || '{}'), null, 2); validatePromptFields(); }
+    catch(e) { alert('User Prompt JSON 模板不是合法 JSON：' + e.message); }
+  }
+
+  function configsForCurrent(){ const task=document.getElementById('configTask').value; const slot=document.getElementById('configSlot').value; return slotConfigs.filter(c=>c.task===task && c.slot===slot); }
+  function renderConfigList(){
+    const rows=configsForCurrent();
+    document.getElementById('configList').innerHTML = rows.map(c=>`<div class="config-item"><div><strong>${escapeHtml(c.version_label||c.id)}</strong><br><span class="badge ${c.is_active?'active':''}">${c.is_active?'active':'history'}</span> <span class="badge">${escapeHtml(c.mode)}</span> <span class="badge gray">gray ${Number(c.gray_ratio ?? 1).toFixed(2)}</span><br><span class="hint">${escapeHtml(c.created_at||'')} · ${escapeHtml(c.created_by||'')}</span></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="secondary small" onclick="loadConfigToEditor('${escapeAttr(c.id)}')">载入</button><button class="small" onclick="activateConfig('${escapeAttr(c.id)}')">激活</button></div></div>`).join('') || '<p class="hint">当前 task/slot 暂无配置。</p>';
+  }
+  function loadActiveConfigToEditor(){ renderConfigList(); const active=configsForCurrent().find(c=>Number(c.is_active)===1) || configsForCurrent()[0]; if(active) loadConfigToEditor(active.id, false); }
+  function loadConfigToEditor(id, scroll=true){
+    const c=slotConfigs.find(x=>x.id===id); if(!c) return;
+    document.getElementById('configTask').value=c.task; document.getElementById('configSlot').value=c.slot;
+    document.getElementById('task').value=c.task; document.getElementById('slot').value=c.slot;
+    document.querySelectorAll('.slot-pill').forEach(b=>b.classList.toggle('active', b.dataset.slot===c.slot));
+    renderConfigList();
+    document.getElementById('configMode').value=c.mode || 'llm_free';
+    document.getElementById('configGray').value=Number(c.gray_ratio ?? 1);
+    document.getElementById('configVersion').value=c.version_label || '';
+    document.getElementById('systemPromptEditor').value=c.system_prompt || '';
+    document.getElementById('seedTextEditor').value=c.fixed_seed_text || '';
+    document.getElementById('userPromptTemplateEditor').value=c.user_prompt_template || defaultUserPromptTemplateForSlot(c.slot || currentSlot());
+    if(scroll) document.getElementById('systemPromptEditor').scrollIntoView({behavior:'smooth', block:'center'});
+    validatePromptFields();
+  }
+  async function saveSlotConfig(){
+    const body={
+      task:document.getElementById('configTask').value,
+      slot:document.getElementById('configSlot').value,
+      mode:document.getElementById('configMode').value,
+      gray_ratio:Number(document.getElementById('configGray').value || 1),
+      version_label:document.getElementById('configVersion').value.trim() || `manual_${new Date().toISOString().slice(0,10)}`,
+      system_prompt:document.getElementById('systemPromptEditor').value,
+      fixed_seed_text:document.getElementById('seedTextEditor').value,
+      user_prompt_template:document.getElementById('userPromptTemplateEditor').value
+    };
+    await api('/api/admin/llm-debug/slot-config',{method:'POST', body:JSON.stringify(body)});
+    alert('已保存新槽位版本并设为 active');
+    await loadSlotConfigs();
+  }
+  async function activateConfig(id){ await api(`/api/admin/llm-debug/slot-config/${encodeURIComponent(id)}/activate`,{method:'POST', body:JSON.stringify({})}); alert('已激活历史版本'); await loadSlotConfigs(); }
+
+  async function runSlot(){
+    if(!currentOrderId) return alert('请先选择订单');
+    const body={order_id:currentOrderId, task:document.getElementById('task').value, slot:document.getElementById('slot').value};
+    const data=await api('/api/hanging/debug/run-slot', {method:'POST', body:JSON.stringify(body)});
+    const el=document.getElementById('latestRun'); el.style.display='block';
+    currentAvailableFields = data.available_fields || data.input_fields || currentAvailableFields;
+    el.innerHTML=renderRun({id:data.run_id, task:body.task, slot:body.slot, source:'debug_manual', output_text:data.output_text, system_prompt:data.system_prompt, user_prompt:data.user_prompt, input_fields:data.input_fields, available_fields:data.available_fields, selected_field_paths:data.selected_field_paths, mode:data.mode, slot_config_id:data.slot_config_id, gray_ratio:data.gray&&data.gray.gray_ratio, gray_bucket:data.gray&&data.gray.gray_bucket, gray_applied:data.gray&&data.gray.gray_applied, error_text:data.error_text}, false);
+    document.getElementById('runId').value=data.run_id;
+    renderFieldPalette();
+    await loadOrder(currentOrderId);
+  }
+  async function annotateRun(){ const run_id=document.getElementById('runId').value.trim(); if(!run_id) return alert('缺少 run_id'); const body={run_id, dimension_scores:{语气:Number(document.getElementById('scoreTone').value||0), 呈现而非裁决:Number(document.getElementById('scoreConsultant').value||0), 不编造:Number(document.getElementById('scoreNoFabrication').value||0), 数字口径:Number(document.getElementById('scoreNumbers').value||0), 拒绝措辞:Number(document.getElementById('scoreRefusal').value||0), 空间特征命中:Number(document.getElementById('scoreSpaceFacts').value||0)}, comment:document.getElementById('comment').value}; await api('/api/admin/llm-debug/annotations',{method:'POST', body:JSON.stringify(body)}); alert('已保存标注'); if(currentOrderId) await loadOrder(currentOrderId); }
+  async function savePreference(){ const body={chosen_run_id:document.getElementById('chosenRun').value.trim(), rejected_run_id:document.getElementById('rejectedRun').value.trim()}; await api('/api/admin/llm-debug/preferences',{method:'POST', body:JSON.stringify(body)}); alert('已保存偏好对'); if(currentOrderId) await loadOrder(currentOrderId); }
+  async function saveOverride(){ if(!currentOrderId) return alert('请先选择订单'); const body={order_id:currentOrderId, task:document.getElementById('task').value, slot:document.getElementById('slot').value, override_text:document.getElementById('overrideText').value, reason:document.getElementById('overrideReason').value}; await api('/api/admin/llm-debug/overrides',{method:'POST', body:JSON.stringify(body)}); alert('已保存覆盖'); if(currentOrderId) await loadOrder(currentOrderId); }
+  async function loadDatasetSnapshot(){ const data=await api('/api/admin/llm-debug/dataset-snapshot'); const c=data.counts||{}; document.getElementById('counts').innerHTML=Object.keys(c).map(k=>`<div class="metric"><span>${escapeHtml(k)}</span><strong>${escapeHtml(c[k])}</strong></div>`).join(''); }
+
+  document.getElementById('secret').addEventListener('change',()=>{syncLinks();loadOrders().catch(()=>{});});
+  document.getElementById('fieldSearch').addEventListener('input', renderFieldPalette);
+  document.getElementById('task').addEventListener('change',()=>{ document.getElementById('configTask').value=currentTask(); loadActiveConfigToEditor(); });
+  document.getElementById('slot').addEventListener('change',()=>pickSlot(currentSlot()));
+  document.getElementById('configTask').addEventListener('change',()=>{ document.getElementById('task').value=document.getElementById('configTask').value; renderConfigList(); loadActiveConfigToEditor(); });
+  document.getElementById('configSlot').addEventListener('change',()=>{ document.getElementById('slot').value=document.getElementById('configSlot').value; pickSlot(document.getElementById('configSlot').value); });
+  installPromptTargets();
+  Promise.all([loadFieldCatalog(), loadSlots(), loadSlotConfigs()])
+    .then(()=>{pickSlot('S3'); return loadOrders();})
+    .then(loadDatasetSnapshot)
+    .catch(e=>alert(e.message));
+</script>
+</body>
+</html>

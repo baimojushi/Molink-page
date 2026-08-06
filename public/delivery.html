@@ -250,6 +250,17 @@
       backdrop-filter: blur(4px);
     }
 
+    .image-meta {
+      padding: 12px 14px 6px;
+      text-align: left;
+      color: var(--color-text-primary);
+      font-size: 13px;
+      line-height: 1.5;
+      background: rgba(255,255,255,0.66);
+      backdrop-filter: blur(4px);
+    }
+    .image-meta .title { font-weight: 600; }
+
     @media (max-width: 767px) { .image-item .hint { padding: 10px 14px; font-size: 12px; } }
 
     /* ==========================================
@@ -573,13 +584,19 @@
 
       let imagesHtml = '';
       if (data.images && data.images.length > 0) {
+        const resultRecords = Array.isArray(data.result_records) ? data.result_records : [];
+        const imageUrls = Array.isArray(data.image_urls) ? data.image_urls : data.images.map(img => `/deliveries/${img}`);
         imagesHtml = `<div class="image-list">
-          ${data.images.map(img => `
-            <div class="image-item" onclick="放大图片('/deliveries/${img}')">
-              <img src="/deliveries/${img}" alt="交付图片" oncontextmenu="标记已下载()">
+          ${data.images.map((img, index) => {
+            const record = resultRecords.find(item => item.filename === img) || resultRecords[index] || null;
+            const imageUrl = (record && (record.r2_url || record.image_url)) || imageUrls[index] || `/deliveries/${img}`;
+            return `
+            <div class="image-item" onclick="放大图片('${imageUrl}')">
+              <img src="${imageUrl}" alt="交付图片" oncontextmenu="标记已下载()">
+              ${record ? `<div class="image-meta"><div class="title">${record.artwork_name || `效果图 ${index + 1}`}</div>${record.artwork_author ? `<div>作者：${record.artwork_author}</div>` : ''}</div>` : ''}
               <div class="hint">长按保存 · 点击放大</div>
-            </div>
-          `).join('')}
+            </div>`;
+          }).join('')}
         </div>`;
       }
 
@@ -589,9 +606,130 @@
           <h2>已完成</h2>
           <p>您的「${data.service_type_label}」服务已处理完毕<br>交付时间：${data.delivered_at}</p>
         </div>
+        ${data.ai_engine === 'hanging' ? '<div id="consultant-card" class="status-card" style="text-align:left"><div id="consultant-text" style="line-height:1.9;white-space:pre-wrap;min-height:1.2em"></div></div>' : ''}
         ${imagesHtml}
+        ${data.ai_engine === 'hanging' ? 渲染挂画元数据(data.hanging) : ''}
         <div id="history-container"></div>
       `;
+
+      if (data.ai_engine === 'hanging') {
+        启动顾问文案流(data.orderId);
+        const link = document.getElementById('install-guide-link');
+        if (link) {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const box = document.getElementById('install-guide-text');
+            if (!box) return;
+            if (box.dataset.loaded === '1') { box.style.display = box.style.display === 'none' ? 'block' : 'none'; return; }
+            box.style.display = 'block';
+            box.dataset.loaded = '1';
+            try {
+              const evs = new EventSource(`/api/hanging/llm-stream/${data.orderId}?token=${token}&task=install_guide`);
+              evs.onmessage = (ev) => {
+                if (ev.data === '[DONE]') { evs.close(); return; }
+                try {
+                  const o = JSON.parse(ev.data);
+                  if (o && o.text) 追加打字机文本(box, o.text);
+                } catch (er) {}
+              };
+              evs.onerror = () => evs.close();
+            } catch (er) {}
+          });
+        }
+      }
+    }
+
+    /* ==========================================
+       挂画引擎：顾问文案 SSE + 候选元数据
+       ========================================== */
+    const 打字机状态 = new WeakMap();
+
+    function 追加打字机文本(el, text, intervalMs = 24) {
+      if (!el || !text) return;
+      let state = 打字机状态.get(el);
+      if (!state) {
+        state = { queue: [], timer: null };
+        打字机状态.set(el, state);
+      }
+      state.queue.push(...String(text).split(''));
+      if (state.timer) return;
+      state.timer = setInterval(() => {
+        const ch = state.queue.shift();
+        if (ch !== undefined) {
+          el.textContent += ch;
+          return;
+        }
+        clearInterval(state.timer);
+        state.timer = null;
+      }, intervalMs);
+    }
+
+    function 启动顾问文案流(orderId) {
+      const el = document.getElementById('consultant-text');
+      if (!el) return;
+      try {
+        const evs = new EventSource(`/api/hanging/llm-stream/${orderId}?token=${token}&task=delivery_main`);
+        evs.onmessage = (e) => {
+          if (e.data === '[DONE]') { evs.close(); return; }
+          try {
+            const obj = JSON.parse(e.data);
+            if (obj && obj.text) 追加打字机文本(el, obj.text);
+          } catch (err) {}
+        };
+        evs.onerror = () => evs.close();
+      } catch (err) {}
+    }
+
+    function 风险徽标(level) {
+      const map = { low: ['推荐', '#2e7d32'], medium: ['谨慎', '#ef6c00'], high: ['需复核', '#c62828'] };
+      const [label, color] = map[level] || ['可用', '#555'];
+      return `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;color:#fff;background:${color}">${label}</span>`;
+    }
+
+    function 渲染挂画元数据(hanging) {
+      if (!hanging) return '';
+      const cands = Array.isArray(hanging.candidates) ? hanging.candidates : [];
+      const notRec = Array.isArray(hanging.not_recommended) ? hanging.not_recommended : [];
+      let html = '';
+
+      if (cands.length) {
+        html += '<div class="image-list">';
+        cands.forEach((c, i) => {
+          const inst = c.install || {};
+          const tags = (c.reason_tags || []).map(t => `<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:10px;background:#f0ece3;font-size:12px">${t}</span>`).join('');
+          const heightLine = inst.center_height_cm ? `画心离地约 ${inst.center_height_cm}cm` : (inst.provisional_center_height_cm ? `预览高度约 ${inst.provisional_center_height_cm}cm，可现场微调` : '');
+          const edges = (inst.bottom_edge_cm && inst.top_edge_cm) ? `画框下沿约 ${inst.bottom_edge_cm}cm，上沿约 ${inst.top_edge_cm}cm` : '';
+          const nail = inst.nail_height_cm ? `挂钩约 ${inst.nail_height_cm}cm` : '';
+          html += `
+            <div class="image-item" style="cursor:default">
+              <div class="image-meta" style="text-align:left">
+                <div class="title">${i === 0 ? '推荐方案' : '备选方案 ' + i} ${风险徽标(c.risk_level)}　${c.wall_position_zh || '主墙面'}</div>
+                ${heightLine ? `<div style="margin-top:6px">${heightLine}</div>` : ''}
+                ${edges ? `<div>${edges}</div>` : ''}
+                ${nail ? `<div>${nail}</div>` : ''}
+                <div style="margin-top:6px">${tags}</div>
+              </div>
+            </div>`;
+        });
+        html += '</div>';
+      }
+
+      if (notRec.length) {
+        html += '<div class="status-card" style="text-align:left"><div class="title" style="font-weight:600;margin-bottom:8px">其他墙面说明</div>';
+        notRec.forEach(nr => {
+          const reason = (nr.reasons || []).join('；');
+          html += `<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #eee">
+            <div>${nr.wall_position_zh || nr.wall_id || '某面墙'}：${reason}</div>
+            ${nr.can_retry_hint ? `<div style="color:#888;font-size:13px;margin-top:4px">建议：${nr.can_retry_hint}</div>` : ''}
+          </div>`;
+        });
+        html += '</div>';
+      }
+
+      if (cands.length) {
+        html += `<div style="text-align:center;margin:10px 0"><a href="#" id="install-guide-link" style="color:#8a6d3b;font-size:14px">查看安装建议 ›</a><div id="install-guide-text" style="display:none;text-align:left;line-height:1.9;white-space:pre-wrap;margin-top:10px;padding:12px;background:#faf8f3;border-radius:8px"></div></div>`;
+      }
+      return html;
     }
 
     function 渲染错误(msg) {
@@ -631,10 +769,14 @@
 
         otherOrders.forEach((order, idx) => {
           const images = JSON.parse(order.delivery_images || '[]');
+          const imageUrls = Array.isArray(order.image_urls) ? order.image_urls : images.map(img => `/deliveries/${img}`);
           let imgsHtml = '';
           if (images.length > 0) {
             imgsHtml = `<div class="history-images">
-              ${images.map(img => `<img src="/deliveries/${img}" alt="历史图片" onclick="放大历史图片('/deliveries/${img}', '${order.delivery_token}')">`).join('')}
+              ${images.map((img, index) => {
+                const imageUrl = imageUrls[index] || `/deliveries/${img}`;
+                return `<img src="${imageUrl}" alt="历史图片" onclick="放大历史图片('${imageUrl}', '${order.delivery_token}')">`;
+              }).join('')}
             </div>`;
           }
 

@@ -287,6 +287,10 @@
     /* ── AI 状态徽标 ── */
     .status-ai-ready     { background: #fde8d0; color: #7a3d00; }
     .status-ai-generating { background: #e8eaf8; color: #3a3a7a; }
+    .status-awaiting-manual { background: #fff1e0; color: #8b5a1b; }
+    .status-content-reviewing { background: #e8f2ff; color: #24517a; }
+    .status-audit-rejected { background: #fde7e1; color: #9a3d28; }
+    .audit-reject-box { margin: 12px 0; padding: 12px 14px; border-radius: 12px; background: #fff1ec; border: 1px solid #f2c6b8; color: #8f3f2c; font-size: 13px; line-height: 1.7; }
 
     /* ── AI 审核区 ── */
     .ai-review-section { margin-top: 16px; }
@@ -337,6 +341,54 @@
     .regen-btn:hover { background: rgba(155,131,112,0.08); }
     .regen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    .recommendation-section { margin-top: 16px; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius); background: #faf7f3; }
+    .recommendation-section h4 { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 10px; font-weight: 600; }
+    .recommend-layout { display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 16px; align-items: start; }
+    .recommend-space-card img { width: 100%; max-width: 320px; border-radius: 8px; border: 1px solid var(--color-border); }
+    .recommend-space-card .img-label { margin-top: 6px; font-size: 12px; color: var(--color-text-secondary); text-align: center; }
+    .recommend-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .recommend-search-input { flex: 1; min-width: 180px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+    .recommend-search-input:focus { border-color: var(--color-primary); }
+    .recommend-dropdown-btn { padding: 10px 14px; border: 1px solid var(--color-primary); border-radius: 8px; background: #fff; color: var(--color-primary); cursor: pointer; font-size: 13px; font-family: inherit; }
+    .recommend-dropdown { margin-bottom: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; background: #fff; }
+    .recommend-dropdown[hidden] { display: none; }
+    .recommend-dropdown-status { min-height: 18px; margin-bottom: 8px; font-size: 12px; color: var(--color-text-secondary); }
+    .recommend-viewport { position: relative; height: 332px; overflow: auto; overscroll-behavior: contain; border-radius: 8px; background: #fff; }
+    .recommend-spacer { position: relative; width: 100%; min-height: 1px; }
+    .recommend-grid-virtual { position: absolute; top: 0; left: 0; width: 100%; display: grid; grid-template-columns: repeat(var(--recommend-columns, 4), minmax(0, 1fr)); gap: 10px; will-change: transform; }
+    .recommend-thumb { position: relative; border: 2px solid var(--color-border); border-radius: 8px; overflow: hidden; cursor: pointer; background: #f5f5f5; min-height: 116px; user-select: none; }
+    .recommend-thumb.selected { border-color: var(--color-accent); }
+    .recommend-thumb img { display: block; width: 100%; height: 96px; object-fit: cover; background: #f0f0f0; }
+    .recommend-thumb-mark { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.58); color: var(--color-accent-dark); border: 1px solid rgba(0,0,0,0.08); z-index: 3; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .recommend-thumb.selected .recommend-thumb-mark { background: rgba(255,255,255,0.78); }
+    .recommend-thumb-code { position: absolute; left: 6px; bottom: 6px; max-width: calc(100% - 52px); padding: 2px 6px; border-radius: 999px; background: rgba(34,34,34,0.48); color: #fff; font-size: 10px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recommend-thumb-preview-btn { position: absolute; right: 8px; bottom: 8px; min-width: 34px; height: 26px; padding: 0 8px; border: 0; border-radius: 999px; background: rgba(34,34,34,0.45); color: #fff; z-index: 3; font-size: 12px; cursor: pointer; }
+    .recommend-thumb-preview-btn:hover { background: rgba(34,34,34,0.62); }
+    .recommend-more-wrap { display: flex; justify-content: center; margin-top: 12px; }
+    .recommend-more-btn { padding: 9px 14px; border: 1px solid var(--color-border); border-radius: 999px; background: #fafafa; color: var(--color-text-primary); cursor: pointer; font-size: 12px; font-family: inherit; }
+    .recommend-more-btn:hover { background: #f3f3f3; }
+    .recommend-selected-wrap { margin-top: 8px; }
+    .recommend-selected-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; color: var(--color-text-secondary); }
+    .recommend-selected-list { display: flex; flex-direction: column; gap: 8px; }
+    .recommend-selected-item { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--color-border); border-radius: 8px; background: #fff; }
+    .recommend-selected-item img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--color-border); cursor: pointer; }
+    .recommend-selected-meta { flex: 1; min-width: 0; }
+    .recommend-selected-meta div { font-size: 12px; color: var(--color-text-secondary); line-height: 1.45; }
+    .recommend-selected-meta .title { font-size: 13px; color: var(--color-text-primary); font-weight: 600; }
+    .recommend-remove-btn { padding: 6px 10px; border: 1px solid #e0c6b5; border-radius: 6px; background: #fff7f1; color: #9b5b35; font-size: 12px; cursor: pointer; font-family: inherit; }
+    .recommend-confirm-btn { padding: 10px 22px; background: var(--color-accent); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .recommend-confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .recommend-empty { padding: 12px; font-size: 12px; color: var(--color-text-secondary); }
+    .ai-gallery-meta { padding: 8px; background: #fff; border-top: 1px solid var(--color-border); }
+    .ai-gallery-meta div { font-size: 11px; color: var(--color-text-secondary); line-height: 1.45; }
+    .ai-gallery-meta .title { font-size: 12px; color: var(--color-text-primary); font-weight: 600; }
+    .ai-review-badge { display: inline-block; margin-bottom: 5px; padding: 2px 6px; border-radius: 999px; font-size: 10px; line-height: 1.4; background: #f1eee9; color: var(--color-text-secondary); }
+    .ai-review-pass { background: #e8f3e9; color: #3d7041; }
+    .ai-review-dimension_failed, .ai-review-dimension_fix_limit { background: #fff1d6; color: #8a5a00; }
+    .ai-review-artwork_consistency_failed, .ai-review-physics_failed, .ai-review-review_failed { background: #f8e5e1; color: #9a3f31; }
+    .ai-review-review_error { background: #ece7f5; color: #654a8a; }
+    @media (max-width: 900px) { .recommend-layout { grid-template-columns: 1fr; } }
+
     /* ── 删除区域 ── */
     .delete-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border); }
     .delete-btn {
@@ -353,7 +405,7 @@
     <img id="lightbox-img" src="" alt="">
   </div>
 
-  <div class="header"><h1>Mo:link Design 管理后台</h1></div>
+  <div class="header"><h1>Mo:link Design 管理后台</h1><div style="display:flex;gap:10px;align-items:center;"><a href="/admin" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.16);color:#fff;text-decoration:none;font-size:13px;">订单管理</a><a id="analytics-link" href="/admin/analytics" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.16);color:#fff;text-decoration:none;font-size:13px;">数据看板</a><a href="/admin/artworks" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.16);color:#fff;text-decoration:none;font-size:13px;">作品库管理</a><a id="llm-debug-link" href="/admin/llm-debug" style="display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.16);color:#fff;text-decoration:none;font-size:13px;">LLM Prompt调试</a></div></div>
 
   <div class="auth-bar">
     <input type="password" id="admin-secret" placeholder="请输入管理密钥">
@@ -363,6 +415,10 @@
   <div class="filter-bar">
     <div class="filter-btn active" onclick="筛选订单(this, '')">全部</div>
     <div class="filter-btn" onclick="筛选订单(this, 'pending')">待处理</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'awaiting_manual_recommendation')">待人工推荐</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'content_reviewing')">内容审核中</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'audit_rejected')">审核拒绝</div>
+    <div class="filter-btn" onclick="筛选订单(this, 'audit_timeout')">审核超时</div>
     <div class="filter-btn" onclick="筛选订单(this, 'ai_generating')">AI生成中</div>
     <div class="filter-btn" onclick="筛选订单(this, 'ai_ready')">待审核</div>
     <div class="filter-btn" onclick="筛选订单(this, 'delivered')">已交付</div>
@@ -379,9 +435,11 @@
     <div class="empty-state"><div class="icon">○</div><p>请输入管理密钥后进入</p></div>
   </div>
 
+  <script src="/admin-exhibition-scope.js"></script>
   <script>
     let 管理密钥 = '';
     let 全部订单 = [];
+    const 管理密钥存储键 = 'molink_admin_secret';
     let 当前筛选 = '';
 
     // 待交付文件缓存（首次交付）：{ orderId: File[] }
@@ -394,6 +452,48 @@
     const 重交付激活 = new Set();
     const 埋点详情缓存 = {};
     const 埋点展开状态 = new Set();
+    const 订单图片资源 = {};
+    const 推荐搜索结果缓存 = {};
+    const 推荐搜索词缓存 = {};
+    const 推荐选中缓存 = {};
+    const 推荐渲染数量缓存 = {};
+    const 推荐下拉展开 = new Set();
+    const 推荐分页游标缓存 = {};
+    const 推荐更多可用缓存 = {};
+    const 推荐加载中缓存 = {};
+    const 推荐错误缓存 = {};
+    const 推荐请求控制器 = {};
+    const 推荐虚拟状态缓存 = {};
+    const 推荐搜索定时器 = {};
+
+    window.addEventListener('resize', () => {
+      Object.keys(推荐虚拟状态缓存).forEach(orderId => {
+        if (推荐下拉展开.has(orderId)) 安排渲染推荐网格(orderId, true);
+      });
+    }, { passive: true });
+
+
+    function 获取预填密钥() {
+      const querySecret = new URLSearchParams(window.location.search).get('secret');
+      return querySecret || localStorage.getItem(管理密钥存储键) || '';
+    }
+
+    function 持久化管理密钥(secret) {
+      if (!secret) return;
+      localStorage.setItem(管理密钥存储键, secret);
+      更新后台导航(secret);
+    }
+
+    function 更新后台导航(secret) {
+      const analyticsLink = document.getElementById('analytics-link');
+      if (analyticsLink) {
+        analyticsLink.href = secret ? `/admin/analytics?secret=${encodeURIComponent(secret)}` : '/admin/analytics';
+      }
+      const llmDebugLink = document.getElementById('llm-debug-link');
+      if (llmDebugLink) {
+        llmDebugLink.href = secret ? `/admin/llm-debug?secret=${encodeURIComponent(secret)}` : '/admin/llm-debug';
+      }
+    }
 
     // ══════════════════════════════════════
     // 加载 & 筛选
@@ -403,10 +503,22 @@
     async function 加载订单() {
       管理密钥 = 获取密钥();
       if (!管理密钥) return alert('请输入管理密钥');
+      持久化管理密钥(管理密钥);
       try {
         const resp = await fetch('/api/admin/orders', { headers: { 'x-admin-secret': 管理密钥 } });
         if (resp.status === 403) return alert('密钥错误');
         const data = await resp.json();
+        Object.keys(推荐选中缓存).forEach(key => delete 推荐选中缓存[key]);
+        Object.keys(推荐搜索结果缓存).forEach(key => delete 推荐搜索结果缓存[key]);
+        Object.keys(推荐渲染数量缓存).forEach(key => delete 推荐渲染数量缓存[key]);
+        Object.keys(推荐搜索词缓存).forEach(key => delete 推荐搜索词缓存[key]);
+        Object.keys(推荐分页游标缓存).forEach(key => delete 推荐分页游标缓存[key]);
+        Object.keys(推荐更多可用缓存).forEach(key => delete 推荐更多可用缓存[key]);
+        Object.keys(推荐加载中缓存).forEach(key => delete 推荐加载中缓存[key]);
+        Object.keys(推荐错误缓存).forEach(key => delete 推荐错误缓存[key]);
+        Object.keys(推荐请求控制器).forEach(key => { try { 推荐请求控制器[key].abort(); } catch (error) {} delete 推荐请求控制器[key]; });
+        Object.keys(推荐虚拟状态缓存).forEach(key => delete 推荐虚拟状态缓存[key]);
+        Object.keys(推荐搜索定时器).forEach(key => clearTimeout(推荐搜索定时器[key]));
         // 后端已将 delivery_images 解析为数组，直接使用
         全部订单 = data.orders;
         渲染订单列表();
@@ -424,11 +536,11 @@
     // 辅助函数
     // ══════════════════════════════════════
     function 状态文本(status) {
-      const m = { pending: '待处理', delivered: '已交付', viewed: '已查收', downloaded: '已下载', processing: '处理中', ai_generating: 'AI生成中', ai_ready: '待审核' };
+      const m = { pending: '待处理', content_reviewing: '内容审核中', audit_rejected: '审核拒绝', audit_timeout: '审核超时', awaiting_manual_recommendation: '等待人工推荐', delivered: '已交付', viewed: '已查收', downloaded: '已下载', processing: '处理中', ai_generating: 'AI生成中', ai_ready: '待审核' };
       return m[status] || status;
     }
     function 状态CSS(status) {
-      const m = { pending: 'status-pending', delivered: 'status-delivered', viewed: 'status-viewed', downloaded: 'status-downloaded', ai_generating: 'status-ai-generating', ai_ready: 'status-ai-ready' };
+      const m = { pending: 'status-pending', content_reviewing: 'status-content-reviewing', audit_rejected: 'status-audit-rejected', audit_timeout: 'status-content-reviewing', awaiting_manual_recommendation: 'status-awaiting-manual', delivered: 'status-delivered', viewed: 'status-viewed', downloaded: 'status-downloaded', ai_generating: 'status-ai-generating', ai_ready: 'status-ai-ready' };
       return m[status] || 'status-pending';
     }
 
@@ -456,9 +568,490 @@
         result_view: '效果图查收',
         image_click: '图片点击',
         image_download: '图片下载',
-        page_stay: '停留时长'
+        page_stay: '停留时长',
+        manual_recommendation_queued: '进入人工推荐队列',
+        manual_recommendation_confirm: '人工确认推荐作品',
+        recommendation_batch_submitted: '推荐批次已提交',
+        manual_recommendation_return: '退回人工推荐'
       };
       return mapping[type] || type;
+    }
+
+    function 获取订单对象(orderId) {
+      return 全部订单.find(order => order.id === orderId) || null;
+    }
+
+    function 取作品缩略图(artwork) {
+      return artwork.thumb_url || artwork.primary_thumb_url || artwork.cover_thumb_url || artwork.image_url || artwork.primary_image_url || artwork.cover_url || (Array.isArray(artwork.thumb_images) ? artwork.thumb_images[0] : '') || (Array.isArray(artwork.images) ? artwork.images[0] : '') || '';
+    }
+
+    function 归一化推荐作品(artwork) {
+      return {
+        id: artwork.id,
+        artwork_code: artwork.artwork_code || artwork.code || artwork.num || '',
+        name: artwork.name || '',
+        author: artwork.author || '',
+        size_text: artwork.size_text || artwork.size || '',
+        image_url: artwork.full_url || artwork.image_url || artwork.primary_image_url || artwork.cover_url || '',
+        thumb_url: 取作品缩略图(artwork),
+        full_url: artwork.full_url || artwork.image_url || artwork.primary_image_url || artwork.cover_url || ''
+      };
+    }
+
+    function 确保推荐状态(orderId) {
+      const order = 获取订单对象(orderId);
+      if (!order) return;
+      if (!Array.isArray(推荐选中缓存[orderId])) {
+        推荐选中缓存[orderId] = Array.isArray(order.recommended_artworks) ? order.recommended_artworks.map(归一化推荐作品) : [];
+      }
+      if (!Array.isArray(推荐搜索结果缓存[orderId])) 推荐搜索结果缓存[orderId] = [];
+      if (!(orderId in 推荐搜索词缓存)) 推荐搜索词缓存[orderId] = '';
+      if (!(orderId in 推荐渲染数量缓存)) 推荐渲染数量缓存[orderId] = 60;
+      if (!(orderId in 推荐分页游标缓存)) 推荐分页游标缓存[orderId] = '';
+      if (!(orderId in 推荐更多可用缓存)) 推荐更多可用缓存[orderId] = false;
+      if (!(orderId in 推荐加载中缓存)) 推荐加载中缓存[orderId] = false;
+      if (!(orderId in 推荐错误缓存)) 推荐错误缓存[orderId] = '';
+      if (!推荐虚拟状态缓存[orderId]) {
+        推荐虚拟状态缓存[orderId] = { lastKey: '', rafId: 0, scrollTop: 0 };
+      }
+    }
+
+    function 获取推荐已选(orderId) {
+      确保推荐状态(orderId);
+      return 推荐选中缓存[orderId] || [];
+    }
+
+    function 获取推荐搜索结果(orderId) {
+      确保推荐状态(orderId);
+      return 推荐搜索结果缓存[orderId] || [];
+    }
+
+    function 获取推荐标签(order) {
+      const list = Array.isArray(order.recommended_artworks) ? order.recommended_artworks : [];
+      if (!list.length) return '';
+      return list.map(item => `${item.name || '未命名'}｜${item.author || '未知作者'}`).join('，');
+    }
+
+    function 加载容器图片(container, eagerCount = 6) {
+      if (!container) return;
+      const images = Array.from(container.querySelectorAll('img[data-image-url]'));
+      images.forEach((img, index) => {
+        if (img.dataset.imageLoaded === '1' || img.getAttribute('src')) return;
+        const sourceUrl = img.dataset.imageUrl;
+        if (!sourceUrl) return;
+        img.loading = index < eagerCount ? 'eager' : 'lazy';
+        img.decoding = 'async';
+        img.referrerPolicy = 'no-referrer';
+        if (index < 2) img.fetchPriority = 'high';
+        img.src = sourceUrl;
+        img.dataset.fullsrc = sourceUrl;
+        img.dataset.imageLoaded = '1';
+      });
+    }
+
+    function 推荐搜索输入(orderId, value) {
+      确保推荐状态(orderId);
+      推荐搜索词缓存[orderId] = value;
+      clearTimeout(推荐搜索定时器[orderId]);
+      推荐搜索定时器[orderId] = setTimeout(() => {
+        搜索推荐作品(orderId, value).catch(err => alert('作品搜索失败: ' + err.message));
+      }, 260);
+    }
+
+    function 获取推荐更多按钮文案(orderId) {
+      const items = 获取推荐搜索结果(orderId).length;
+      if (推荐加载中缓存[orderId]) return '加载中…';
+      return 推荐更多可用缓存[orderId] ? `继续加载更多（已加载 ${items} 项）` : (items ? `已加载 ${items} 项` : '暂无更多作品');
+    }
+
+    function 获取推荐下拉状态文案(orderId) {
+      if (推荐错误缓存[orderId]) return 推荐错误缓存[orderId];
+      if (推荐加载中缓存[orderId] && 获取推荐搜索结果(orderId).length === 0) return '正在加载作品列表…';
+      const count = 获取推荐搜索结果(orderId).length;
+      if (!count) return '输入关键词可搜索作品，列表仅加载轻量缩略图。';
+      return `已加载 ${count} 件作品，滚动仅渲染可见项。`;
+    }
+
+    function 创建推荐缩略图节点(orderId, item, selectedFlag) {
+      const cell = document.createElement('div');
+      cell.className = `recommend-thumb${selectedFlag ? ' selected' : ''}`;
+      cell.dataset.artworkId = item.id;
+      cell.dataset.fullUrl = item.full_url || item.image_url || '';
+      cell.innerHTML = `
+        <img src="${escAttr(item.thumb_url || item.image_url || '')}" alt="${escAttr(item.name || '作品')}" loading="lazy" decoding="async" draggable="false" referrerpolicy="no-referrer">
+        <div class="recommend-thumb-mark">${selectedFlag ? '✓' : ''}</div>
+        <div class="recommend-thumb-code">${item.artwork_code || item.name || '作品'}</div>
+        <button type="button" class="recommend-thumb-preview-btn">预览</button>
+      `;
+      return cell;
+    }
+
+    function 获取推荐网格指标(orderId) {
+      const viewport = document.getElementById(`recommend-viewport-${orderId}`);
+      const width = Math.max(220, viewport ? viewport.clientWidth : 360);
+      const gap = 10;
+      const minCellWidth = 108;
+      const columns = Math.max(1, Math.floor((width + gap) / (minCellWidth + gap)));
+      const cellWidth = Math.floor((width - gap * (columns - 1)) / columns);
+      const itemHeight = 116;
+      const rowHeight = itemHeight + gap;
+      return { viewport, columns, gap, itemHeight, rowHeight, cellWidth };
+    }
+
+    function 安排渲染推荐网格(orderId, force = false) {
+      确保推荐状态(orderId);
+      const state = 推荐虚拟状态缓存[orderId];
+      if (state.rafId) cancelAnimationFrame(state.rafId);
+      state.rafId = requestAnimationFrame(() => {
+        state.rafId = 0;
+        渲染推荐网格(orderId, force);
+      });
+    }
+
+    function 渲染推荐网格(orderId, force = false) {
+      const dropdown = document.getElementById(`recommend-dropdown-${orderId}`);
+      const viewport = document.getElementById(`recommend-viewport-${orderId}`);
+      const spacer = document.getElementById(`recommend-spacer-${orderId}`);
+      const grid = document.getElementById(`recommend-grid-${orderId}`);
+      if (!dropdown || dropdown.hidden || !viewport || !spacer || !grid) return;
+      const items = 获取推荐搜索结果(orderId);
+      const { columns, gap, rowHeight } = 获取推荐网格指标(orderId);
+      const totalRows = Math.max(1, Math.ceil(items.length / columns));
+      spacer.style.height = `${Math.max(totalRows * rowHeight - gap, viewport.clientHeight)}px`;
+      grid.style.setProperty('--recommend-columns', String(columns));
+      const selectedIds = new Set(获取推荐已选(orderId).map(item => item.id));
+      const scrollTop = viewport.scrollTop;
+      const visibleRows = Math.max(4, Math.ceil(viewport.clientHeight / rowHeight) + 2);
+      const startRow = Math.max(0, Math.floor(scrollTop / rowHeight) - 1);
+      const endRow = Math.min(totalRows, startRow + visibleRows);
+      const startIndex = startRow * columns;
+      const endIndex = Math.min(items.length, endRow * columns);
+      const renderKey = `${startIndex}:${endIndex}:${columns}:${Array.from(selectedIds).sort().join(',')}`;
+      if (!force && 推荐虚拟状态缓存[orderId].lastKey === renderKey) return;
+      推荐虚拟状态缓存[orderId].lastKey = renderKey;
+      grid.style.transform = `translateY(${startRow * rowHeight}px)`;
+      grid.replaceChildren();
+      const frag = document.createDocumentFragment();
+      for (let i = startIndex; i < endIndex; i += 1) {
+        frag.appendChild(创建推荐缩略图节点(orderId, items[i], selectedIds.has(items[i].id)));
+      }
+      grid.appendChild(frag);
+    }
+
+    function 更新推荐已选区(orderId) {
+      const list = document.getElementById(`recommend-selected-list-${orderId}`);
+      if (!list) return;
+      const selected = 获取推荐已选(orderId);
+      if (!selected.length) {
+        list.innerHTML = '<div class="recommend-empty">请先勾选 1 到 5 件作品</div>';
+        return;
+      }
+      list.innerHTML = selected.map(item => `
+        <div class="recommend-selected-item">
+          <img src="${escAttr(item.thumb_url || item.image_url || '')}" alt="${escAttr(item.name || '作品')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onclick="放大图片('${escAttr(item.full_url || item.image_url || item.thumb_url || '')}')">
+          <div class="recommend-selected-meta">
+            <div class="title">${item.name || '未命名作品'}</div>
+            <div>作者：${item.author || '未知作者'}</div>
+            <div>尺寸：${item.size_text || '未填写'}</div>
+          </div>
+          <button class="recommend-remove-btn" onclick="移除推荐作品('${orderId}', '${item.id}')">移除</button>
+        </div>
+      `).join('');
+    }
+
+    function 更新推荐控件状态(orderId) {
+      const selected = 获取推荐已选(orderId);
+      const countEl = document.getElementById(`recommend-selected-count-${orderId}`);
+      if (countEl) countEl.textContent = `已选 ${selected.length} / 5`;
+      const btn = document.getElementById(`recommend-confirm-${orderId}`);
+      if (btn) btn.disabled = !selected.length;
+      const toggleBtn = document.getElementById(`recommend-toggle-${orderId}`);
+      if (toggleBtn) toggleBtn.textContent = 推荐下拉展开.has(orderId) ? '收起作品列表' : '展开作品列表';
+      const dropdown = document.getElementById(`recommend-dropdown-${orderId}`);
+      if (dropdown) dropdown.hidden = !推荐下拉展开.has(orderId);
+      const statusEl = document.getElementById(`recommend-status-${orderId}`);
+      if (statusEl) statusEl.textContent = 获取推荐下拉状态文案(orderId);
+      const moreWrap = document.getElementById(`recommend-more-wrap-${orderId}`);
+      const moreBtn = document.getElementById(`recommend-more-btn-${orderId}`);
+      if (moreWrap) moreWrap.hidden = !推荐下拉展开.has(orderId);
+      if (moreBtn) {
+        moreBtn.textContent = 获取推荐更多按钮文案(orderId);
+        moreBtn.disabled = !推荐更多可用缓存[orderId] || 推荐加载中缓存[orderId];
+      }
+    }
+
+    function 更新推荐可见状态(orderId) {
+      更新推荐控件状态(orderId);
+      if (推荐下拉展开.has(orderId)) {
+        安排渲染推荐网格(orderId, true);
+      }
+    }
+
+    function 应用推荐缩略图状态(orderId, artworkId) {
+      document.querySelectorAll(`#recommend-grid-${orderId} .recommend-thumb[data-artwork-id="${artworkId}"]`).forEach(el => {
+        const selected = 获取推荐已选(orderId).some(item => item.id === artworkId);
+        el.classList.toggle('selected', selected);
+        const mark = el.querySelector('.recommend-thumb-mark');
+        if (mark) mark.textContent = selected ? '✓' : '';
+      });
+    }
+
+    function 生成推荐区HTML(order) {
+      if (order.service_type !== 'recommend_work' || order.status !== 'awaiting_manual_recommendation') return '';
+      确保推荐状态(order.id);
+      const selected = 获取推荐已选(order.id);
+      const keyword = 推荐搜索词缓存[order.id] || '';
+      const dropdownOpen = 推荐下拉展开.has(order.id);
+      return `
+            <div class="recommendation-section-inner">
+              <h4>人工推荐作品</h4>
+              <div class="recommend-layout">
+                <div class="recommend-space-card">
+                  ${order.space_image ? `<img data-image-url="${escAttr(获取图片源地址(order.space_image, 'upload'))}" alt="空间图" onclick="放大图片(this.dataset.fullsrc || this.dataset.imageUrl || this.src)">` : '<div class="recommend-empty">缺少空间图</div>'}
+                  <div class="img-label">用户提交的空间图</div>
+                </div>
+                <div>
+                  <div class="recommend-toolbar">
+                    <input class="recommend-search-input" id="recommend-search-${order.id}" value="${escAttr(keyword)}" placeholder="搜索作品名称 / 编号 / 作者 / 尺寸" oninput="推荐搜索输入('${order.id}', this.value)" onkeydown="if (event.key === 'Enter') { event.preventDefault(); 搜索推荐作品('${order.id}', this.value).catch(err => alert('作品搜索失败: ' + err.message)); }">
+                    <button class="recommend-dropdown-btn" id="recommend-toggle-${order.id}" onclick="event.stopPropagation(); 切换推荐面板('${order.id}')">${dropdownOpen ? '收起作品列表' : '展开作品列表'}</button>
+                    <button class="recommend-dropdown-btn" onclick="event.stopPropagation(); 搜索推荐作品('${order.id}', document.getElementById('recommend-search-${order.id}').value).catch(err => alert('作品搜索失败: ' + err.message))">搜索</button>
+                  </div>
+                  <div class="recommend-dropdown" id="recommend-dropdown-${order.id}" ${dropdownOpen ? '' : 'hidden'}>
+                    <div class="recommend-dropdown-status" id="recommend-status-${order.id}">${获取推荐下拉状态文案(order.id)}</div>
+                    <div class="recommend-viewport" id="recommend-viewport-${order.id}">
+                      <div class="recommend-spacer" id="recommend-spacer-${order.id}"></div>
+                      <div class="recommend-grid-virtual" id="recommend-grid-${order.id}"></div>
+                    </div>
+                    <div class="recommend-more-wrap" id="recommend-more-wrap-${order.id}" ${dropdownOpen ? '' : 'hidden'}>
+                      <button class="recommend-more-btn" id="recommend-more-btn-${order.id}" onclick="event.stopPropagation(); 加载更多推荐作品('${order.id}')">${获取推荐更多按钮文案(order.id)}</button>
+                    </div>
+                  </div>
+                  <div class="recommend-selected-wrap">
+                    <div class="recommend-selected-header"><span id="recommend-selected-count-${order.id}">已选 ${selected.length} / 5</span><span>点击缩略图可勾选或取消</span></div>
+                    <div class="recommend-selected-list" id="recommend-selected-list-${order.id}"></div>
+                  </div>
+                  <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+                    <button class="recommend-confirm-btn" id="recommend-confirm-${order.id}" onclick="执行确认推荐('${order.id}')" ${selected.length ? '' : 'disabled'}>确认推荐</button>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+    }
+
+    function 初始化推荐区节点(orderId) {
+      const viewport = document.getElementById(`recommend-viewport-${orderId}`);
+      const section = document.getElementById(`recommendation-section-${orderId}`);
+      if (!section) return;
+      更新推荐已选区(orderId);
+      更新推荐可见状态(orderId);
+      if (!viewport || viewport.dataset.bound === '1') {
+        if (推荐下拉展开.has(orderId)) 安排渲染推荐网格(orderId, true);
+        return;
+      }
+      viewport.dataset.bound = '1';
+      viewport.addEventListener('scroll', () => {
+        推荐虚拟状态缓存[orderId].scrollTop = viewport.scrollTop;
+        安排渲染推荐网格(orderId);
+      }, { passive: true });
+      viewport.addEventListener('click', event => {
+        const previewBtn = event.target.closest('.recommend-thumb-preview-btn');
+        if (previewBtn) {
+          event.stopPropagation();
+          const thumb = previewBtn.closest('.recommend-thumb');
+          if (thumb && thumb.dataset.fullUrl) 放大图片(thumb.dataset.fullUrl);
+          return;
+        }
+        const thumb = event.target.closest('.recommend-thumb');
+        if (!thumb) return;
+        切换推荐作品(orderId, thumb.dataset.artworkId);
+      });
+      if (推荐下拉展开.has(orderId)) 安排渲染推荐网格(orderId, true);
+    }
+
+    function 更新推荐区(orderId) {
+      const order = 获取订单对象(orderId);
+      const mount = document.getElementById(`recommendation-section-${orderId}`);
+      if (!order || !mount) return;
+      mount.innerHTML = 生成推荐区HTML(order);
+      加载容器图片(mount, 4);
+      初始化推荐区节点(orderId);
+    }
+
+    async function 搜索推荐作品(orderId, keyword = '', options = {}) {
+      确保推荐状态(orderId);
+      推荐下拉展开.add(orderId);
+      const append = !!options.append;
+      const query = String(keyword == null ? '' : keyword).trim();
+      推荐搜索词缓存[orderId] = query;
+      if (推荐请求控制器[orderId]) {
+        try { 推荐请求控制器[orderId].abort(); } catch (error) {}
+      }
+      const controller = new AbortController();
+      推荐请求控制器[orderId] = controller;
+      推荐加载中缓存[orderId] = true;
+      推荐错误缓存[orderId] = '';
+      if (!append) {
+        推荐分页游标缓存[orderId] = '';
+        推荐更多可用缓存[orderId] = false;
+        推荐搜索结果缓存[orderId] = [];
+      }
+      更新推荐可见状态(orderId);
+      try {
+        const cursor = append ? (推荐分页游标缓存[orderId] || '') : '';
+        const resp = await fetch(`/api/admin/artworks-lite?q=${encodeURIComponent(query)}&status=published&limit=60&cursor=${encodeURIComponent(cursor)}`, {
+          headers: { 'x-admin-secret': 管理密钥 },
+          signal: controller.signal
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || '作品缩略列表读取失败');
+        const incoming = Array.isArray(data.artworks) ? data.artworks.map(归一化推荐作品) : [];
+        if (append) {
+          const existing = 获取推荐搜索结果(orderId);
+          const idSet = new Set(existing.map(item => item.id));
+          推荐搜索结果缓存[orderId] = existing.concat(incoming.filter(item => !idSet.has(item.id)));
+        } else {
+          推荐搜索结果缓存[orderId] = incoming;
+          const viewport = document.getElementById(`recommend-viewport-${orderId}`);
+          if (viewport) viewport.scrollTop = 0;
+        }
+        推荐分页游标缓存[orderId] = data.next_cursor || '';
+        推荐更多可用缓存[orderId] = Boolean(data.has_more && data.next_cursor);
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        推荐错误缓存[orderId] = error.message || '作品列表加载失败';
+      } finally {
+        if (推荐请求控制器[orderId] === controller) delete 推荐请求控制器[orderId];
+        推荐加载中缓存[orderId] = false;
+        更新推荐可见状态(orderId);
+        安排渲染推荐网格(orderId, true);
+      }
+    }
+
+    function 切换推荐面板(orderId) {
+      确保推荐状态(orderId);
+      if (推荐下拉展开.has(orderId)) {
+        推荐下拉展开.delete(orderId);
+      } else {
+        推荐下拉展开.add(orderId);
+        if (!获取推荐搜索结果(orderId).length && !推荐加载中缓存[orderId]) {
+          搜索推荐作品(orderId, 推荐搜索词缓存[orderId] || '').catch(err => alert('作品列表加载失败: ' + err.message));
+        }
+      }
+      展开状态.add(orderId);
+      更新推荐可见状态(orderId);
+    }
+
+    function 加载更多推荐作品(orderId) {
+      if (!推荐更多可用缓存[orderId] || 推荐加载中缓存[orderId]) return;
+      搜索推荐作品(orderId, 推荐搜索词缓存[orderId] || '', { append: true }).catch(err => alert('作品列表加载失败: ' + err.message));
+    }
+
+    function 切换推荐作品(orderId, artworkId) {
+      确保推荐状态(orderId);
+      const selected = 获取推荐已选(orderId);
+      const existingIndex = selected.findIndex(item => item.id === artworkId);
+      if (existingIndex >= 0) {
+        selected.splice(existingIndex, 1);
+        更新推荐已选区(orderId);
+        更新推荐控件状态(orderId);
+        应用推荐缩略图状态(orderId, artworkId);
+        return;
+      }
+      if (selected.length >= 5) {
+        alert('最多只能勾选 5 件作品');
+        return;
+      }
+      const order = 获取订单对象(orderId);
+      const pool = [...获取推荐搜索结果(orderId), ...(Array.isArray(order?.recommended_artworks) ? order.recommended_artworks.map(归一化推荐作品) : [])];
+      const artwork = pool.find(item => item.id === artworkId);
+      if (!artwork) return;
+      selected.push(归一化推荐作品(artwork));
+      更新推荐已选区(orderId);
+      更新推荐控件状态(orderId);
+      应用推荐缩略图状态(orderId, artworkId);
+    }
+
+    function 移除推荐作品(orderId, artworkId) {
+      确保推荐状态(orderId);
+      推荐选中缓存[orderId] = 获取推荐已选(orderId).filter(item => item.id !== artworkId);
+      更新推荐已选区(orderId);
+      更新推荐控件状态(orderId);
+      应用推荐缩略图状态(orderId, artworkId);
+    }
+
+    function AI结果记录(order, url, index) {
+      const records = Array.isArray(order.ai_result_records) ? order.ai_result_records : [];
+      return records.find(item => item.url === url) || null;
+    }
+
+    function AI审核候选列表(order) {
+      const candidates = Array.isArray(order.ai_review_candidates) ? order.ai_review_candidates : [];
+      if (candidates.length > 0) return candidates.filter(item => item && (item.url || item.image_url));
+      let aiResultUrls = [];
+      try { aiResultUrls = JSON.parse(order.ai_result_urls || '[]'); } catch {}
+      if (aiResultUrls.length === 0 && order.ai_result_url) aiResultUrls = [order.ai_result_url];
+      return aiResultUrls.filter(Boolean).map((url, index) => ({
+        ...(AI结果记录(order, url, index) || {}),
+        url,
+        image_url: url,
+        review_status: 'pass',
+        review_status_label: '系统审核通过',
+        selected_by_default: true
+      }));
+    }
+
+    function AI候选状态Class(candidate) {
+      return String(candidate?.review_status || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    function AI候选标签(candidate) {
+      return candidate?.review_status_label || (candidate?.review_pass ? '系统审核通过' : '待人工确认');
+    }
+
+    function AI候选默认选中(candidate) {
+      return candidate?.selected_by_default === true || candidate?.review_pass === true || candidate?.review_status === 'pass';
+    }
+
+    function 简短文本(value, maxLen = 42) {
+      const text = String(value || '').trim();
+      if (!text) return '';
+      return text.length > maxLen ? text.slice(0, maxLen) + '…' : text;
+    }
+
+    function 交付结果记录(order, filename, index) {
+      const records = Array.isArray(order.delivery_result_records) ? order.delivery_result_records : [];
+      const value = String(filename || '').trim();
+      const basename = value.split('/').pop().split('?')[0];
+      return records.find(item => {
+        if (!item) return false;
+        const recordFilename = String(item.filename || '').trim();
+        const localUrl = String(item.local_image_url || '').trim();
+        const imageUrl = String(item.image_url || '').trim();
+        const r2Url = String(item.r2_url || item.r2_public_url || '').trim();
+        return recordFilename === value
+          || recordFilename === basename
+          || localUrl === value
+          || localUrl.split('/').pop().split('?')[0] === basename
+          || imageUrl === value
+          || imageUrl.split('/').pop().split('?')[0] === basename
+          || r2Url === value
+          || r2Url.split('/').pop().split('?')[0] === basename;
+      }) || records[index] || null;
+    }
+
+    function 获取交付图片显示地址(order, filename, index) {
+      const record = 交付结果记录(order, filename, index);
+      if (record) {
+        const url = record.r2_url || record.r2_public_url || record.permanent_url || record.image_url;
+        if (url) return 获取图片源地址(url, 'delivery');
+      }
+      const urls = Array.isArray(order.delivery_image_urls) ? order.delivery_image_urls : [];
+      if (urls[index]) return 获取图片源地址(urls[index], 'delivery');
+      return 获取图片源地址(filename, 'delivery');
+    }
+
+    function 重新生成按钮文案(order) {
+      return order.service_type === 'recommend_work' ? '↻ 退回人工推荐' : '↻ 重新生成';
     }
 
     function 获取当前筛选订单() {
@@ -468,12 +1061,16 @@
 
     function 步骤描述(order) {
       const s = order.status;
+      if (s === 'content_reviewing') return '① 内容安全审核中';
+      if (s === 'audit_rejected') return '内容安全审核拒绝，等待用户更换照片';
+      if (s === 'audit_timeout') return '内容安全审核超时，等待用户重新提交';
       if (s === 'pending') return order.ai_user_message ? '⚠ AI生成失败，待重新提交' : '① 等待处理';
-      if (s === 'ai_generating') return '② AI生成中…';
-      if (s === 'ai_ready') return '③ 待管理员审核';
-      if (s === 'delivered') return '④ 已交付，等待用户查收';
-      if (s === 'viewed') return '⑤ 用户已查收';
-      if (s === 'downloaded') return '⑥ 用户已下载';
+      if (s === 'awaiting_manual_recommendation') return '② 等待人工选作品';
+      if (s === 'ai_generating') return order.service_type === 'recommend_work' ? '③ 推荐效果图生成中…' : '② AI生成中…';
+      if (s === 'ai_ready') return order.service_type === 'recommend_work' ? '④ 待管理员审核' : '③ 待管理员审核';
+      if (s === 'delivered') return '⑤ 已交付，等待用户查收';
+      if (s === 'viewed') return '⑥ 用户已查收';
+      if (s === 'downloaded') return '⑦ 用户已下载';
       return s;
     }
 
@@ -487,11 +1084,97 @@
         .replace(/>/g, '&gt;');
     }
 
+    function 获取图片源地址(pathOrUrl, kind = 'upload') {
+      const value = String(pathOrUrl || '').trim();
+      if (!value) return '';
+      if (/^(https?:)?\/\//i.test(value) || value.startsWith('data:') || value.startsWith('blob:')) {
+        return value;
+      }
+      return kind === 'delivery' ? `/deliveries/${value}` : `/uploads/${value}`;
+    }
+
+    function 清理订单图片资源(orderId) {
+      const resource = 订单图片资源[orderId];
+      if (resource) {
+        resource.active = false;
+        if (resource.controller) {
+          try { resource.controller.abort(); } catch (error) {}
+        }
+        (resource.objectUrls || []).forEach(url => URL.revokeObjectURL(url));
+        delete 订单图片资源[orderId];
+      }
+      const body = document.getElementById(`body-${orderId}`);
+      if (!body) return;
+      body.querySelectorAll('img[data-image-url]').forEach(img => {
+        img.removeAttribute('src');
+        img.dataset.imageLoaded = '0';
+        delete img.dataset.fullsrc;
+      });
+    }
+
+    function 清理全部订单图片资源() {
+      Object.keys(订单图片资源).forEach(orderId => 清理订单图片资源(orderId));
+    }
+
+    function 获取临时图片地址(url) {
+      return url;
+    }
+
+    async function 加载订单图片(orderId) {
+      if (!展开状态.has(orderId)) return;
+      const body = document.getElementById(`body-${orderId}`);
+      if (!body) return;
+
+      const targets = Array.from(body.querySelectorAll('img[data-image-url]'));
+      if (!targets.length) return;
+
+      清理订单图片资源(orderId);
+      const resource = {
+        controller: new AbortController(),
+        objectUrls: [],
+        active: true
+      };
+      订单图片资源[orderId] = resource;
+
+      const liveBody = document.getElementById(`body-${orderId}`);
+      if (!liveBody) return;
+      const images = Array.from(liveBody.querySelectorAll('img[data-image-url]'));
+
+      images.forEach((img, index) => {
+        const sourceUrl = img.dataset.imageUrl;
+        if (!sourceUrl) return;
+        try {
+          const displayUrl = 获取临时图片地址(sourceUrl);
+          if (!resource.active || !展开状态.has(orderId)) return;
+          img.loading = index < 4 ? 'eager' : 'lazy';
+          img.decoding = 'async';
+          img.referrerPolicy = 'no-referrer';
+          if (index < 2) img.fetchPriority = 'high';
+          img.src = displayUrl;
+          img.dataset.fullsrc = displayUrl;
+          img.dataset.imageLoaded = '1';
+        } catch (error) {
+          console.warn('订单图片加载失败:', sourceUrl, error.message || error);
+        }
+      });
+    }
+
+    function 同步展开订单图片加载() {
+      展开状态.forEach(orderId => {
+        加载订单图片(orderId).catch(error => {
+          if (error.name !== 'AbortError') {
+            console.warn('订单图片同步加载失败:', orderId, error.message || error);
+          }
+        });
+      });
+    }
+
     // ══════════════════════════════════════
     // 渲染
     // ══════════════════════════════════════
     function 渲染订单列表() {
       const container = document.getElementById('orders-container');
+      清理全部订单图片资源();
       let orders = 全部订单;
       if (当前筛选) orders = orders.filter(o => o.status === 当前筛选);
       if (orders.length === 0) {
@@ -506,6 +1189,29 @@
         const body = document.getElementById(`body-${id}`);
         if (body) body.classList.add('open');
       });
+      同步展开订单图片加载();
+      获取当前筛选订单().forEach(order => { if (order.service_type === 'recommend_work' && order.status === 'awaiting_manual_recommendation') 初始化推荐区节点(order.id); });
+    }
+
+    function 更新订单卡片(orderId) {
+      const order = 获取订单对象(orderId);
+      const oldCard = document.getElementById(`card-${orderId}`);
+      if (!order || !oldCard) return;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = 渲染订单卡片(order).trim();
+      const newCard = wrapper.firstElementChild;
+      if (!newCard) return;
+      oldCard.replaceWith(newCard);
+      if (展开状态.has(orderId)) {
+        const body = document.getElementById(`body-${orderId}`);
+        if (body) body.classList.add('open');
+        加载订单图片(orderId).catch(error => {
+          if (error.name !== 'AbortError') {
+            console.warn('订单局部刷新后图片加载失败:', orderId, error.message || error);
+          }
+        });
+      }
+      if (order.service_type === 'recommend_work' && order.status === 'awaiting_manual_recommendation') 初始化推荐区节点(orderId);
     }
 
     function 渲染订单卡片(order) {
@@ -535,9 +1241,11 @@
         </div>
         <div class="order-body" id="body-${order.id}">
           <div class="detail-row"><span class="label">订单编号</span><span>${order.id.substring(0,8)}…</span></div>
+          <div class="detail-row"><span class="label">所属展览</span><span>${escAttr(order.exhibition_name || order.exhibition_id || '未标记')}</span></div>
           <div class="detail-row"><span class="label">接收${接收标签}</span><span>${order.receive_target}</span></div>
           <div class="detail-row"><span class="label">附加服务</span><span>${order.extra_service ? '是' : '否'}</span></div>
           ${order.artwork_size ? `<div class="detail-row"><span class="label">画作尺寸</span><span style="font-weight:600;color:var(--color-primary-dark)">${order.artwork_size}</span></div>` : ''}
+          ${获取推荐标签(order) ? `<div class="detail-row"><span class="label">推荐作品</span><span>${获取推荐标签(order)}</span></div>` : ''}
 
           <!-- 时间进度 -->
           <div class="detail-row"><span class="label">提交时间</span><span>${order.created_at || '—'}</span></div>
@@ -548,6 +1256,9 @@
           <div class="detail-row"><span class="label">当前步骤</span><span style="font-weight:600">${步骤描述(order)}</span></div>
           ${order.ai_current_step ? `<div class="detail-row"><span class="label">详细步骤</span><span style="color:var(--color-primary-dark)">${order.ai_current_step}</span></div>` : ''}
           ${order.ai_retry_count > 0 ? `<div class="detail-row"><span class="label">重试次数</span><span>${order.ai_retry_count} 次</span></div>` : ''}
+          ${order.content_review_status ? `<div class="detail-row"><span class="label">内容审核</span><span>${escAttr(order.content_review_status)}${order.content_review_rejected_at ? ' · ' + escAttr(order.content_review_rejected_at) : ''}</span></div>` : ''}
+          ${order.status === 'audit_rejected' ? `<div class="audit-reject-box"><strong>内容安全审核未通过</strong><br>${escAttr(order.content_review_reject_reason || '图片未通过内容安全审核')}<br>该订单已保留在后台，并计入总订单统计。</div>` : ''}
+          ${order.status === 'audit_timeout' ? `<div class="audit-reject-box"><strong>内容安全审核超时</strong><br>${escAttr(order.content_review_reject_reason || '审核结果长时间未返回')}<br>该订单已保留在后台，不计入审核拒绝订单量。</div>` : ''}
 
           <div class="tracking-summary">
             <div class="tracking-summary-main">
@@ -566,38 +1277,52 @@
           <div class="images-section">
             <h4>用户上传</h4>
             <div class="images-row">
-              ${order.artwork_image ? `<div class="img-wrap"><img src="${order.artwork_image.startsWith('http') ? order.artwork_image : '/uploads/' + order.artwork_image}" alt="作品图" onclick="放大图片(this.src)" onerror="this.style.border='2px solid #c45c4a'"><div class="img-label">作品图</div></div>` : ''}
-              ${order.space_image    ? `<div class="img-wrap"><img src="${order.space_image.startsWith('http') ? order.space_image : '/uploads/' + order.space_image}"   alt="空间图" onclick="放大图片(this.src)" onerror="this.style.border='2px solid #c45c4a'"><div class="img-label">空间图</div></div>` : ''}
+              ${order.artwork_image ? `<div class="img-wrap"><img data-image-url="${escAttr(获取图片源地址(order.artwork_image, 'upload'))}" alt="作品图" onclick="放大图片(this.dataset.fullsrc || this.dataset.imageUrl || this.src)" onerror="this.style.border='2px solid #c45c4a'"><div class="img-label">作品图</div></div>` : ''}
+              ${order.space_image    ? `<div class="img-wrap"><img data-image-url="${escAttr(获取图片源地址(order.space_image, 'upload'))}" alt="空间图" onclick="放大图片(this.dataset.fullsrc || this.dataset.imageUrl || this.src)" onerror="this.style.border='2px solid #c45c4a'"><div class="img-label">空间图</div></div>` : ''}
             </div>
           </div>` : ''}
 
+          ${order.service_type === 'recommend_work' && order.status === 'awaiting_manual_recommendation' ? `<div class="recommendation-section" id="recommendation-section-${order.id}">${生成推荐区HTML(order)}</div>` : ''}
+
           <!-- AI 效果图审核（ai_ready / ai_generating 状态） -->
           ${(() => {
-            let aiResultUrls = [];
-            try { aiResultUrls = JSON.parse(order.ai_result_urls || '[]'); } catch {}
-            if (aiResultUrls.length === 0 && order.ai_result_url) aiResultUrls = [order.ai_result_url];
-            const hasResults = aiResultUrls.length > 0;
+            const aiCandidates = AI审核候选列表(order);
+            const hasResults = aiCandidates.length > 0;
             const showSection = order.status === 'ai_ready' || order.status === 'ai_generating' || hasResults;
             if (!showSection) return '';
             return `
             <div class="ai-review-section">
-              <h4>AI 效果图${order.status === 'ai_ready' ? `（${aiResultUrls.length} 张待审核）` : order.status === 'ai_generating' ? '（生成中）' : ''}</h4>
+              <h4>AI 效果图${order.status === 'ai_ready' ? `（${aiCandidates.length} 张候选，含迭代过程图）` : order.status === 'ai_generating' ? `（生成中${hasResults ? '，已产生 ' + aiCandidates.length + ' 张候选' : ''}）` : ''}</h4>
               ${hasResults ? `
-                <p style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:8px;">点击图片选择/取消，绿色边框为已选中，交付时只交付选中图片</p>
+                <p style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:8px;">点击图片选择或取消，绿色边框为已选中。系统审核通过图默认选中，尺寸/物理/一致性未通过的迭代图也可人工选择交付。</p>
                 <div class="ai-gallery" id="gallery-${order.id}">
-                  ${aiResultUrls.map((url, i) => `
-                    <div class="ai-gallery-item selected" data-url="${url}" onclick="切换AI图选择(this, '${order.id}')">
-                      <img src="${url}" onclick="event.stopPropagation(); 放大图片('${url}')">
+                  ${aiCandidates.map((candidate, i) => {
+                    const url = candidate.url || candidate.image_url;
+                    const selected = AI候选默认选中(candidate) ? 'selected' : '';
+                    const statusClass = AI候选状态Class(candidate);
+                    const reason = candidate.reason || candidate.qwen_reason || '';
+                    const fixText = candidate.dimension_fix_instruction || candidate.correction_amount || '';
+                    return `
+                    <div class="ai-gallery-item ${selected}" data-url="${escAttr(url)}" onclick="切换AI图选择(this, '${order.id}')">
+                      <img data-image-url="${escAttr(url)}" alt="效果图 ${i + 1}" onclick="event.stopPropagation(); 放大图片(this.dataset.fullsrc || this.dataset.imageUrl || this.src)">
                       <div class="select-badge">✓</div>
-                      <div class="img-label">效果图 ${i + 1}</div>
-                    </div>
-                  `).join('')}
+                      <div class="ai-gallery-meta">
+                        <span class="ai-review-badge ai-review-${statusClass}">${escAttr(AI候选标签(candidate))}</span>
+                        <div class="title">${escAttr(candidate.artwork_name || `效果图 ${i + 1}`)}</div>
+                        ${candidate.artwork_author ? `<div>作者：${escAttr(candidate.artwork_author)}</div>` : ''}
+                        ${candidate.artwork_size ? `<div>尺寸：${escAttr(candidate.artwork_size)}</div>` : ''}
+                        ${candidate.batch_index ? `<div>轮次：${candidate.retry_count ? '重试' + candidate.retry_count + ' · ' : ''}${candidate.batch_index}/${candidate.total_in_batch || '?'}</div>` : ''}
+                        ${reason ? `<div title="${escAttr(reason)}">原因：${escAttr(简短文本(reason))}</div>` : ''}
+                        ${fixText ? `<div title="${escAttr(fixText)}">修正：${escAttr(简短文本(fixText))}</div>` : ''}
+                      </div>
+                    </div>`;
+                  }).join('')}
                 </div>
                 <div class="ai-action-row">
                   <button class="approve-btn" id="approve-btn-${order.id}" onclick="执行通过交付('${order.id}')">✓ 通过并交付选中图</button>
                   <div class="regen-area">
-                    <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）：如"画作偏小，请调大""></textarea>
-                    <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">↻ 重新生成</button>
+                    <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）"></textarea>
+                    <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">${重新生成按钮文案(order)}</button>
                   </div>
                 </div>
               ` : order.status === 'ai_generating' ? `
@@ -606,7 +1331,7 @@
                 <p style="color:#c45c4a;font-size:13px;margin-bottom:10px;">⚠ AI 已完成但图片链接丢失，请重新生成。</p>
                 <div class="regen-area">
                   <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）"></textarea>
-                  <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">↻ 重新生成</button>
+                  <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">${重新生成按钮文案(order)}</button>
                 </div>
               `}
             </div>`;
@@ -617,7 +1342,7 @@
           <div class="images-section">
             <h4>交付图片</h4>
             <div class="images-row">
-              ${交付图片.map((img, i) => `<div class="img-wrap"><img src="/deliveries/${img}" alt="交付图${i+1}" onclick="放大图片(this.src)"><div class="img-label">交付${i+1}</div></div>`).join('')}
+              ${交付图片.map((img, i) => { const record = 交付结果记录(order, img, i); const displayUrl = 获取交付图片显示地址(order, img, i); return `<div class="img-wrap"><img data-image-url="${escAttr(displayUrl)}" alt="交付图${i+1}" onclick="放大图片(this.dataset.fullsrc || this.dataset.imageUrl || this.src)"><div class="img-label">${record ? `${record.artwork_name || ('交付' + (i + 1))}${record.artwork_author ? '｜' + record.artwork_author : ''}` : `交付${i+1}`}</div></div>`; }).join('')}
             </div>
           </div>` : ''}
 
@@ -672,13 +1397,13 @@
           <!-- Bug修复2：pending / processing 均显示首次交付操作区。
                旧版只判断 pending，processing 状态的订单无法完成交付。 -->
           <!-- pending 但有 ai_user_message → 可重新提交AI -->
-          ${order.status === 'pending' && order.ai_user_message ? `
+          ${order.status === 'pending' && order.ai_user_message && order.service_type !== 'recommend_work' ? `
           <div class="ai-review-section">
             <h4>AI 效果图</h4>
             <p style="color:#c45c4a;font-size:13px;margin-bottom:10px;">⚠ AI生成失败或未完成，可重新提交。</p>
             <div class="regen-area">
               <textarea class="regen-note" id="regen-note-${order.id}" placeholder="重新生成备注（可选）"></textarea>
-              <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">↻ 重新提交AI生成</button>
+              <button class="regen-btn" id="regen-btn-${order.id}" onclick="执行重新生成('${order.id}')">${重新生成按钮文案(order)}</button>
             </div>
           </div>` : ''}
 
@@ -719,9 +1444,15 @@
       if (展开状态.has(id)) {
         展开状态.delete(id);
         body.classList.remove('open');
+        清理订单图片资源(id);
       } else {
         展开状态.add(id);
         body.classList.add('open');
+        加载订单图片(id).catch(error => {
+          if (error.name !== 'AbortError') {
+            console.warn('订单展开加载失败:', id, error.message || error);
+          }
+        });
       }
     }
 
@@ -858,9 +1589,8 @@
       } else {
         重交付激活.add(orderId);
       }
-      // Bug修复1：切换面板前先将该订单加入展开状态，防止重渲染后面板所在卡片折叠不可见。
       展开状态.add(orderId);
-      渲染订单列表();
+      更新订单卡片(orderId);
     }
 
     async function 执行重新交付(orderId) {
@@ -896,6 +1626,33 @@
       } catch (err) {
         alert('重新交付请求失败: ' + err.message);
         if (btn) { btn.disabled = false; btn.textContent = '覆盖交付'; }
+      }
+    }
+
+    async function 执行确认推荐(orderId) {
+      const selected = 获取推荐已选(orderId);
+      if (selected.length < 1 || selected.length > 5) {
+        return alert('请勾选 1 到 5 件作品');
+      }
+      const btn = document.getElementById(`recommend-confirm-${orderId}`);
+      if (btn) { btn.disabled = true; btn.textContent = '提交中…'; }
+      try {
+        const resp = await fetch(`/api/admin/recommendations/${orderId}/confirm`, {
+          method: 'POST',
+          headers: { 'x-admin-secret': 管理密钥, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ artwork_ids: selected.map(item => item.id) })
+        });
+        const data = await resp.json();
+        if (data.success) {
+          alert(`✅ 已提交 ${data.count} 件作品生成，请稍后刷新查看结果。`);
+          await 加载订单();
+        } else {
+          alert(data.error || '提交推荐失败');
+          if (btn) { btn.disabled = false; btn.textContent = '确认推荐'; }
+        }
+      } catch (err) {
+        alert('请求失败: ' + err.message);
+        if (btn) { btn.disabled = false; btn.textContent = '确认推荐'; }
       }
     }
 
@@ -952,6 +1709,7 @@
     async function 执行重新生成(orderId) {
       const noteEl = document.getElementById(`regen-note-${orderId}`);
       const note = noteEl ? noteEl.value.trim() : '';
+      const order = 获取订单对象(orderId) || {};
       const btn = document.getElementById(`regen-btn-${orderId}`);
       if (btn) { btn.disabled = true; btn.textContent = '提交中…'; }
       try {
@@ -962,15 +1720,17 @@
         });
         const data = await resp.json();
         if (data.success) {
-          alert('✅ 已重新提交生成任务，请稍后刷新查看结果。');
+          alert(order.service_type === 'recommend_work'
+            ? '✅ 已退回人工推荐，可直接复用上次勾选继续确认。'
+            : '✅ 已重新提交生成任务，请稍后刷新查看结果。');
           await 加载订单();
         } else {
           alert(data.error || '操作失败');
-          if (btn) { btn.disabled = false; btn.textContent = '↻ 重新生成'; }
+          if (btn) { btn.disabled = false; btn.textContent = 重新生成按钮文案(order); }
         }
       } catch (err) {
         alert('请求失败: ' + err.message);
-        if (btn) { btn.disabled = false; btn.textContent = '↻ 重新生成'; }
+        if (btn) { btn.disabled = false; btn.textContent = 重新生成按钮文案(order); }
       }
     }
 
@@ -1009,13 +1769,13 @@
     async function 切换埋点详情(orderId) {
       if (埋点展开状态.has(orderId)) {
         埋点展开状态.delete(orderId);
-        渲染订单列表();
+        更新订单卡片(orderId);
         return;
       }
 
       埋点展开状态.add(orderId);
       展开状态.add(orderId);
-      渲染订单列表();
+      更新订单卡片(orderId);
 
       if (埋点详情缓存[orderId]) return;
 
@@ -1028,7 +1788,7 @@
       } catch (err) {
         埋点详情缓存[orderId] = [];
       }
-      渲染订单列表();
+      更新订单卡片(orderId);
     }
 
     async function 批量下载当前筛选() {
@@ -1091,6 +1851,20 @@
     // ══════════════════════════════════════
     document.getElementById('admin-secret').addEventListener('keydown', e => {
       if (e.key === 'Enter') 加载订单();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const presetSecret = 获取预填密钥();
+      if (presetSecret) {
+        document.getElementById('admin-secret').value = presetSecret;
+        更新后台导航(presetSecret);
+      } else {
+        更新后台导航('');
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      清理全部订单图片资源();
     });
   </script>
 </body>

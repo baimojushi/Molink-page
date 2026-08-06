@@ -205,3 +205,286 @@
   line-height: 1.5;
   color: #a09588;
 }
+
+@import '../../utils/fullscreenViewer.wxss';
+
+.history-viewer-advisor-dock {
+  position: fixed;
+  left: 18rpx;
+  top: calc(env(safe-area-inset-top) + 108rpx);
+  z-index: 10002;
+  display: flex;
+  justify-content: flex-start;
+  pointer-events: none;
+}
+
+.history-viewer-advisor-card,
+.history-viewer-advisor-pill {
+  box-sizing: border-box;
+  pointer-events: auto;
+  border: 1rpx solid rgba(255, 255, 255, 0.34);
+  background: rgba(246, 246, 248, 0.52);
+  -webkit-backdrop-filter: blur(28px) saturate(138%);
+  backdrop-filter: blur(28px) saturate(138%);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.11);
+}
+
+.history-viewer-advisor-card {
+  width: auto;
+  max-width: 470rpx;
+  min-height: 76rpx;
+  padding: 9rpx 9rpx 9rpx 10rpx;
+  display: flex;
+  align-items: center;
+  border-radius: 22rpx;
+  transform-origin: left top;
+  animation: historyViewerAdvisorExpand 300ms cubic-bezier(0.22, 0.8, 0.28, 1) both;
+}
+
+@keyframes historyViewerAdvisorExpand {
+  from {
+    opacity: 0.68;
+    transform: translateY(-5rpx) scale(0.84);
+  }
+  68% {
+    opacity: 1;
+    transform: translateY(1rpx) scale(1.012);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.history-viewer-advisor-card-pressed {
+  opacity: 0.8;
+}
+
+.history-viewer-advisor-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  flex: 0 0 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15rpx;
+  background: rgba(255, 255, 255, 0.34);
+  color: #48484a;
+  font-size: 20rpx;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.history-viewer-advisor-copy {
+  min-width: 0;
+  flex: 1;
+  margin-left: 10rpx;
+}
+
+.history-viewer-advisor-name,
+.history-viewer-advisor-wechat {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-viewer-advisor-name {
+  font-size: 20rpx;
+  line-height: 1.3;
+  color: #2c2c2e;
+  font-weight: 600;
+}
+
+.history-viewer-advisor-wechat {
+  margin-top: 2rpx;
+  font-size: 16rpx;
+  line-height: 1.25;
+  color: #6e6e73;
+}
+
+.history-viewer-advisor-action {
+  min-width: 58rpx;
+  height: 46rpx;
+  margin-left: 10rpx;
+  padding: 0 11rpx;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14rpx;
+  background: rgba(255, 255, 255, 0.36);
+  color: #3a3a3c;
+  font-size: 17rpx;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: opacity 140ms ease, transform 140ms ease, background 140ms ease;
+}
+
+.history-viewer-advisor-action-pressed {
+  opacity: 0.62;
+  transform: scale(0.96);
+}
+
+.history-viewer-advisor-action.is-copied {
+  background: rgba(255, 255, 255, 0.52);
+  color: #1c1c1e;
+}
+
+.history-viewer-advisor-toggle {
+  width: 30rpx;
+  height: 30rpx;
+  margin-left: 4rpx;
+  flex: 0 0 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.history-viewer-advisor-chevron {
+  width: 9rpx;
+  height: 9rpx;
+  box-sizing: border-box;
+  border-right: 2rpx solid rgba(72, 72, 74, 0.68);
+  border-bottom: 2rpx solid rgba(72, 72, 74, 0.68);
+}
+
+.chevron-down {
+  transform: rotate(45deg) translate(-1rpx, -1rpx);
+}
+
+.chevron-right {
+  margin: 0 10rpx 0 4rpx;
+  transform: rotate(-45deg);
+}
+
+.history-viewer-advisor-pill {
+  height: 64rpx;
+  padding: 8rpx 2rpx 8rpx 8rpx;
+  display: flex;
+  align-items: center;
+  border-radius: 999rpx;
+  transform-origin: left top;
+  animation: historyViewerAdvisorCollapse 250ms cubic-bezier(0.22, 0.8, 0.28, 1) both;
+}
+
+@keyframes historyViewerAdvisorCollapse {
+  from {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.history-viewer-advisor-pill-pressed {
+  opacity: 0.66;
+  transform: scale(0.97);
+}
+
+.history-viewer-advisor-avatar-compact {
+  width: 48rpx;
+  height: 48rpx;
+  flex-basis: 48rpx;
+}
+
+.history-viewer-advisor-pill-text {
+  margin-left: 8rpx;
+  color: #48484a;
+  font-size: 18rpx;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .history-viewer-advisor-card {
+    max-width: 466rpx;
+  }
+
+  .history-viewer-advisor-wechat {
+    max-width: 190rpx;
+  }
+}
+
+@media (min-width: 600px) {
+  .history-viewer-advisor-dock {
+    left: 18px;
+    top: calc(env(safe-area-inset-top) + 68px);
+  }
+
+  .history-viewer-advisor-card {
+    max-width: 294px;
+    min-height: 48px;
+    padding: 6px;
+    border-radius: 14px;
+  }
+
+  .history-viewer-advisor-avatar {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 9px;
+    font-size: 12px;
+  }
+
+  .history-viewer-advisor-copy {
+    margin-left: 7px;
+  }
+
+  .history-viewer-advisor-name {
+    font-size: 12px;
+  }
+
+  .history-viewer-advisor-wechat {
+    font-size: 10px;
+  }
+
+  .history-viewer-advisor-action {
+    min-width: 38px;
+    height: 30px;
+    margin-left: 7px;
+    padding: 0 7px;
+    border-radius: 9px;
+    font-size: 10px;
+  }
+
+  .history-viewer-advisor-toggle {
+    width: 20px;
+    height: 20px;
+    margin-left: 3px;
+    flex-basis: 20px;
+  }
+
+  .history-viewer-advisor-chevron {
+    width: 6px;
+    height: 6px;
+    border-width: 1.5px;
+  }
+
+  .history-viewer-advisor-pill {
+    height: 42px;
+    padding: 6px 2px 6px 6px;
+  }
+
+  .history-viewer-advisor-avatar-compact {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+
+  .history-viewer-advisor-pill-text {
+    margin-left: 6px;
+    font-size: 11px;
+  }
+
+  .chevron-right {
+    margin: 0 7px 0 3px;
+  }
+}

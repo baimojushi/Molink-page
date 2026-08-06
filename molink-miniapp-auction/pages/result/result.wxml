@@ -1,4 +1,4 @@
-<view class="page-container">
+<view class="page-container {{collectionAdvisorName || collectionAdvisorWechat ? 'has-collection-advisor' : ''}}">
   <view class="result-header">
     <view class="success-icon">✓</view>
     <text class="result-title">效果图已完成</text>
@@ -19,10 +19,50 @@
   <view class="images-section" wx:if="{{deliveryImages.length > 0}}">
     <view class="section-label">您的效果图</view>
     <view class="image-list">
-      <view class="image-item glass-card" wx:for="{{deliveryImages}}" wx:key="*this">
-        <image class="delivery-img" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-src="{{item}}" data-index="{{index}}" lazy-load />
+      <view class="image-item glass-card" wx:for="{{deliveryImages}}" wx:key="fullUrl">
+        <view id="delivery-image-{{index}}" class="delivery-img-stage" bindtap="toggleDeliveryImage" data-index="{{index}}">
+          <view class="delivery-loading" wx:if="{{!item.isLoaded && !item.loadFailed}}">
+            <view class="loading-visual">
+              <view class="loading-orbit loading-orbit-a"></view>
+              <view class="loading-orbit loading-orbit-b"></view>
+              <view class="loading-core"></view>
+            </view>
+            <text class="loading-copy">正在展开空间画面</text>
+          </view>
+
+          <view class="delivery-load-error" wx:elif="{{item.loadFailed}}">
+            <text>图片暂未载入，请稍后重试</text>
+          </view>
+
+          <view
+            class="delivery-img-reveal {{item.isLoaded ? 'is-loaded ' + item.revealClass : ''}}"
+            style="animation-delay: {{item.revealDelay}};"
+          >
+            <view class="delivery-img-motion">
+              <image
+                id="delivery-canvas-{{index}}"
+                class="delivery-img-canvas"
+                src="{{item.displayUrl || item.fullUrl}}"
+                mode="scaleToFill"
+                style="{{item.layoutStyle}}"
+                animation="{{item.animationData}}"
+                bindload="onDeliveryImageLoad"
+                binderror="onDeliveryImageError"
+                data-index="{{index}}"
+              />
+            </view>
+            <view class="delivery-reveal-sheen" style="animation-delay: {{item.revealDelay}};"></view>
+          </view>
+
+          <view wx:if="{{item.hasFocus && item.isLoaded && !item.motionLocked}}" class="delivery-view-hint">{{item.hint}}</view>
+        </view>
+        <view class="primary-supplement-status" wx:if="{{index === 0 && primarySupplementRendering}}">
+          <view class="primary-supplement-dot"></view>
+          <text>正在为主图优化色彩，稍后自动更新</text>
+        </view>
         <view class="image-actions">
-          <button class="action-btn" bindtap="saveImage" data-src="{{item}}" data-index="{{index}}">保存到相册</button>
+          <button class="action-btn" bindtap="previewImage" data-src="{{item.fullUrl}}" data-index="{{index}}">查看大图</button>
+          <button class="action-btn" bindtap="saveImage" data-src="{{item.fullUrl}}" data-index="{{index}}">保存到相册</button>
         </view>
       </view>
     </view>
@@ -32,8 +72,135 @@
     <text class="empty-text">效果图加载中...</text>
   </view>
 
+  <view class="result-advisor-card glass-card" wx:if="{{advisorText}}">
+    <view class="thinking-title-row">
+      <text class="thinking-dot"></text>
+      <text class="thinking-title">艺术顾问解读</text>
+    </view>
+    <text class="result-advisor-copy">{{advisorText}}</text>
+  </view>
+
+  <view class="thinking-card glass-card result-thinking-card" wx:if="{{thinkingReady}}">
+    <view class="thinking-title-row">
+      <text class="thinking-dot"></text>
+      <text class="thinking-title">艺术顾问建议与墙面选择</text>
+    </view>
+    <text class="thinking-guide">{{thinkingGuideCopy}}</text>
+
+    <view class="wall-candidates">
+      <view
+        class="wall-candidate {{item.is_selected ? 'selected' : ''}} {{item.current_effect ? 'current-effect' : ''}} status-{{item.supplement_status}} {{item.is_disabled ? 'disabled' : ''}}"
+        wx:for="{{wallCandidates}}"
+        wx:key="wall_id"
+        data-wall-id="{{item.wall_id}}"
+        bindtap="toggleWallChoice"
+      >
+        <view class="schematic-wall">
+          <view class="schematic-floor"></view>
+          <view class="schematic-artwork" style="{{item.artworkStyle}}"></view>
+        </view>
+        <view class="wall-copy">
+          <view class="wall-title-row">
+            <text class="wall-title">{{item.schematic.wallLabel}}</text>
+            <text class="wall-badge current-effect-badge" wx:if="{{item.status_label === '当前效果'}}">当前效果</text>
+            <text class="wall-badge pending-badge" wx:elif="{{item.status_label === '生成中'}}">生成中</text>
+            <text class="wall-badge success-badge" wx:elif="{{item.status_label === '已追加'}}">已追加</text>
+            <text class="wall-badge failed-badge" wx:elif="{{item.status_label === '未完成'}}">未完成</text>
+            <text class="wall-badge" wx:elif="{{item.is_primary}}">首选</text>
+            <text class="wall-badge selected-badge" wx:elif="{{item.is_selected}}">已选</text>
+          </view>
+          <text class="wall-reason">{{item.reason}}</text>
+          <text class="wall-score" wx:if="{{item.score_label}}">综合分 {{item.score_label}}</text>
+          <view
+            class="wallpaper-suggestion {{item.wallpaper_opt_in_preview ? 'checked' : ''}}"
+            wx:if="{{item.suggest_dark_wallpaper && !item.current_effect && (item.is_selected || item.is_primary)}}"
+            data-wall-id="{{item.wall_id}}"
+            catchtap="toggleWallpaperSuggestion"
+          >
+            <view class="wallpaper-check">{{item.wallpaper_opt_in_preview ? '✓' : ''}}</view>
+            <view class="wallpaper-tone" style="{{item.wallpaperToneStyle}}"></view>
+            <view class="wallpaper-copy-wrap">
+              <text class="wallpaper-title">为这面墙换上深色墙纸</text>
+              <text class="wallpaper-copy">推荐，与作品更相衬；可取消</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="not-rec-list" wx:if="{{notRecommendedWalls.length}}">
+      <text class="not-rec-title">暂不推荐的墙面</text>
+      <text class="not-rec-item" wx:for="{{notRecommendedWalls}}" wx:key="wall_id">{{item.wall_zh}}：{{item.primary_reason}}</text>
+    </view>
+
+    <button class="preference-btn" disabled="{{!selectedWallIds.length || preferenceSubmitting}}" bindtap="submitWallPreference">
+      {{preferenceSubmitting ? '正在提交…' : '生成所选墙面的追加效果'}}
+    </button>
+    <text class="preference-message" wx:if="{{preferenceMessage}}">{{preferenceMessage}}</text>
+  </view>
+
   <view class="again-section">
     <button class="btn-secondary" bindtap="submitAgain">提交新的委托</button>
     <text class="privacy-notice">您提交的原始照片已从服务器删除</text>
+  </view>
+
+
+  <view wx:if="{{collectionAdvisorName || collectionAdvisorWechat}}" class="collection-advisor-float">
+    <view class="collection-advisor-identity">
+      <text class="collection-advisor-label">收藏顾问</text>
+      <text class="collection-advisor-name">{{collectionAdvisorName || '展览收藏顾问'}}</text>
+    </view>
+    <view wx:if="{{collectionAdvisorWechat}}" class="collection-advisor-action">
+      <text class="collection-advisor-wechat-label">微信号</text>
+      <button
+        class="collection-advisor-copy-btn"
+        aria-label="复制收藏顾问微信号"
+        catchtap="copyCollectionAdvisorWechat"
+      >
+        <text class="collection-advisor-wechat-value">{{collectionAdvisorWechat}}</text>
+        <view class="collection-copy-icon">
+          <view class="collection-copy-icon-back"></view>
+          <view class="collection-copy-icon-front"></view>
+        </view>
+      </button>
+    </view>
+  </view>
+
+  <view wx:if="{{viewerVisible}}" class="fullscreen-viewer">
+    <view class="fullscreen-viewer-topbar">
+      <text class="fullscreen-viewer-tip">双指缩放 · 拖动查看 · 双击切换</text>
+      <view class="fullscreen-viewer-close" catchtap="closeFullscreenViewer">×</view>
+    </view>
+
+    <movable-area class="fullscreen-viewer-area" scale-area>
+      <movable-view
+        class="fullscreen-viewer-canvas"
+        direction="all"
+        inertia="{{true}}"
+        out-of-bounds="{{false}}"
+        scale="{{true}}"
+        scale-min="1"
+        scale-max="4"
+        scale-value="{{viewerScale}}"
+        x="{{viewerX}}"
+        y="{{viewerY}}"
+        animation="{{true}}"
+        bindscale="onViewerScale"
+      >
+        <image
+          class="fullscreen-viewer-image"
+          src="{{viewerUrl}}"
+          mode="aspectFit"
+          catchtap="onViewerImageTap"
+        />
+      </movable-view>
+    </movable-area>
+
+    <view class="fullscreen-viewer-controls">
+      <view class="fullscreen-viewer-button" catchtap="zoomFullscreenViewerOut">−</view>
+      <text class="fullscreen-viewer-scale">{{viewerScaleText}}</text>
+      <view class="fullscreen-viewer-button" catchtap="zoomFullscreenViewerIn">＋</view>
+      <view class="fullscreen-viewer-reset" catchtap="resetFullscreenViewer">还原</view>
+    </view>
   </view>
 </view>

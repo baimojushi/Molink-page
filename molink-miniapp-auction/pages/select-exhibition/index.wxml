@@ -1,0 +1,42 @@
+<view class="page-container">
+  <view class="hero">
+    <text class="eyebrow">Mo:link · EXHIBITIONS</text>
+    <text class="title">选择当前展览</text>
+    <text class="subtitle">作品、扫码与服务记录将在展览内独立呈现</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-card">正在载入展览...</view>
+  <view wx:elif="{{errorText}}" class="state-card error">{{errorText}}</view>
+  <view wx:elif="{{!exhibitions.length}}" class="state-card">当前暂无开放展览</view>
+
+  <view wx:else class="exhibition-list">
+    <view
+      wx:for="{{exhibitions}}"
+      wx:key="id"
+      class="exhibition-card"
+      bindtap="chooseExhibition"
+      data-exhibition="{{item}}"
+      hover-class="exhibition-card-hover"
+    >
+      <image wx:if="{{item.cover_url}}" class="cover" src="{{item.cover_url}}" mode="aspectFill" />
+      <view class="card-body">
+        <view class="status-row">
+          <text class="live-dot"></text>
+          <text class="status-text">正在展出</text>
+        </view>
+        <text class="name">{{item.name}}</text>
+        <text wx:if="{{item.venue_name}}" class="meta">{{item.venue_name}}</text>
+        <text class="meta">{{item.starts_at}}{{item.ends_at ? ' — ' + item.ends_at : ' 起'}}</text>
+        <view class="choose-row">
+          <text>进入展览</text>
+          <text>→</text>
+        </view>
+        <button class="demo-locate" catchtap="locateHere" data-exhibition="{{item}}">定位到这里</button>
+      </view>
+    </view>
+  </view>
+
+  <text wx:if="{{locating}}" class="footnote">正在识别附近展览…</text>
+  <text wx:elif="{{locationHint}}" class="footnote">{{locationHint}}</text>
+  <text wx:else class="footnote">将使用模糊定位识别附近展览；始终可以手动选择。</text>
+</view>

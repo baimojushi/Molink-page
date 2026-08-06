@@ -8,15 +8,15 @@
 
   <view class="artwork-grid" wx:else>
     <view
-      class="artwork-card {{selected && selected.num === item.num ? 'selected' : ''}}"
+      class="artwork-card {{selected && selected.id === item.id ? 'selected' : ''}} {{item.display_price || item.price ? 'has-price' : ''}}"
       wx:for="{{artworks}}"
-      wx:key="num"
+      wx:key="id"
       data-artwork="{{item}}"
       bindtap="selectArtwork"
     >
       <image
         class="artwork-img"
-        src="{{item.images[0]}}"
+        src="{{item.list_image_url || item.images[0]}}"
         mode="aspectFill"
         lazy-load
         catchtap="previewArtwork"
@@ -25,10 +25,12 @@
       <view class="artwork-info">
         <text class="artwork-name">{{item.name || '（无题）'}}</text>
         <text class="artwork-author">{{item.author}}</text>
-        <text class="artwork-meta">{{item.medium}} {{item.size}}</text>
-        <text wx:if="{{item.price}}" class="artwork-price">保留价 ¥{{item.price}}</text>
+        <text wx:if="{{item.artwork_code}}" class="artwork-code">作品代码 {{item.artwork_code}}</text>
+        <text class="artwork-meta">{{item.display_size || ''}}</text>
+        <text wx:if="{{item.display_frame_size}}" class="artwork-meta">装裱尺寸 {{item.display_frame_size}}</text>
       </view>
-      <view wx:if="{{selected && selected.num === item.num}}" class="check-mark">✓</view>
+      <text wx:if="{{item.display_price || item.price}}" class="artwork-price">{{item.display_price || item.price}}</text>
+      <view wx:if="{{selected && selected.id === item.id}}" class="check-mark">✓</view>
     </view>
   </view>
 

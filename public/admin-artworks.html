@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mo:link Design · 作品库管理</title>
+  <style>
+    :root {
+      --color-primary: #8b6c54;
+      --color-primary-dark: #735946;
+      --color-bg: #F5F0EB;
+      --color-card: #ffffff;
+      --color-border: #E5DDD5;
+      --color-text-primary: #2a2a2a;
+      --color-text-secondary: #5a5a5a;
+      --color-text-tertiary: #8a8a8a;
+      --color-danger: #c45c4a;
+      --color-warning: #d4a843;
+      --radius: 10px;
+      --shadow-soft: 0 10px 24px rgba(91, 68, 44, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+    }
+
+    .header {
+      background: var(--color-primary-dark);
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+    .header-sub { font-size: 12px; opacity: .88; margin-top: 4px; }
+    .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .header-link,
+    .inline-link-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+    }
+    .inline-link-btn.secondary {
+      background: #fff;
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border);
+    }
+
+    .auth-bar {
+      background: var(--color-card);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--color-border);
+      display: grid;
+      grid-template-columns: minmax(280px, 380px) auto 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    .auth-tip {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    input, textarea, select, button { font: inherit; }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--color-text-primary);
+      outline: none;
+      min-width: 0;
+    }
+    textarea { resize: vertical; }
+    input:focus, textarea:focus, select:focus { border-color: var(--color-primary); }
+
+    .btn, .secondary-btn, .danger-btn {
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      padding: 10px 16px;
+      white-space: nowrap;
+      transition: transform .12s ease, opacity .12s ease, background .12s ease;
+    }
+    .btn:hover, .secondary-btn:hover, .danger-btn:hover { transform: translateY(-1px); }
+    .btn { background: var(--color-primary); color: #fff; }
+    .secondary-btn { background: var(--color-card); color: var(--color-text-primary); border: 1px solid var(--color-border); }
+    .danger-btn { background: var(--color-danger); color: #fff; }
+
+    .page {
+      padding: 16px 24px 40px;
+      display: grid;
+      grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .page.page-inline-mode {
+      grid-template-columns: 1fr;
+    }
+    .page.page-inline-mode #editorStackHome {
+      display: none;
+    }
+    .stack { display: grid; gap: 16px; min-width: 0; }
+    .card {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      padding: 16px;
+      min-width: 0;
+    }
+    .card h2, .card h3 { margin: 0 0 12px; }
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .card-desc {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .form-grid { display: grid; gap: 12px; }
+    .split-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .dropzone {
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: #faf7f3;
+      display: grid;
+      gap: 12px;
+    }
+    .dropzone-title { font-size: 15px; font-weight: 600; }
+    .dropzone-hint { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; overflow-wrap: anywhere; }
+    .status-box {
+      background: #faf7f3;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      min-height: 42px;
+    }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 6px;
+    }
+    .dim-preview {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      padding-top: 4px;
+    }
+
+    .list-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .list-toolbar > * { min-width: 0; }
+    .list-toolbar .grow { flex: 1 1 260px; }
+
+    .artwork-list { display: grid; gap: 12px; }
+    .artwork-entry {
+      display: grid;
+      gap: 12px;
+    }
+    .artwork-item {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      min-width: 0;
+      transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .artwork-item.is-active {
+      border-color: rgba(139, 108, 84, 0.68);
+      background: #fcf8f3;
+      box-shadow: 0 0 0 3px rgba(139, 108, 84, 0.08);
+    }
+    .thumb {
+      width: 76px;
+      height: 76px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      background: #eee center/cover no-repeat;
+      flex-shrink: 0;
+    }
+    .artwork-main {
+      min-width: 0;
+      display: grid;
+      gap: 6px;
+    }
+    .artwork-name { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+    .artwork-meta, .muted { font-size: 12px; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+    .artwork-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      align-self: stretch;
+      align-items: flex-start;
+    }
+
+    .inline-action-link {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .artwork-workspace-inline-host {
+      min-width: 0;
+    }
+    .artwork-workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+      margin-top: -2px;
+    }
+    .artwork-editor-inline-host,
+    .artwork-detail-inline-host {
+      min-width: 0;
+    }
+    .artwork-detail-card {
+      margin-top: 0;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+    .artwork-editor-inline-host #editorPanelStack > .card:first-child {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .badge-published { background: #d4edda; color: #155724; }
+    .badge-draft { background: #fef3cd; color: #856404; }
+    .badge-archived { background: #ece8f4; color: #5d4f79; }
+    .badge-cover { background: rgba(155,131,112,0.12); color: var(--color-primary-dark); }
+
+    .detail-grid { display: grid; gap: 10px; }
+    .detail-row {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      font-size: 13px;
+    }
+    .detail-key { color: var(--color-text-secondary); }
+    .detail-value { overflow-wrap: anywhere; }
+
+    .asset-section { display: grid; gap: 10px; }
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 12px;
+      min-width: 0;
+    }
+    .asset-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+      min-width: 0;
+    }
+    .asset-card img {
+      display: block;
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #eee;
+    }
+    .asset-body {
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      min-width: 0;
+    }
+    .asset-path {
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #faf7f3;
+      border: 1px solid var(--color-border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+    .asset-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sql-grid { display: grid; gap: 12px; }
+    .sql-box {
+      min-height: 180px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .sql-result-wrap {
+      width: 100%;
+      overflow: auto;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      min-width: 720px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--color-border);
+      padding: 9px 10px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+    th {
+      background: #faf7f3;
+      color: var(--color-text-secondary);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .empty { color: var(--color-text-secondary); font-size: 13px; }
+
+    @media (max-width: 1180px) {
+      .page { grid-template-columns: 1fr; }
+      .artwork-workspace-grid { grid-template-columns: 1fr; }
+      .auth-bar { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .split-2, .artwork-item, .artwork-workspace-grid { grid-template-columns: 1fr; }
+      .asset-grid { grid-template-columns: 1fr; }
+      .detail-row { grid-template-columns: 1fr; }
+      .page, .auth-bar, .header { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Mo:link Design 作品库管理</h1>
+      <div class="header-sub">作品信息维护、R2 上传、封面设置、排序调整、扫码页分配、小程序码下载</div>
+    </div>
+    <div class="header-actions">
+      <button id="exportMiniappCodesBtn" class="header-link" type="button" onclick="downloadAllMiniappCodes()">按当前展览导出小程序码</button>
+      <a class="header-link" href="/admin">返回订单后台</a>
+      <a class="header-link" href="/admin/analytics">数据看板</a>
+      <a class="header-link" href="/admin/exhibitions">展览管理</a>
+      <a class="header-link" href="/admin/llm-debug">LLM Prompt调试</a>
+    </div>
+  </div>
+
+  <div class="auth-bar">
+    <input id="secretInput" type="password" placeholder="输入管理口令" />
+    <div class="toolbar">
+      <button class="btn" onclick="saveSecret()">保存口令</button>
+      <button class="secondary-btn" onclick="loadAll()">刷新页面</button>
+    </div>
+    <div class="auth-tip">管理口令用于当前浏览器请求后台接口，不会写入作品数据，也不是 Cloudflare / R2 密钥。</div>
+  </div>
+
+  <div class="page" id="pageLayout">
+    <div class="stack" id="editorStackHome">
+      <div class="stack" id="editorPanelStack">
+      <div class="card">
+        <div class="card-title-row">
+          <h2 id="formTitle">新建作品</h2>
+          <span class="muted">作品代码保存后自动生成，格式：AW-2604-0001</span>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="field-label" for="artworkExhibition">所属展览</label>
+            <select id="artworkExhibition">
+              <option value="">正在加载展览...</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="artworkName">作品名称</label>
+            <input id="artworkName" placeholder="请输入作品名称" />
+          </div>
+          <div class="split-2">
+            <div>
+              <label class="field-label" for="artworkAuthor">作者</label>
+              <input id="artworkAuthor" placeholder="请输入作者姓名" />
+            </div>
+            <div>
+              <label class="field-label" for="artworkStatus">状态</label>
+              <select id="artworkStatus">
+                <option value="published">已发布</option>
+                <option value="draft">草稿</option>
+                <option value="archived">已归档</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label" for="artworkPrice">作品价格（选填）</label>
+            <input id="artworkPrice" placeholder="按需填写，内容将原样展示" />
+            <div class="muted" style="margin-top:6px;">不预设币种或单位，例如可填写“¥28,000”“价格面议”或其他自定义文本。</div>
+          </div>
+          <div>
+            <label class="field-label" for="artworkDesc">备注说明</label>
+            <textarea id="artworkDesc" rows="4" placeholder="可填写材质、年代、说明等"></textarea>
+          </div>
+        </div>
+        <div class="status-box" id="createStatus">先填写基本信息，再保存作品。</div>
+        <div class="toolbar" style="margin-top:12px;">
+          <button class="btn" onclick="saveArtwork()">保存作品信息</button>
+          <button class="secondary-btn" onclick="resetForm()">新建空表单</button>
+          <button class="danger-btn" onclick="removeArtwork()">删除当前作品</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title-row">
+          <h3>作品图上传</h3>
+          <span class="muted">用于裸画 / 作品本体展示</span>
+        </div>
+        <div class="dropzone">
+          <div>
+            <div class="dropzone-title">拖拽或选择多张作品图</div>
+            <div class="dropzone-hint">图片会写入 R2 实际路径：{作品代码}/artwork/。若只上传作品图，可只填写本区尺寸。</div>
+          </div>
+          <input id="artworkFiles" type="file" accept="image/*" multiple />
+          <div class="split-2">
+            <div>
+              <label class="field-label" for="artworkLength">作品横向尺度</label>
+              <input id="artworkLength" placeholder="如 68 cm" />
+            </div>
+            <div>
+              <label class="field-label" for="artworkTrans">作品纵向尺度</label>
+              <input id="artworkTrans" placeholder="如 136 cm" />
+            </div>
+          </div>
+          <div class="dim-preview" id="artworkDimPreview">将生成作品尺寸：未填写</div>
+          <div class="toolbar">
+            <button class="btn" onclick="uploadAssets('artwork')">上传作品图</button>
+          </div>
+          <div class="status-box" id="uploadArtworkStatus">未开始上传</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title-row">
+          <h3>带框 / 装裱图上传</h3>
+          <span class="muted">用于含画框或完整装裱效果展示</span>
+        </div>
+        <div class="dropzone">
+          <div>
+            <div class="dropzone-title">拖拽或选择多张带框 / 装裱图</div>
+            <div class="dropzone-hint">图片会写入 R2 实际路径：{作品代码}/frame/。若只有装裱图，也可单独上传并填写装裱尺寸。</div>
+          </div>
+          <input id="frameFiles" type="file" accept="image/*" multiple />
+          <div class="split-2">
+            <div>
+              <label class="field-label" for="frameLength">装裱横向尺度</label>
+              <input id="frameLength" placeholder="如 82 cm" />
+            </div>
+            <div>
+              <label class="field-label" for="frameTrans">装裱纵向尺度</label>
+              <input id="frameTrans" placeholder="如 150 cm" />
+            </div>
+          </div>
+          <div class="dim-preview" id="frameDimPreview">将生成装裱尺寸：未填写</div>
+          <div class="toolbar">
+            <button class="btn" onclick="uploadAssets('frame')">上传带框 / 装裱图</button>
+          </div>
+          <div class="status-box" id="uploadFrameStatus">未开始上传</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title-row">
+          <h3>主效果图上传</h3>
+          <span class="muted">用于扫码进入小程序后的全屏效果图</span>
+        </div>
+        <div class="dropzone">
+          <div>
+            <div class="dropzone-title">选择 1 张主效果图</div>
+            <div class="dropzone-hint">图片会写入 R2 实际路径：{作品代码}/effect/。上传成功后会自动检查并生成对应小程序码；如果已经生成过，则直接复用。</div>
+          </div>
+          <input id="effectFiles" type="file" accept="image/*" />
+          <div class="toolbar">
+            <button class="btn" onclick="uploadAssets('effect')">上传主效果图</button>
+            <button id="generateEffectBtn" class="btn" onclick="generateArtworkEffect()">AI 生成空间效果图</button>
+            <button class="secondary-btn" onclick="assignScanPage()">分配扫码页</button>
+          </div>
+          <div class="status-box" id="uploadEffectStatus">未开始上传</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>R2 状态</h3>
+        <div class="status-box" id="r2Status">尚未检测</div>
+      </div>
+
+      <div class="card">
+        <h3>小程序码配置状态</h3>
+        <div class="status-box" id="miniappStatus">尚未检测</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title-row">
+          <h3>SQL 控制台</h3>
+          <span class="muted">用于排查作品表与图片表的数据问题</span>
+        </div>
+        <div class="card-desc">用途：查看表结构、核对作品记录、修正封面或排序异常。这里的 SQL 只允许访问作品库相关表，不会开放整站数据库。</div>
+        <div class="sql-grid" style="margin-top:12px;">
+          <div class="toolbar">
+            <button class="secondary-btn" onclick="loadSchema()">查看当前表结构</button>
+            <button class="btn" onclick="runSql()">执行 SQL</button>
+          </div>
+          <textarea id="sqlInput" class="sql-box" placeholder="示例：SELECT artwork_code, name, size_text, frame_length, frame_trans FROM artworks ORDER BY created_at DESC LIMIT 20"></textarea>
+          <div class="status-box" id="sqlStatus">可执行 SELECT、PRAGMA、INSERT、UPDATE、DELETE。适合定向排查作品库数据。</div>
+          <div id="sqlResult"></div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <div class="card-title-row">
+          <h2>作品列表</h2>
+          <span class="muted">点击任一作品即可在该作品行下方载入详情与编辑区，编辑面板会同步移动并顶部对齐</span>
+        </div>
+        <div class="list-toolbar">
+          <input class="grow" id="searchInput" placeholder="搜索作品代码 / 名称 / 作者 / 尺寸" oninput="debouncedLoadArtworks()" />
+          <select id="statusFilter" onchange="loadArtworks()">
+            <option value="">全部状态</option>
+            <option value="published">已发布</option>
+            <option value="draft">草稿</option>
+            <option value="archived">已归档</option>
+          </select>
+          <button class="secondary-btn" onclick="loadArtworks()">刷新列表</button>
+        </div>
+        <div class="artwork-list" id="artworkList"></div>
+      </div>
+
+      <div id="artworkDetailParking" hidden>
+        <div class="card artwork-detail-card" id="artworkDetailPanel" hidden>
+          <div class="card-title-row">
+            <h2>当前作品详情</h2>
+            <span class="muted">封面图用于作品列表缩略图、客户端默认主图与首屏展示，不影响原始文件。</span>
+          </div>
+          <div class="detail-grid" id="detailMeta">
+            <div class="empty">未选择作品</div>
+          </div>
+
+          <div class="asset-section" style="margin-top:18px;">
+            <div class="card-title-row">
+              <h3>作品图</h3>
+              <span class="muted">排序从 1 开始。支持上移 / 下移微调顺序。</span>
+            </div>
+            <div class="asset-grid" id="artworkAssetGrid"></div>
+          </div>
+
+          <div class="asset-section" style="margin-top:18px;">
+            <div class="card-title-row">
+              <h3>带框 / 装裱图</h3>
+              <span class="muted">适合展示装裱比例和含框观感。</span>
+            </div>
+            <div class="asset-grid" id="frameAssetGrid"></div>
+          </div>
+
+          <div class="asset-section" style="margin-top:18px;">
+            <div class="card-title-row">
+              <h3>主效果图</h3>
+              <span class="muted">每件作品只保留 1 张，用于扫码落地页全屏展示。</span>
+            </div>
+            <div class="asset-grid" id="effectAssetGrid"></div>
+          </div>
+
+          <div class="asset-section" style="margin-top:18px;">
+            <div class="card-title-row">
+              <h3>扫码页与小程序码</h3>
+              <span class="muted">主效果图存在时可分配扫码页。二维码使用全局唯一扫码令牌，替换效果图时无需重生成。</span>
+            </div>
+            <div class="detail-grid" id="scanMeta">
+              <div class="empty">未分配扫码页</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin-exhibition-scope.js"></script>
+  <script>
+    const STATUS_LABELS = {
+      published: '已发布',
+      draft: '草稿',
+      archived: '已归档'
+    };
+
+    const COLUMN_LABELS = {
+      id: '内部 ID',
+      artwork_code: '作品代码',
+      code: '作品代码',
+      num: '作品代码',
+      name: '作品名称',
+      author: '作者',
+      price: '作品价格',
+      length: '作品横向尺度',
+      trans: '作品纵向尺度',
+      frame_length: '装裱横向尺度',
+      frame_trans: '装裱纵向尺度',
+      size_text: '作品尺寸',
+      frame_size_text: '装裱尺寸',
+      description: '备注说明',
+      status: '状态',
+      cover_asset_id: '封面图 ID',
+      cover_url: '封面图地址',
+      primary_image_url: '默认主图地址',
+      created_at: '创建时间',
+      updated_at: '更新时间',
+      asset_kind: '图片类型',
+      sort_order: '排序位次',
+      r2_key: 'R2 路径',
+      url: '图片地址',
+      original_filename: '原始文件名',
+      mime_type: '文件类型',
+      file_size: '文件大小',
+      width: '图片宽度',
+      height: '图片高度',
+      qrcode_url: '小程序码地址',
+      scan_page_path: '扫码页路径',
+      scan_page_display_path: '扫码页显示路径',
+      scan_scene: '扫码参数'
+    };
+
+    const ASSET_KIND_LABELS = {
+      artwork: '作品图',
+      frame: '带框 / 装裱图',
+      effect: '主效果图',
+      miniapp_qr: '小程序码'
+    };
+
+    let adminSecret = localStorage.getItem('adminSecret') || '';
+    let currentArtworkId = null;
+    let currentArtwork = null;
+    let debounceTimer = null;
+    let availableExhibitions = [];
+    let effectPollTimer = null;
+
+    function currentExhibitionScope() {
+      return String(localStorage.getItem('currentExhibitionId') || 'all').trim() || 'all';
+    }
+
+    function populateExhibitionOptions(exhibitions = []) {
+      availableExhibitions = exhibitions;
+      const select = document.getElementById('artworkExhibition');
+      if (!select) return;
+      const previous = select.value;
+      select.innerHTML = exhibitions.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}｜${translateExhibitionStatus(item.status)}</option>`).join('');
+      const scope = currentExhibitionScope();
+      const preferred = previous || (scope !== 'all' ? scope : '') || ((exhibitions.find(item => item.status === 'live') || exhibitions[0] || {}).id || '');
+      if ([...select.options].some(option => option.value === preferred)) select.value = preferred;
+    }
+
+    function translateExhibitionStatus(status) {
+      return ({ live: '进行中', draft: '草稿', archived: '已归档' })[status] || status || '';
+    }
+
+    window.addEventListener('molink:exhibitions-loaded', event => {
+      populateExhibitionOptions((event.detail && event.detail.exhibitions) || []);
+    });
+
+    function headers(extra = {}) {
+      return Object.assign({ 'x-admin-secret': adminSecret }, extra);
+    }
+
+    async function request(url, options = {}) {
+      const response = await fetch(url, {
+        method: options.method || 'GET',
+        headers: headers(options.headers || {}),
+        body: options.body
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || '请求失败');
+      return data;
+    }
+
+    function saveSecret() {
+      adminSecret = document.getElementById('secretInput').value.trim();
+      localStorage.setItem('adminSecret', adminSecret);
+      loadAll();
+    }
+
+    function translateStatus(status) {
+      return STATUS_LABELS[status] || status || '未设置';
+    }
+
+    function badgeClass(status) {
+      return `badge badge-${status || 'draft'}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeFilenamePart(value) {
+      return String(value == null ? '' : value)
+        .trim()
+        .replace(/[\/:*?"<>|]+/g, '-')
+        .replace(/\s+/g, ' ')
+        .replace(/^[\s.-]+|[\s.-]+$/g, '')
+        .slice(0, 80);
+    }
+
+    function buildMiniappCodeFilename(artwork) {
+      const code = sanitizeFilenamePart(artwork && artwork.artwork_code ? artwork.artwork_code : 'miniapp-code') || 'miniapp-code';
+      const name = sanitizeFilenamePart(artwork && artwork.name ? artwork.name : '');
+      return `${code}${name ? `-${name}` : ''}.png`;
+    }
+
+    function getArtworkEntries() {
+      return Array.from(document.querySelectorAll('.artwork-entry'));
+    }
+
+    function getArtworkEntryById(artworkId) {
+      return getArtworkEntries().find(entry => entry.dataset.artworkId === String(artworkId)) || null;
+    }
+
+    function clearArtworkSelection() {
+      getArtworkEntries().forEach(entry => {
+        const item = entry.querySelector('.artwork-item');
+        if (item) item.classList.remove('is-active');
+      });
+    }
+
+    function getDetailPanel() {
+      return document.getElementById('artworkDetailPanel');
+    }
+
+    function getDetailParking() {
+      return document.getElementById('artworkDetailParking');
+    }
+
+    function getPageLayout() {
+      return document.getElementById('pageLayout');
+    }
+
+    function getEditorStackHome() {
+      return document.getElementById('editorStackHome');
+    }
+
+    function getEditorPanelStack() {
+      return document.getElementById('editorPanelStack');
+    }
+
+    function setPageInlineMode(enabled) {
+      const page = getPageLayout();
+      if (page) page.classList.toggle('page-inline-mode', !!enabled);
+    }
+
+    function parkDetailPanel() {
+      const panel = getDetailPanel();
+      const parking = getDetailParking();
+      if (panel && parking && panel.parentElement !== parking) {
+        parking.appendChild(panel);
+      }
+      return panel;
+    }
+
+    function parkEditorPanelStack() {
+      const stack = getEditorPanelStack();
+      const home = getEditorStackHome();
+      if (stack && home && stack.parentElement !== home) {
+        home.appendChild(stack);
+      }
+      return stack;
+    }
+
+    function parkWorkspacePanels() {
+      const panel = parkDetailPanel();
+      const stack = parkEditorPanelStack();
+      setPageInlineMode(false);
+      return { panel, stack };
+    }
+
+    function hideDetailPanel() {
+      const { panel } = parkWorkspacePanels();
+      clearArtworkSelection();
+      if (panel) panel.hidden = true;
+    }
+
+    function mountArtworkWorkspace(artworkId) {
+      const panel = getDetailPanel();
+      const editorStack = getEditorPanelStack();
+      clearArtworkSelection();
+      if (!panel || !editorStack || !artworkId) {
+        const parked = parkWorkspacePanels();
+        if (parked.panel) parked.panel.hidden = true;
+        return parked;
+      }
+
+      const entry = getArtworkEntryById(artworkId);
+      const workspaceHost = entry ? entry.querySelector('.artwork-workspace-inline-host') : null;
+      if (!entry || !workspaceHost) {
+        const parked = parkWorkspacePanels();
+        if (parked.panel) parked.panel.hidden = true;
+        return parked;
+      }
+
+      let workspaceGrid = workspaceHost.querySelector('.artwork-workspace-grid');
+      if (!workspaceGrid) {
+        workspaceGrid = document.createElement('div');
+        workspaceGrid.className = 'artwork-workspace-grid';
+
+        const editorHost = document.createElement('div');
+        editorHost.className = 'artwork-editor-inline-host';
+
+        const detailHost = document.createElement('div');
+        detailHost.className = 'artwork-detail-inline-host';
+
+        workspaceGrid.appendChild(editorHost);
+        workspaceGrid.appendChild(detailHost);
+        workspaceHost.appendChild(workspaceGrid);
+      }
+
+      const editorHost = workspaceGrid.querySelector('.artwork-editor-inline-host');
+      const detailHost = workspaceGrid.querySelector('.artwork-detail-inline-host');
+
+      if (editorHost && editorStack.parentElement !== editorHost) {
+        editorHost.appendChild(editorStack);
+      }
+      if (detailHost && panel.parentElement !== detailHost) {
+        detailHost.appendChild(panel);
+      }
+
+      setPageInlineMode(true);
+      panel.hidden = false;
+
+      const item = entry.querySelector('.artwork-item');
+      if (item) item.classList.add('is-active');
+
+      return { panel, stack: editorStack };
+    }
+
+    function setSectionHtml(id, html) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = html;
+    }
+
+    function formatDimensionText(length, trans) {
+      const a = String(length || '').trim();
+      const b = String(trans || '').trim();
+      if (a && b) return `${a} × ${b}`;
+      return a || b || '';
+    }
+
+    function updateDimensionPreview(kind) {
+      if (kind === 'artwork') {
+        const text = formatDimensionText(
+          document.getElementById('artworkLength').value,
+          document.getElementById('artworkTrans').value
+        );
+        document.getElementById('artworkDimPreview').textContent = `将生成作品尺寸：${text || '未填写'}`;
+      }
+      if (kind === 'frame') {
+        const text = formatDimensionText(
+          document.getElementById('frameLength').value,
+          document.getElementById('frameTrans').value
+        );
+        document.getElementById('frameDimPreview').textContent = `将生成装裱尺寸：${text || '未填写'}`;
+      }
+    }
+
+    function bindDimensionInputs() {
+      ['artworkLength', 'artworkTrans'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => updateDimensionPreview('artwork'));
+      });
+      ['frameLength', 'frameTrans'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => updateDimensionPreview('frame'));
+      });
+    }
+
+    function resetForm() {
+      currentArtworkId = null;
+      currentArtwork = null;
+      document.getElementById('formTitle').textContent = '新建作品';
+      document.getElementById('artworkName').value = '';
+      const scope = currentExhibitionScope();
+      const defaultExhibition = scope !== 'all' ? scope : ((availableExhibitions.find(item => item.status === 'live') || availableExhibitions[0] || {}).id || '');
+      if (document.getElementById('artworkExhibition') && defaultExhibition) document.getElementById('artworkExhibition').value = defaultExhibition;
+      document.getElementById('artworkAuthor').value = '';
+      document.getElementById('artworkPrice').value = '';
+      document.getElementById('artworkDesc').value = '';
+      document.getElementById('artworkStatus').value = 'published';
+      document.getElementById('artworkLength').value = '';
+      document.getElementById('artworkTrans').value = '';
+      document.getElementById('frameLength').value = '';
+      document.getElementById('frameTrans').value = '';
+      document.getElementById('createStatus').textContent = '先填写基本信息，再保存作品。';
+      hideDetailPanel();
+      setSectionHtml('detailMeta', '<div class="empty">未选择作品</div>');
+      setSectionHtml('scanMeta', '<div class="empty">未分配扫码页</div>');
+      setSectionHtml('artworkAssetGrid', '<div class="empty">暂无图片</div>');
+      setSectionHtml('frameAssetGrid', '<div class="empty">暂无图片</div>');
+      setSectionHtml('effectAssetGrid', '<div class="empty">暂无图片</div>');
+      document.getElementById('artworkFiles').value = '';
+      document.getElementById('frameFiles').value = '';
+      document.getElementById('effectFiles').value = '';
+      document.getElementById('uploadArtworkStatus').textContent = '未开始上传';
+      document.getElementById('uploadFrameStatus').textContent = '未开始上传';
+      document.getElementById('uploadEffectStatus').textContent = '未开始上传';
+      updateDimensionPreview('artwork');
+      updateDimensionPreview('frame');
+    }
+
+    async function loadR2Status() {
+      const el = document.getElementById('r2Status');
+      try {
+        const data = await request('/api/admin/artworks/r2-status');
+        el.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        el.textContent = error.message;
+      }
+    }
+
+    async function loadMiniappStatus() {
+      const el = document.getElementById('miniappStatus');
+      try {
+        const data = await request('/api/admin/artworks/miniapp-status');
+        el.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        el.textContent = error.message;
+      }
+    }
+
+    function debouncedLoadArtworks() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(loadArtworks, 220);
+    }
+
+    async function loadArtworks() {
+      const list = document.getElementById('artworkList');
+      parkWorkspacePanels();
+      list.innerHTML = '<div class="empty">加载中…</div>';
+      try {
+        const q = document.getElementById('searchInput').value.trim();
+        const status = document.getElementById('statusFilter').value;
+        const data = await request(`/api/admin/artworks?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}`);
+        const artworks = data.artworks || [];
+        if (!artworks.length) {
+          list.innerHTML = '<div class="empty">暂无作品</div>';
+          hideDetailPanel();
+          return;
+        }
+        list.innerHTML = artworks.map(artwork => `
+          <div class="artwork-entry" data-artwork-id="${escapeHtml(artwork.id)}">
+            <div class="artwork-item">
+              <div class="thumb" style="background-image:url('${escapeHtml(artwork.cover_url || artwork.images?.[0] || '')}')"></div>
+              <div class="artwork-main">
+                <div class="artwork-name">${escapeHtml(artwork.name || '未命名作品')}</div>
+                <div class="artwork-meta">代码：${escapeHtml(artwork.artwork_code || '')}</div>
+                <div class="artwork-meta">作者：${escapeHtml(artwork.author || '')}</div>
+                ${artwork.price ? `<div class="artwork-meta">价格：${escapeHtml(artwork.price)}</div>` : ''}
+                <div class="artwork-meta">作品尺寸：${escapeHtml(artwork.size_text || '未填写')}　装裱尺寸：${escapeHtml(artwork.frame_size_text || '未填写')}</div>
+                <div class="artwork-meta">
+                  <span class="${badgeClass(artwork.status)}">${escapeHtml(translateStatus(artwork.status))}</span>
+                </div>
+              </div>
+              <div class="artwork-actions">
+                <button class="secondary-btn" onclick="selectArtwork('${artwork.id}')">载入</button>
+                ${artwork.qrcode_url ? `<a class="secondary-btn inline-action-link" href="${escapeHtml(artwork.qrcode_url)}" download="${escapeHtml(buildMiniappCodeFilename(artwork))}" target="_blank" rel="noopener noreferrer">二维码下载</a>` : ''}
+              </div>
+            </div>
+            <div class="artwork-workspace-inline-host"></div>
+          </div>
+        `).join('');
+        if (currentArtworkId && currentArtwork) {
+          mountArtworkWorkspace(currentArtworkId);
+        } else {
+          hideDetailPanel();
+        }
+      } catch (error) {
+        list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+        hideDetailPanel();
+      }
+    }
+
+    function buildDetailRows(artwork) {
+      const items = [
+        ['作品代码', artwork.artwork_code || ''],
+        ['作品名称', artwork.name || ''],
+        ['作者', artwork.author || ''],
+        ['作品价格', artwork.price || '未填写'],
+        ['作品尺寸', artwork.size_text || '未填写'],
+        ['装裱尺寸', artwork.frame_size_text || '未填写'],
+        ['状态', translateStatus(artwork.status)],
+        ['封面图地址', artwork.cover_url || '未设置'],
+        ['创建时间', artwork.created_at || ''],
+        ['更新时间', artwork.updated_at || ''],
+        ['备注说明', artwork.description || '未填写'],
+        ['内部 ID', artwork.id || '']
+      ];
+      return items.map(([key, value]) => `
+        <div class="detail-row">
+          <div class="detail-key">${escapeHtml(key)}</div>
+          <div class="detail-value">${escapeHtml(value)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderScanMeta(artwork) {
+      if (!artwork || !artwork.effect_assets || !artwork.effect_assets.length) {
+        setSectionHtml('scanMeta', '<div class="empty">当前作品还没有主效果图，无法分配扫码页。</div>');
+        return;
+      }
+
+      const qrcodeUrl = artwork.qrcode_url || '';
+      const downloadButton = qrcodeUrl
+        ? `<a class="inline-link-btn secondary" href="${escapeHtml(qrcodeUrl)}" download="${escapeHtml(buildMiniappCodeFilename(artwork))}" target="_blank" rel="noopener noreferrer">下载小程序码</a>`
+        : '';
+      const assignTip = qrcodeUrl ? '已生成小程序码，如需补生成可再次点击“分配扫码页”。' : '尚未生成小程序码，可点击“分配扫码页”。';
+
+      setSectionHtml('scanMeta', `
+        <div class="detail-row">
+          <div class="detail-key">扫码页路径</div>
+          <div class="detail-value">${escapeHtml(artwork.scan_page_path || 'pages/scan-entry/index')}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-key">页面参数</div>
+          <div class="detail-value">${escapeHtml(artwork.scan_scene || '')}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-key">显示路径</div>
+          <div class="detail-value">${escapeHtml(artwork.scan_page_display_path || '')}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-key">小程序码</div>
+          <div class="detail-value">
+            <div style="display:grid;gap:8px;">
+              <div>${escapeHtml(qrcodeUrl || '尚未生成')}</div>
+              <div class="toolbar">
+                <button class="btn" onclick="assignScanPage()">分配扫码页</button>
+                ${downloadButton}
+              </div>
+              <div class="muted">${escapeHtml(assignTip)}</div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    async function selectArtwork(id) {
+      try {
+        const data = await request(`/api/admin/artworks/${id}`);
+        const artwork = data.artwork;
+        currentArtwork = artwork;
+        currentArtworkId = artwork.id;
+        document.getElementById('formTitle').textContent = `编辑作品 · ${artwork.artwork_code}`;
+        document.getElementById('artworkName').value = artwork.name || '';
+        document.getElementById('artworkExhibition').value = artwork.exhibition_id || '';
+        document.getElementById('artworkAuthor').value = artwork.author || '';
+        document.getElementById('artworkPrice').value = artwork.price || '';
+        document.getElementById('artworkDesc').value = artwork.description || '';
+        document.getElementById('artworkStatus').value = artwork.status || 'published';
+        document.getElementById('artworkLength').value = artwork.length || '';
+        document.getElementById('artworkTrans').value = artwork.trans || '';
+        document.getElementById('frameLength').value = artwork.frame_length || '';
+        document.getElementById('frameTrans').value = artwork.frame_trans || '';
+        document.getElementById('createStatus').textContent = `当前作品：${artwork.artwork_code}`;
+        mountArtworkWorkspace(artwork.id);
+        setSectionHtml('detailMeta', buildDetailRows(artwork));
+        renderAssets('artworkAssetGrid', artwork.artwork_assets || [], artwork.cover_asset_id, artwork.id, 'artwork');
+        renderAssets('frameAssetGrid', artwork.frame_assets || [], artwork.cover_asset_id, artwork.id, 'frame');
+        renderAssets('effectAssetGrid', artwork.effect_assets || [], artwork.cover_asset_id, artwork.id, 'effect');
+        renderScanMeta(artwork);
+        updateDimensionPreview('artwork');
+        updateDimensionPreview('frame');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function getAssetListByKind(kind) {
+      if (!currentArtwork) return [];
+      if (kind === 'artwork') return currentArtwork.artwork_assets || [];
+      if (kind === 'frame') return currentArtwork.frame_assets || [];
+      if (kind === 'effect') return currentArtwork.effect_assets || [];
+      return [];
+    }
+
+    function renderAssets(targetId, assets, coverAssetId, artworkId, kind) {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      if (!assets.length) {
+        el.innerHTML = '<div class="empty">暂无图片</div>';
+        return;
+      }
+      el.innerHTML = assets.map((asset, index) => `
+        <div class="asset-card">
+          <img src="${escapeHtml(asset.url)}" alt="asset" />
+          <div class="asset-body">
+            <div><strong>${escapeHtml(asset.original_filename || '未命名文件')}</strong></div>
+            <div>图片类型：${escapeHtml(ASSET_KIND_LABELS[asset.asset_kind] || asset.asset_kind || '')}</div>
+            <div>排序位次：${Number(asset.sort_order || index + 1)}</div>
+            ${asset.id === coverAssetId ? '<div><span class="badge badge-cover">当前封面</span></div>' : ''}
+            <div class="asset-path">${escapeHtml(asset.r2_key || '')}</div>
+            <div class="asset-actions">
+              ${kind === 'artwork' || kind === 'frame'
+                ? `<button class="secondary-btn" onclick="moveAsset('${artworkId}','${kind}','${asset.id}',-1)">上移一位</button>
+                   <button class="secondary-btn" onclick="moveAsset('${artworkId}','${kind}','${asset.id}',1)">下移一位</button>`
+                : ''}
+              <button class="btn" onclick="setCover('${artworkId}','${asset.id}')">设为封面</button>
+              <button class="danger-btn" onclick="deleteAsset('${asset.id}')">删除图片</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function moveAsset(artworkId, kind, assetId, direction) {
+      const items = [...getAssetListByKind(kind)].sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+      const currentIndex = items.findIndex(item => item.id === assetId);
+      const targetIndex = currentIndex + direction;
+      if (currentIndex < 0 || targetIndex < 0 || targetIndex >= items.length) return;
+      const temp = items[currentIndex];
+      items[currentIndex] = items[targetIndex];
+      items[targetIndex] = temp;
+      const payload = items.map((item, index) => ({ id: item.id, sort_order: index + 1 }));
+      try {
+        await request(`/api/admin/artworks/${artworkId}/assets/reorder`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: payload })
+        });
+        await selectArtwork(artworkId);
+        await loadArtworks();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function saveArtwork() {
+      const payload = {
+        exhibition_id: document.getElementById('artworkExhibition').value,
+        name: document.getElementById('artworkName').value.trim(),
+        author: document.getElementById('artworkAuthor').value.trim(),
+        price: document.getElementById('artworkPrice').value.trim(),
+        description: document.getElementById('artworkDesc').value.trim(),
+        status: document.getElementById('artworkStatus').value,
+        length: document.getElementById('artworkLength').value.trim(),
+        trans: document.getElementById('artworkTrans').value.trim(),
+        frame_length: document.getElementById('frameLength').value.trim(),
+        frame_trans: document.getElementById('frameTrans').value.trim()
+      };
+
+      if (!payload.exhibition_id) {
+        return alert('请选择所属展览');
+      }
+      if (!payload.name || !payload.author) {
+        return alert('请至少填写作品名称和作者');
+      }
+
+      try {
+        let data;
+        if (currentArtworkId) {
+          data = await request(`/api/admin/artworks/${currentArtworkId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          data = await request('/api/admin/artworks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+        document.getElementById('createStatus').textContent = `保存成功：${data.artwork.artwork_code}`;
+        await loadArtworks();
+        await selectArtwork(data.artwork.id);
+      } catch (error) {
+        document.getElementById('createStatus').textContent = error.message;
+      }
+    }
+
+    async function removeArtwork() {
+      if (!currentArtworkId) return alert('当前没有已保存作品');
+      if (!confirm('确认删除当前作品及其全部图片、小程序码？')) return;
+      try {
+        await request(`/api/admin/artworks/${currentArtworkId}`, { method: 'DELETE' });
+        resetForm();
+        await loadArtworks();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+
+    async function downloadAllMiniappCodes() {
+      const scope = localStorage.getItem('currentExhibitionId') || 'all';
+      if (!scope || scope === 'all') return alert('请先在顶部选择一个具体展览');
+      const button = document.getElementById('exportMiniappCodesBtn');
+      try {
+        button.disabled = true;
+        button.textContent = '正在生成并打包…';
+        const response = await fetch('/api/admin/artworks/miniapp-codes/download-all', {
+          headers: headers()
+        });
+        if (!response.ok) {
+          let message = '批量导出失败';
+          try {
+            const data = await response.json();
+            if (data && data.error) message = data.error;
+          } catch (error) {}
+          throw new Error(message);
+        }
+        const blob = await response.blob();
+        const disposition = response.headers.get('content-disposition') || '';
+        const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+        const match = disposition.match(/filename="?([^";]+)"?/i);
+        const filename = utf8Match && utf8Match[1] ? decodeURIComponent(utf8Match[1]) : (match && match[1] ? match[1] : `molink-miniapp-codes-${new Date().toISOString().slice(0, 10)}.zip`);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        alert(error.message || '批量导出失败');
+      } finally {
+        button.disabled = false;
+        button.textContent = '按当前展览导出小程序码';
+      }
+    }
+
+    function stopEffectPolling() {
+      if (effectPollTimer) clearTimeout(effectPollTimer);
+      effectPollTimer = null;
+    }
+
+    async function pollArtworkEffect() {
+      if (!currentArtworkId) return;
+      const statusEl = document.getElementById('uploadEffectStatus');
+      const button = document.getElementById('generateEffectBtn');
+      try {
+        const data = await request(`/api/admin/artworks/${currentArtworkId}/effect-generation`);
+        if (data.status === 'idle') return;
+        statusEl.textContent = data.step || `任务状态：${data.status}`;
+        button.disabled = !data.ready && !data.failed;
+        button.textContent = data.ready ? '不满意，再生成一次' : (data.failed ? '重新生成空间效果图' : '生成处理中…');
+        if (data.ready) {
+          stopEffectPolling();
+          await selectArtwork(currentArtworkId);
+          statusEl.textContent = '生成完成，已自动上传为主效果图；不满意可再次生成。';
+        } else if (!data.failed) {
+          effectPollTimer = setTimeout(pollArtworkEffect, 3500);
+        }
+      } catch (error) {
+        statusEl.textContent = error.message || '任务状态读取失败';
+        button.disabled = false;
+      }
+    }
+
+    async function generateArtworkEffect() {
+      if (!currentArtworkId) return alert('请先保存并选中作品');
+      const note = prompt('可填写本次空间风格调整要求（可留空）：', '') || '';
+      const button = document.getElementById('generateEffectBtn');
+      const statusEl = document.getElementById('uploadEffectStatus');
+      try {
+        stopEffectPolling();
+        button.disabled = true;
+        button.textContent = '正在提交…';
+        statusEl.textContent = '正在生成不含画作的适配空间…';
+        await request(`/api/admin/artworks/${currentArtworkId}/generate-effect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note })
+        });
+        pollArtworkEffect();
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = 'AI 生成空间效果图';
+        statusEl.textContent = error.message || '生成任务创建失败';
+      }
+    }
+
+    async function assignScanPage() {
+      if (!currentArtworkId) return alert('请先保存并选中作品');
+      if (!currentArtwork || !currentArtwork.effect_assets || !currentArtwork.effect_assets.length) {
+        return alert('请先上传主效果图，再分配扫码页');
+      }
+      const statusEl = document.getElementById('uploadEffectStatus');
+      statusEl.textContent = '正在分配扫码页并检查小程序码…';
+      try {
+        const data = await request(`/api/admin/artworks/${currentArtworkId}/assign-scan-page`, { method: 'POST' });
+        const reusedText = data.created ? '已新生成小程序码。' : '已复用现有小程序码。';
+        statusEl.textContent = `扫码页分配完成：${reusedText}`;
+        await selectArtwork(currentArtworkId);
+        await loadArtworks();
+      } catch (error) {
+        statusEl.textContent = error.message;
+      }
+    }
+
+    async function uploadAssets(kind) {
+      if (!currentArtworkId) return alert('请先保存作品信息');
+      const inputMap = {
+        artwork: 'artworkFiles',
+        frame: 'frameFiles',
+        effect: 'effectFiles'
+      };
+      const statusMap = {
+        artwork: 'uploadArtworkStatus',
+        frame: 'uploadFrameStatus',
+        effect: 'uploadEffectStatus'
+      };
+      const input = document.getElementById(inputMap[kind]);
+      const statusEl = document.getElementById(statusMap[kind]);
+      if (!input.files.length) return alert('请选择图片');
+
+      const fd = new FormData();
+      [...input.files].forEach(file => fd.append('files', file));
+      if (kind === 'artwork') {
+        fd.append('length', document.getElementById('artworkLength').value.trim());
+        fd.append('trans', document.getElementById('artworkTrans').value.trim());
+      }
+      if (kind === 'frame') {
+        fd.append('frame_length', document.getElementById('frameLength').value.trim());
+        fd.append('frame_trans', document.getElementById('frameTrans').value.trim());
+      }
+
+      statusEl.textContent = '上传中…';
+      try {
+        const data = await request(`/api/admin/artworks/${currentArtworkId}/assets/${kind}`, {
+          method: 'POST',
+          body: fd
+        });
+        if (kind === 'effect') {
+          statusEl.textContent = data.artwork && data.artwork.qrcode_url
+            ? '上传成功：主效果图已更新，并已关联小程序码。'
+            : '上传成功：主效果图已更新。';
+        } else {
+          statusEl.textContent = `上传成功：${data.assets.length} 张`;
+        }
+        input.value = '';
+        await selectArtwork(currentArtworkId);
+        await loadArtworks();
+      } catch (error) {
+        statusEl.textContent = error.message;
+      }
+    }
+
+    async function setCover(artworkId, assetId) {
+      try {
+        await request(`/api/admin/artworks/${artworkId}/cover`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ asset_id: assetId })
+        });
+        await selectArtwork(artworkId);
+        await loadArtworks();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function deleteAsset(assetId) {
+      if (!confirm('确认删除这张图片？如果这是主效果图，对应小程序码也会一起删除。')) return;
+      try {
+        await request(`/api/admin/artwork-assets/${assetId}`, { method: 'DELETE' });
+        if (currentArtworkId) {
+          await selectArtwork(currentArtworkId);
+        }
+        await loadArtworks();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function loadSchema() {
+      const input = document.getElementById('sqlInput');
+      const statusEl = document.getElementById('sqlStatus');
+      try {
+        const data = await request('/api/admin/artworks-sql/schema');
+        input.value = [...(data.tables || []), ...(data.indexes || [])]
+          .map(item => item.sql)
+          .filter(Boolean)
+          .join('\n\n');
+        statusEl.textContent = '已加载作品库当前表结构。';
+      } catch (error) {
+        statusEl.textContent = error.message;
+      }
+    }
+
+    function translateColumn(key) {
+      return COLUMN_LABELS[key] || key;
+    }
+
+    function formatCell(key, value) {
+      if (key === 'status') return translateStatus(value);
+      if (key === 'asset_kind') return ASSET_KIND_LABELS[value] || value || '';
+      return value == null ? '' : String(value);
+    }
+
+    function renderTable(rows) {
+      if (!rows || !rows.length) return '<div class="empty">无结果</div>';
+      const cols = Object.keys(rows[0]);
+      return `
+        <div class="sql-result-wrap">
+          <table>
+            <thead>
+              <tr>${cols.map(col => `<th>${escapeHtml(translateColumn(col))}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => `
+                <tr>
+                  ${cols.map(col => `<td>${escapeHtml(formatCell(col, row[col]))}</td>`).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function runSql() {
+      const sql = document.getElementById('sqlInput').value.trim();
+      const statusEl = document.getElementById('sqlStatus');
+      const resultEl = document.getElementById('sqlResult');
+      if (!sql) {
+        statusEl.textContent = '请输入 SQL。';
+        return;
+      }
+      try {
+        const data = await request('/api/admin/artworks-sql/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sql })
+        });
+        if (Array.isArray(data.rows)) {
+          resultEl.innerHTML = renderTable(data.rows);
+          statusEl.textContent = `查询成功，返回 ${data.rows.length} 行。`;
+        } else {
+          resultEl.innerHTML = '';
+          statusEl.textContent = `执行成功，影响 ${data.changes || 0} 行。`;
+        }
+        await loadArtworks();
+        if (currentArtworkId) await selectArtwork(currentArtworkId);
+      } catch (error) {
+        statusEl.textContent = error.message;
+      }
+    }
+
+    async function loadAll() {
+      adminSecret = localStorage.getItem('adminSecret') || document.getElementById('secretInput').value.trim();
+      document.getElementById('secretInput').value = adminSecret;
+      await Promise.all([loadArtworks(), loadR2Status(), loadMiniappStatus()]);
+      if (currentArtworkId) {
+        await selectArtwork(currentArtworkId);
+      }
+    }
+
+    document.getElementById('secretInput').value = adminSecret;
+    bindDimensionInputs();
+    resetForm();
+    if (adminSecret) loadAll();
+  </script>
+</body>
+</html>

@@ -4,6 +4,41 @@ function generateDeviceId() {
   return `dev_${timestamp}_${random}`
 }
 
+
+function getAnalyticsSessionId() {
+  const key = 'analyticsSessionId'
+  let sessionId = wx.getStorageSync(key)
+  if (!sessionId) {
+    sessionId = `sess_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
+    wx.setStorageSync(key, sessionId)
+  }
+  return sessionId
+}
+
+function trackClientEvent(eventName, data = {}) {
+  const app = getApp()
+  if (!eventName) return Promise.resolve()
+  return new Promise(resolve => {
+    wx.request({
+      url: `${app.globalData.serverUrl}/api/client/app-events`,
+      method: 'POST',
+      data: Object.assign({
+        event_name: eventName,
+        platform: 'miniapp',
+        session_id: getAnalyticsSessionId(),
+        device_uuid: app.globalData.deviceId || '',
+        openid: app.globalData.openid || '',
+        miniapp_entry_method: app.globalData.miniappEntryMethod || '',
+        miniapp_scene: app.globalData.miniappEntryScene || '',
+        miniapp_entry_path: app.globalData.miniappEntryPath || '',
+        exhibition_id: app.globalData.currentExhibitionId || ''
+      }, data || {}),
+      header: { 'Content-Type': 'application/json' },
+      complete: () => resolve()
+    })
+  })
+}
+
 function formatTime(date) {
   const d = new Date(date)
   const month = d.getMonth() + 1
@@ -40,8 +75,8 @@ function staffRequest(url, method, data) {
       method,
       data: hasBody ? data : undefined,
       header: hasBody
-        ? { 'Content-Type': 'application/json', 'x-admin-secret': app.globalData.token }
-        : { 'x-admin-secret': app.globalData.token },
+        ? { 'Content-Type': 'application/json', 'x-admin-secret': app.globalData.token, 'x-admin-actor': app.globalData.staffName || 'staff' }
+        : { 'x-admin-secret': app.globalData.token, 'x-admin-actor': app.globalData.staffName || 'staff' },
       success: res => {
         if (res.statusCode === 401) {
           app.logout()
@@ -95,9 +130,11 @@ function uploadClientFile(filePath, fileType) {
 
 module.exports = {
   generateDeviceId,
+  getAnalyticsSessionId,
   formatTime,
   request,
   staffRequest,
+  trackClientEvent,
   uploadDeliveryFile,
   uploadClientFile
 }

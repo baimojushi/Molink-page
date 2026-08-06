@@ -1,15 +1,4 @@
-<view class="page-container">
-  <view class="login-overlay" wx:if="{{showLoginOverlay}}">
-    <view class="login-card glass-card">
-      <text class="login-title">登录后可跨设备查看全部历史订单</text>
-      <text class="login-desc">同一微信号登录后，可查看该微信号及其登录设备上的全部历史订单；不登录则仅查看当前设备订单。</text>
-      <button class="btn-primary login-btn" bindtap="doWxLogin" disabled="{{loginLoading}}">
-        {{loginLoading ? '登录中...' : '微信登录并绑定'}}
-      </button>
-      <text class="login-skip" bindtap="skipLogin">仅查看当前设备订单</text>
-    </view>
-  </view>
-
+<view class="page-container {{privacyAgreed ? 'privacy-agreed' : 'privacy-pending'}}">
   <view class="header-top">
     <view class="header-top-spacer"></view>
     <view class="history-entry touch-chip" bindtap="openHistory" hover-class="touch-chip-hover">
@@ -19,9 +8,22 @@
   </view>
 
   <view class="header {{headerIntroDone ? 'intro-done' : ''}}">
-    <text class="logo intro-fade-up" bindlongpress="onLogoLongPress">Mo:link 墨林设计</text>
-    <text class="tagline intro-fade-up">外滩艺博会作品-家居匹配服务</text>
+    <text class="logo intro-fade-up" bindlongpress="onLogoLongPress" space="nbsp">Mo:link  墨林设计</text>
+
+    <view class="exhibition-brand intro-fade-up">
+      <text class="exhibition-brand-name">{{currentExhibitionName}}</text>
+      <view
+        class="exhibition-switch-button touch-chip"
+        bindtap="switchExhibition"
+        hover-class="exhibition-switch-button-hover"
+        hover-stay-time="90"
+      >
+        <text class="exhibition-switch-text">定位/选择当前展览</text>
+      </view>
+    </view>
   </view>
+
+  <view wx:if="{{exhibitionOrderDisabled}}" class="exhibition-ended-tip">该展览已结束，作品仍可浏览，暂不支持在线下单</view>
 
   <view wx:if="{{activeOrder}}" class="active-order-card pending" bindtap="goToActiveOrder">
     <view class="active-order-left">
@@ -38,22 +40,22 @@
 
   <view class="service-list">
     <view
-      class="service-card glass-card {{selectedService === item.id ? 'selected' : ''}} {{cardIntroStep >= index + 1 ? 'card-entered' : 'card-pre-enter'}}"
+      class="service-card glass-card {{selectedService === item.id ? 'selected' : ''}} {{exhibitionOrderDisabled ? 'service-disabled' : ''}} {{item.disabled ? 'service-unavailable' : ''}} {{cardIntroStep >= index + 1 ? 'card-entered' : 'card-pre-enter'}}"
       wx:for="{{services}}"
       wx:key="id"
       data-id="{{item.id}}"
       bindtap="selectService"
-      hover-class="service-card-hover"
+      hover-class="{{item.disabled ? '' : 'service-card-hover'}}"
       hover-stay-time="90"
     >
       <view class="service-card-main">
-        <image class="service-icon {{selectedService === item.id ? 'selected' : ''}}" src="{{item.iconPath}}" mode="aspectFit"></image>
+        <image class="service-icon {{selectedService === item.id ? 'selected' : ''}} {{item.disabled ? 'service-icon-dimmed' : ''}}" src="{{item.iconPath}}" mode="aspectFit"></image>
         <view class="service-info">
-          <text class="service-title">{{item.title}}</text>
-          <text class="service-desc">{{item.desc}}</text>
+          <text class="service-title {{item.disabled ? 'service-title-dimmed' : ''}}">{{item.title}}</text>
+          <text class="service-desc {{item.disabled ? 'service-desc-notice' : ''}}">{{item.desc}}</text>
         </view>
       </view>
-      <view class="service-check {{selectedService === item.id ? 'checked' : ''}}">
+      <view class="service-check {{selectedService === item.id ? 'checked' : ''}} {{item.disabled ? 'service-check-hidden' : ''}}">
         <text wx:if="{{selectedService === item.id}}">✓</text>
       </view>
     </view>
@@ -87,7 +89,19 @@
     <text class="privacy-link" bindtap="openTerms">· 用户协议 ·</text>
   </view>
 
+  <view wx:if="{{!privacyAgreed}}" class="privacy-float glass-frost {{privacyShake ? 'privacy-shake' : ''}}">
+    <view class="privacy-check-hit" bindtap="togglePrivacyAgreement" hover-class="privacy-check-hit-hover" hover-stay-time="80">
+      <view class="privacy-checkbox"></view>
+    </view>
+    <view class="privacy-consent-copy {{privacyShake ? 'privacy-copy-alert' : ''}}">
+      <text bindtap="togglePrivacyAgreement">请先阅读并勾选同意</text>
+      <text class="privacy-consent-link" catchtap="openPrivacy">《隐私政策》</text>
+      <text>和</text>
+      <text class="privacy-consent-link" catchtap="openTerms">《用户协议》</text>
+    </view>
+  </view>
+
   <view class="bottom-bar">
-    <button class="btn-primary {{selectedService ? '' : 'disabled'}}" bindtap="goNext">下一步</button>
+    <button class="btn-primary {{selectedService && privacyAgreed && !exhibitionOrderDisabled ? '' : 'disabled'}}" bindtap="goNext">下一步</button>
   </view>
 </view>

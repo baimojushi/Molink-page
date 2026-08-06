@@ -1,6 +1,5 @@
 {
   "pages": [
-    "pages/artwork-entry/artwork-entry",
     "pages/index/index",
     "pages/upload/upload",
     "pages/history/history",

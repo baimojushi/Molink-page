@@ -362,6 +362,19 @@
       transition: all var(--duration-normal) var(--easing-smooth);
     }
 
+    .delivery-img-stage {
+      position: relative;
+      width: 100%;
+      height: min(62vw, 420px);
+      min-height: 260px;
+      overflow: hidden;
+      cursor: default;
+      background: #ecebe7;
+    }
+
+    .delivery-img-stage.has-focus { cursor: zoom-out; }
+    .delivery-img-stage.has-focus.is-full { cursor: zoom-in; }
+
     @media (hover: hover) {
       .delivery-img-wrap:hover {
         transform: translateY(-3px);
@@ -370,24 +383,58 @@
     }
 
     .delivery-img-wrap img {
-      width: 100%;
+      position: absolute;
       display: block;
+      transform-origin: 50% 50%;
+      will-change: transform;
       -webkit-touch-callout: default;
       -webkit-user-select: auto;
       user-select: auto;
     }
 
     .delivery-img-hint {
-      padding: 6px 10px;
+      padding: 0;
       font-size: 11px;
       color: var(--color-text-tertiary);
       text-align: center;
+      background: transparent;
+    }
+
+    .delivery-view-hint {
+      position: absolute;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      z-index: 2;
+      padding: 6px 12px;
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(0,0,0,0.48);
+      font-size: 11px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .delivery-img-actions {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      padding: 8px 12px;
       background: rgba(255,255,255,0.5);
+    }
+
+    .delivery-img-action {
+      border: 0;
+      padding: 5px 8px;
+      color: var(--color-primary);
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
     }
 
     @media (max-width: 767px) {
       .delivery-img-hint {
-        padding: 8px 12px;
+        padding: 0;
         font-size: 12px;
       }
     }
@@ -434,6 +481,106 @@
       border: 1px solid var(--glass-border);
       white-space: pre-wrap;
     }
+
+    .primary-rerender-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      background: rgba(122, 158, 126, 0.14);
+      color: var(--color-accent-dark);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .primary-rerender-banner.failed {
+      background: rgba(145, 115, 85, 0.12);
+      color: var(--color-primary-dark);
+    }
+
+    .primary-rerender-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--color-accent);
+      animation: primaryRerenderPulse 1.3s ease-in-out infinite;
+    }
+
+    @keyframes primaryRerenderPulse {
+      50% { opacity: 0.35; transform: scale(0.78); }
+    }
+
+    .wall-preference-panel {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.28);
+    }
+
+    .wall-preference-title { font-size: 15px; font-weight: 600; color: var(--color-primary-dark); }
+    .wall-preference-sub { margin-top: 5px; font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); }
+    .wall-preference-options { display: grid; gap: 10px; margin-top: 12px; }
+    .wall-preference-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid rgba(145,115,85,0.18);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.38);
+      cursor: pointer;
+    }
+    .wall-preference-option input { margin-top: 3px; accent-color: var(--color-accent-dark); }
+    .wall-preference-option strong { display: block; font-size: 13px; }
+    .wall-preference-option span { display: block; margin-top: 3px; font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); }
+    .wall-preference-submit {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--color-accent-dark);
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .wall-preference-submit:disabled { opacity: 0.48; cursor: default; }
+    .wall-preference-message { min-height: 18px; margin-top: 9px; font-size: 12px; color: var(--color-text-secondary); }
+
+    .wall-preference-option.current-effect {
+      background: #fff;
+      border-color: rgba(122,158,126,0.48);
+      box-shadow: 0 8px 24px rgba(60,60,67,0.06);
+      cursor: default;
+    }
+    .wall-preference-option.selected { border-color: rgba(122,158,126,0.72); background: rgba(122,158,126,0.10); }
+    .wall-preference-option.disabled { opacity: 0.62; cursor: default; }
+    .wall-option-main { display:flex; gap:10px; align-items:flex-start; width:100%; }
+    .wall-option-copy { flex:1; min-width:0; }
+    .wall-option-badge {
+      display:inline-flex; margin-left:7px; padding:2px 8px; border-radius:999px;
+      font-size:10px; line-height:1.5; background:rgba(122,158,126,0.15); color:var(--color-accent-dark);
+    }
+    .wall-option-badge.current { background:#fff; border:1px solid rgba(122,158,126,0.38); }
+    .wall-option-badge.pending { color:#93651c; background:rgba(214,151,57,0.15); }
+    .wall-option-badge.failed { color:#b84d3c; background:rgba(196,92,74,0.12); }
+    .wallpaper-opt-in { display:flex; gap:7px; align-items:center; margin-top:8px; font-size:11px; color:var(--color-text-secondary); }
+    .web-advisor-copy { margin-top:14px; padding:14px; border-radius:var(--radius-md); background:rgba(255,255,255,0.26); color:var(--color-text-secondary); font-size:13px; line-height:1.75; white-space:pre-wrap; }
+    .web-failure-card {
+      padding:20px; border:1px solid rgba(196,92,74,0.22); border-radius:var(--radius-md);
+      background:rgba(255,255,255,0.4); text-align:left;
+    }
+    .web-failure-card h3 { margin:0 0 10px; color:var(--color-primary-dark); font-size:19px; }
+    .web-failure-card p { margin:7px 0; color:var(--color-text-secondary); font-size:13px; line-height:1.7; }
+    .web-failure-followup { padding:12px; border-radius:10px; background:rgba(122,158,126,0.10); }
+    .web-failure-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px; }
+    .web-failure-actions button { padding:12px; border-radius:10px; border:0; cursor:pointer; font-size:13px; }
+    .web-failure-primary { background:var(--color-accent-dark); color:#fff; }
+    .web-failure-secondary { background:rgba(122,158,126,0.12); color:var(--color-accent-dark); }
 
     /* "提交新的业务"按钮 */
     .new-order-btn {
@@ -1538,6 +1685,50 @@
       });
     });
 
+
+    function 获取埋点会话ID() {
+      const key = 'molink_analytics_session_id';
+      let sessionId = localStorage.getItem(key);
+      if (!sessionId) {
+        sessionId = `sess_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+        localStorage.setItem(key, sessionId);
+      }
+      return sessionId;
+    }
+
+    function 记录应用埋点(eventName, payload = {}) {
+      if (!eventName) return;
+      fetch('/api/client/app-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_name: eventName,
+          platform: 'web',
+          session_id: 获取埋点会话ID(),
+          device_uuid: 设备UUID,
+          ...payload
+        })
+      }).catch(() => {});
+    }
+
+    function 转义HTML(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function 读取活跃订单缓存() {
+      try { return JSON.parse(localStorage.getItem('molink_active_order') || '{}') || {}; }
+      catch (_) { return {}; }
+    }
+
+    function 缓存活跃订单(patch) {
+      localStorage.setItem('molink_active_order', JSON.stringify({ ...读取活跃订单缓存(), ...(patch || {}) }));
+    }
+
     /* ==========================================
        状态管理
        ========================================== */
@@ -1550,7 +1741,17 @@
       提交中: false,
       当前步骤: 1,
       当前订单ID: null,
-      轮询定时器: null
+      轮询定时器: null,
+      主墙补渲染定时器: null,
+      主墙补渲染提示: '',
+      网页墙纸候选: [],
+      网页墙纸选择: {},
+      网页墙面已加载: false,
+      网页墙面等待中: false,
+      当前订单失败: false,
+      墙面偏好提交中: false,
+      漏斗必填已完成: false,
+      邮箱已埋点: false
     };
 
     /* ==========================================
@@ -1581,6 +1782,9 @@
       btn.classList.add('active');
       状态.服务类型 = btn.dataset.type;
       状态.当前步骤 = 2;
+      状态.漏斗必填已完成 = false;
+      状态.邮箱已埋点 = false;
+      记录应用埋点('service_selected', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home' });
 
       清除上传('artwork');
       清除上传('space');
@@ -1628,15 +1832,20 @@
     function 触发上传(type) {
       const box = document.getElementById(`upload-${type}`);
       if (box.classList.contains('disabled') || box.classList.contains('has-image')) return;
+      记录应用埋点('image_choose_started', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', image_key: type });
       document.getElementById(`file-${type}`).click();
     }
 
     function 处理上传(input, type) {
       const file = input.files[0];
-      if (!file) return;
+      if (!file) {
+        记录应用埋点('image_choose_cancel', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', image_key: type });
+        return;
+      }
 
       const MAX_SIZE = 20 * 1024 * 1024; // 20MB
       if (file.size > MAX_SIZE) {
+        记录应用埋点('image_choose_failed', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', image_key: type, error_msg: 'file_too_large' });
         显示Toast(`图片超过 20MB 限制（当前 ${(file.size / 1024 / 1024).toFixed(1)} MB），请压缩后重新选择`, '✗');
         input.value = '';
         return;
@@ -1644,6 +1853,7 @@
 
       if (type === 'artwork') 状态.作品图文件 = file;
       else 状态.空间图文件 = file;
+      记录应用埋点('image_choose_success', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', image_key: type, file_size: file.size || 0 });
 
       const box = document.getElementById(`upload-${type}`);
       box.classList.add('has-image');
@@ -1671,6 +1881,9 @@
     }
 
     function 清除上传(type) {
+      if ((type === 'artwork' && 状态.作品图文件) || (type !== 'artwork' && 状态.空间图文件)) {
+        记录应用埋点('image_removed', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', image_key: type });
+      }
       if (type === 'artwork') 状态.作品图文件 = null;
       else 状态.空间图文件 = null;
 
@@ -1711,6 +1924,10 @@
        ========================================== */
     document.getElementById('receive-email').addEventListener('input', (e) => {
       状态.接收地址 = e.target.value.trim();
+      if (!状态.邮箱已埋点 && 状态.接收地址.includes('@')) {
+        状态.邮箱已埋点 = true;
+        记录应用埋点('email_input_completed', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', email_domain: 状态.接收地址.split('@').pop() || '' });
+      }
       检查邮箱完成();
     });
 
@@ -1730,6 +1947,7 @@
     function 切换附加服务() {
       状态.附加服务 = !状态.附加服务;
       document.getElementById('extra-toggle').classList.toggle('active', 状态.附加服务);
+      记录应用埋点('extra_service_toggled', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', enabled: 状态.附加服务 });
     }
 
     /* ==========================================
@@ -1750,6 +1968,10 @@
       }
 
       document.getElementById('submit-btn').disabled = !可提交;
+      if (可提交 && !状态.漏斗必填已完成) {
+        状态.漏斗必填已完成 = true;
+        记录应用埋点('required_input_ready', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', has_email: !!状态.接收地址 });
+      }
     }
 
     /* ==========================================
@@ -1784,31 +2006,413 @@
 
     /* 显示等待状态 */
     function 显示等待状态(serviceLabel) {
+      记录应用埋点('waiting_view', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', order_id: 状态.当前订单ID || '' });
+      状态.当前订单失败 = false;
       const html = `
         <div class="apple-spinner-container">
           ${创建Apple加载器()}
-          <div class="apple-spinner-text">${serviceLabel || '处理中'}</div>
+          <div id="web-waiting-step" class="apple-spinner-text">${转义HTML(serviceLabel || '处理中')}</div>
         </div>
+        <div id="web-waiting-advisor" class="web-advisor-copy" hidden></div>
+        <div id="web-wall-preferences" class="wall-preference-panel"><div class="wall-preference-sub">正在整理墙面候选与顾问建议…</div></div>
         <div class="delivery-hint">
-          您可以退出当前页面，点击邮箱链接或重新扫码即可查看生成结果。<br>
-          您可以在本界面等待或刷新以提交新的业务请求，并点击查看历史记录浏览所有的已生成内容。
+          您可以退出当前页面，完成后会收到通知；墙面候选会保留在这里，交付后仍可追加生成其他方案。
         </div>
       `;
       显示交付面板(html);
+      if (状态.当前订单ID) 加载网页墙面选择(状态.当前订单ID, false);
+    }
+
+    function 更新网页等待状态(data) {
+      const step = document.getElementById('web-waiting-step');
+      if (step) step.textContent = data.currentStep || (data.progress && data.progress.message) || '正在为您细化空间呈现';
+      const advisor = document.getElementById('web-waiting-advisor');
+      const advisorText = String(data.advisorProgress || data.ai_advisor_progress || (data.progress && data.progress.advisorText) || '').trim();
+      if (advisor && advisorText) {
+        advisor.hidden = false;
+        advisor.textContent = `艺术顾问解读\n${advisorText}`;
+      }
+      if (状态.当前订单ID) 加载网页墙面选择(状态.当前订单ID, false);
+    }
+
+    function 显示失败状态(data) {
+      状态.当前订单失败 = true;
+      const failure = data.failure || {};
+      const program = failure.category === 'program' || failure.kind === 'program';
+      const suggestions = Array.isArray(failure.suggestions) ? failure.suggestions : [];
+      const token = data.deliveryToken || 读取活跃订单缓存().deliveryToken || '';
+      const historyAction = token ? `window.location.href='/d/${encodeURIComponent(token)}'` : `提交新业务()`;
+      const html = `
+        <div class="web-failure-card">
+          <h3>${转义HTML(failure.title || '本次处理暂未完成')}</h3>
+          <p>${转义HTML(failure.reason || '系统未能完成本次空间处理。')}</p>
+          ${failure.suggestion && !program ? `<p>${转义HTML(failure.suggestion)}</p>` : ''}
+          ${suggestions.length && !program ? `<p>${suggestions.map(item => `• ${转义HTML(item)}`).join('<br>')}</p>` : ''}
+          ${program ? '<p class="web-failure-followup">问题已经记录，我们将在今日内进行人工处理。完成后会通过消息通知您，您也可以在历史记录中查看结果。</p>' : ''}
+          <div class="web-failure-actions">
+            <button class="web-failure-primary" onclick="${historyAction}">查看历史记录</button>
+            <button class="web-failure-secondary" onclick="提交新业务()">${program ? '提交新的委托' : '更换照片重试'}</button>
+          </div>
+        </div>
+        <div id="web-wall-preferences" class="wall-preference-panel"><div class="wall-preference-sub">正在读取可用墙面建议…</div></div>
+      `;
+      显示交付面板(html);
+      if (状态.当前订单ID) 加载网页墙面选择(状态.当前订单ID, false);
     }
 
     /* 显示交付结果 */
+    const 交付图黄金点 = [[0.382, 0.382], [0.618, 0.382], [0.382, 0.618], [0.618, 0.618]];
+    let 交付图视图数据 = [];
+
+    function 规范作品框(value) {
+      const raw = Array.isArray(value) ? value : (value && typeof value === 'object' ? [value.x1, value.y1, value.x2, value.y2] : null);
+      if (!raw || raw.length < 4) return null;
+      const box = raw.slice(0, 4).map(Number);
+      if (box.some(value => !Number.isFinite(value))) return null;
+      const x1 = Math.max(0, Math.min(1, Math.min(box[0], box[2])));
+      const y1 = Math.max(0, Math.min(1, Math.min(box[1], box[3])));
+      const x2 = Math.max(0, Math.min(1, Math.max(box[0], box[2])));
+      const y2 = Math.max(0, Math.min(1, Math.max(box[1], box[3])));
+      return x2 > x1 && y2 > y1 ? [x1, y1, x2, y2] : null;
+    }
+
+    function 计算交付图聚焦(imageWidth, imageHeight, containerWidth, containerHeight, bbox) {
+      if (!bbox || !imageWidth || !imageHeight || !containerWidth || !containerHeight) return null;
+      const [nx1, ny1, nx2, ny2] = bbox;
+      const artWidth = (nx2 - nx1) * imageWidth;
+      const artHeight = (ny2 - ny1) * imageHeight;
+      const centerX = (nx1 + nx2) * imageWidth / 2;
+      const centerY = (ny1 + ny2) * imageHeight / 2;
+      const aspect = containerWidth / containerHeight;
+      let cropWidth = Math.sqrt(artWidth * artHeight * 30 * aspect);
+      cropWidth = Math.max(cropWidth, artWidth * 1.15, artHeight * 1.15 * aspect);
+      const cropHeight = cropWidth / aspect;
+      if (cropWidth > imageWidth || cropHeight > imageHeight) return null;
+      let golden = 交付图黄金点[0];
+      let minDistance = Infinity;
+      交付图黄金点.forEach(point => {
+        const dx = centerX / imageWidth - point[0];
+        const dy = centerY / imageHeight - point[1];
+        const distance = dx * dx + dy * dy;
+        if (distance < minDistance) { minDistance = distance; golden = point; }
+      });
+      const cropX = Math.max(0, Math.min(imageWidth - cropWidth, centerX - golden[0] * cropWidth));
+      const cropY = Math.max(0, Math.min(imageHeight - cropHeight, centerY - golden[1] * cropHeight));
+      const scale0 = Math.min(containerWidth / imageWidth, containerHeight / imageHeight);
+      const zoom = Math.min(containerWidth / (cropWidth * scale0), containerHeight / (cropHeight * scale0));
+      if (!Number.isFinite(zoom) || zoom <= 1.001) return null;
+      const baseWidth = imageWidth * scale0;
+      const baseHeight = imageHeight * scale0;
+      const cropScreenX = (containerWidth - baseWidth) / 2 + (cropX + cropWidth / 2) * scale0;
+      const cropScreenY = (containerHeight - baseHeight) / 2 + (cropY + cropHeight / 2) * scale0;
+      return {
+        baseWidth, baseHeight,
+        left: (containerWidth - baseWidth) / 2,
+        top: (containerHeight - baseHeight) / 2,
+        transform: `translate(${-zoom * (cropScreenX - containerWidth / 2)}px, ${-zoom * (cropScreenY - containerHeight / 2)}px) scale(${zoom})`
+      };
+    }
+
+    function 初始化交付图(index, img) {
+      const state = 交付图视图数据[index];
+      const stage = document.getElementById(`delivery-image-${index}`);
+      if (!state || !stage || !img.naturalWidth || !img.naturalHeight) return;
+      const focus = 计算交付图聚焦(img.naturalWidth, img.naturalHeight, stage.clientWidth, stage.clientHeight, state.bbox);
+      const scale0 = Math.min(stage.clientWidth / img.naturalWidth, stage.clientHeight / img.naturalHeight);
+      const layout = focus || {
+        baseWidth: img.naturalWidth * scale0, baseHeight: img.naturalHeight * scale0,
+        left: (stage.clientWidth - img.naturalWidth * scale0) / 2,
+        top: (stage.clientHeight - img.naturalHeight * scale0) / 2
+      };
+      Object.assign(img.style, { width: `${layout.baseWidth}px`, height: `${layout.baseHeight}px`, left: `${layout.left}px`, top: `${layout.top}px` });
+      state.hasFocus = !!focus;
+      state.focusTransform = focus ? focus.transform : 'translate(0,0) scale(1)';
+      state.viewState = focus ? 'focus' : 'full';
+      stage.classList.toggle('has-focus', !!focus);
+      stage.classList.toggle('is-full', false);
+      img.style.transition = 'none';
+      img.style.transform = state.focusTransform;
+      const hint = stage.querySelector('.delivery-view-hint');
+      if (hint) {
+        hint.hidden = !focus;
+        if (focus) hint.textContent = '点击查看完整空间';
+      }
+      requestAnimationFrame(() => requestAnimationFrame(() => { img.style.transition = 'transform 1400ms cubic-bezier(0.22, 1, 0.36, 1)'; }));
+    }
+
+    function 切换交付图视图(index) {
+      const state = 交付图视图数据[index];
+      if (!state || !state.hasFocus) return;
+      const stage = document.getElementById(`delivery-image-${index}`);
+      const img = stage && stage.querySelector('img');
+      if (!img) return;
+      state.viewState = state.viewState === 'focus' ? 'full' : 'focus';
+      img.style.transform = state.viewState === 'focus' ? state.focusTransform : 'translate(0,0) scale(1)';
+      stage.classList.toggle('is-full', state.viewState === 'full');
+      const hint = stage.querySelector('.delivery-view-hint');
+      if (hint) hint.textContent = state.viewState === 'focus' ? '点击查看完整空间' : '点击聚焦作品';
+      记录应用埋点('result_image_view_toggle', { page_name: 'index', image_index: index, view_state: state.viewState });
+    }
+
+    function 预览交付图(index) {
+      const state = 交付图视图数据[index];
+      if (state) 放大图片(state.url);
+    }
+
+    function 主墙补渲染缓存键(orderId) {
+      return `molink_primary_supplement:${orderId}`;
+    }
+
+    function 停止主墙补渲染轮询() {
+      if (!状态.主墙补渲染定时器) return;
+      clearInterval(状态.主墙补渲染定时器);
+      状态.主墙补渲染定时器 = null;
+    }
+
+    function 开始主墙补渲染轮询(orderId) {
+      if (!orderId || 状态.主墙补渲染定时器) return;
+      状态.主墙补渲染定时器 = setInterval(async () => {
+        try {
+          const resp = await fetch(`/api/client/order-status/${orderId}`);
+          const data = await resp.json();
+          const rerenderStatus = String(data.primary_wall_rerender_status || 'idle');
+          let hasPendingWall = false;
+          try {
+            const thinkingResp = await fetch(`/api/client/hanging-thinking/${orderId}`);
+            const thinkingPayload = await thinkingResp.json();
+            const thinking = thinkingPayload && (thinkingPayload.thinking || thinkingPayload);
+            hasPendingWall = Boolean(thinking && thinking.has_pending_supplement);
+          } catch (_) {}
+          状态.网页墙面等待中 = hasPendingWall;
+          if (rerenderStatus === 'pending' || hasPendingWall) {
+            加载网页墙面选择(orderId, Boolean(document.querySelector('.delivery-done-title')));
+            return;
+          }
+          显示交付结果(data);
+        } catch (error) {
+          console.error('追加效果轮询异常:', error);
+        }
+      }, 5000);
+    }
+
+    function 处理主墙补渲染状态(data) {
+      const orderId = 状态.当前订单ID || data.orderId || '';
+      const rerenderStatus = String(data.primary_wall_rerender_status || 'idle');
+      const key = 主墙补渲染缓存键(orderId);
+      const wasTracking = Boolean(orderId && localStorage.getItem(key));
+      if (rerenderStatus === 'pending' || 状态.网页墙面等待中) {
+        开始主墙补渲染轮询(orderId);
+        return;
+      }
+      停止主墙补渲染轮询();
+      if (orderId) localStorage.removeItem(key);
+      if (wasTracking && rerenderStatus === 'succeeded') {
+        状态.主墙补渲染提示 = 'succeeded';
+        显示Toast('主图色彩已更新', '✓');
+      } else if (wasTracking && rerenderStatus === 'failed') {
+        状态.主墙补渲染提示 = 'failed';
+        显示Toast('本次色彩优化未通过，已保留原图', 'i');
+      }
+    }
+
+    function 主墙补渲染横幅(data) {
+      const rerenderStatus = String(data.primary_wall_rerender_status || 'idle');
+      if (rerenderStatus === 'pending') {
+        return `<div class="primary-rerender-banner"><span class="primary-rerender-dot"></span><span>正在为主图优化色彩，稍后自动更新</span></div>`;
+      }
+      if (状态.主墙补渲染提示 === 'failed') {
+        return `<div class="primary-rerender-banner failed"><span>本次色彩优化未通过，已保留原有交付图。</span></div>`;
+      }
+      return '';
+    }
+
+    function 更新网页墙面提交按钮() {
+      const selectedCount = Object.values(状态.网页墙纸选择).filter(item => item && item.selected).length;
+      const button = document.getElementById('web-wall-preference-submit');
+      if (button) button.disabled = selectedCount === 0 || 状态.墙面偏好提交中;
+    }
+
+    function 切换网页墙面选择(input) {
+      const wallId = decodeURIComponent(input.dataset.wallId || '');
+      if (!wallId) return;
+      const selectedCount = Object.values(状态.网页墙纸选择).filter(item => item && item.selected).length;
+      if (input.checked && selectedCount >= 2) {
+        input.checked = false;
+        显示Toast('最多选择两面墙', 'i');
+        return;
+      }
+      const current = 状态.网页墙纸选择[wallId] || { selected: false, wallpaper: false };
+      状态.网页墙纸选择[wallId] = { ...current, selected: input.checked };
+      const option = input.closest('.wall-preference-option');
+      if (option) option.classList.toggle('selected', input.checked);
+      更新网页墙面提交按钮();
+    }
+
+    function 切换网页墙纸建议(input) {
+      const wallId = decodeURIComponent(input.dataset.wallId || '');
+      if (!wallId) return;
+      const current = 状态.网页墙纸选择[wallId] || { selected: false, wallpaper: false };
+      状态.网页墙纸选择[wallId] = { selected: current.selected || input.checked, wallpaper: input.checked };
+      const mainInput = document.querySelector(`input.web-wall-main[data-wall-id="${CSS.escape(encodeURIComponent(wallId))}"]`);
+      if (mainInput && input.checked) {
+        mainInput.checked = true;
+        const option = mainInput.closest('.wall-preference-option');
+        if (option) option.classList.add('selected');
+      }
+      更新网页墙面提交按钮();
+    }
+
+    function 网页墙面状态标签(item, delivered) {
+      const status = String(item.supplement_status || 'idle');
+      if (delivered && item.current_effect && !item.selected_by_user) return ['当前效果', 'current'];
+      if (status === 'pending') return ['生成中', 'pending'];
+      if (status === 'succeeded') return ['已追加', 'success'];
+      if (status === 'failed') return ['未完成', 'failed'];
+      if (item.selected_by_user) return ['已选择', 'success'];
+      if (item.is_primary) return ['首选', ''];
+      return ['', ''];
+    }
+
+    async function 加载网页墙面选择(orderId, delivered) {
+      const container = document.getElementById('web-wall-preferences');
+      if (!container || !orderId) return;
+      try {
+        const resp = await fetch(`/api/client/hanging-thinking/${orderId}`);
+        const payload = await resp.json();
+        const thinking = payload && (payload.thinking || payload);
+        const candidates = thinking && Array.isArray(thinking.candidates) ? thinking.candidates : [];
+        if (!candidates.length) {
+          if (!状态.网页墙面已加载) container.innerHTML = '<div class="wall-preference-sub">顾问正在整理墙面建议，稍后会自动出现。</div>';
+          return;
+        }
+        状态.网页墙面已加载 = true;
+        状态.网页墙面等待中 = Boolean(thinking.has_pending_supplement);
+        状态.网页墙纸候选 = candidates;
+        const previous = 状态.网页墙纸选择 || {};
+        状态.网页墙纸选择 = {};
+        candidates.forEach(item => {
+          const wallId = String(item.wall_id || '');
+          状态.网页墙纸选择[wallId] = previous[wallId] || { selected: false, wallpaper: false };
+        });
+        const guide = thinking.guide_copy || '您可以选择其他墙面，我们会再完成一次挂画与渲染，并把新图追加到当前交付中。';
+        container.innerHTML = `
+          <div class="wall-preference-title">艺术顾问建议与墙面选择</div>
+          <div class="wall-preference-sub">${转义HTML(guide)}</div>
+          <div class="wall-preference-options">
+            ${candidates.map(item => {
+              const wallId = String(item.wall_id || '');
+              const status = String(item.supplement_status || 'idle');
+              const rawCurrentEffect = Boolean(item.current_effect);
+              const currentEffect = Boolean(delivered && rawCurrentEffect && !thinking.has_user_selection);
+              const locked = rawCurrentEffect || status === 'pending' || status === 'succeeded';
+              const label = item.wall_position_zh || (item.schematic && item.schematic.wallLabel) || item.wall_zh || '候选墙面';
+              const reason = item.reason || item.primary_reason || '这面墙满足当前空间的基本挂画条件。';
+              const [badge, badgeClass] = 网页墙面状态标签(item, delivered);
+              const checked = Boolean(状态.网页墙纸选择[wallId] && 状态.网页墙纸选择[wallId].selected);
+              return `<label class="wall-preference-option ${currentEffect ? 'current-effect' : ''} ${checked ? 'selected' : ''} ${locked ? 'disabled' : ''}">
+                <div class="wall-option-main">
+                  ${locked ? '' : `<input class="web-wall-main" type="checkbox" data-wall-id="${encodeURIComponent(wallId)}" onchange="切换网页墙面选择(this)" ${checked ? 'checked' : ''}>`}
+                  <span class="wall-option-copy">
+                    <strong>${转义HTML(label)}${badge ? `<em class="wall-option-badge ${badgeClass}">${转义HTML(badge)}</em>` : ''}</strong>
+                    <span>${转义HTML(reason)}</span>
+                    ${item.suggest_dark_wallpaper && !currentEffect ? `<label class="wallpaper-opt-in" onclick="event.stopPropagation()"><input type="checkbox" data-wall-id="${encodeURIComponent(wallId)}" onchange="切换网页墙纸建议(this)" ${状态.网页墙纸选择[wallId].wallpaper ? 'checked' : ''} ${locked ? 'disabled' : ''}> 同时采用深色墙纸建议</label>` : ''}
+                  </span>
+                </div>
+              </label>`;
+            }).join('')}
+          </div>
+          <button id="web-wall-preference-submit" class="wall-preference-submit" onclick="提交网页墙面选择()" disabled>生成所选墙面的追加效果</button>
+          <div id="web-wall-preference-message" class="wall-preference-message">${状态.网页墙面等待中 ? '追加效果正在生成，完成后会自动出现在交付图中。' : ''}</div>`;
+        更新网页墙面提交按钮();
+        if (状态.网页墙面等待中) 开始主墙补渲染轮询(orderId);
+      } catch (error) {
+        console.error('加载墙面建议失败:', error);
+        if (!状态.网页墙面已加载) container.innerHTML = '<div class="wall-preference-sub">墙面建议暂时未载入，不影响当前订单处理。</div>';
+      }
+    }
+
+    async function 提交网页墙面选择() {
+      if (状态.墙面偏好提交中 || !状态.当前订单ID) return;
+      const selectedWallIds = Object.keys(状态.网页墙纸选择).filter(wallId => 状态.网页墙纸选择[wallId] && 状态.网页墙纸选择[wallId].selected);
+      if (!selectedWallIds.length) return;
+      const wallpaperOptIn = Object.fromEntries(selectedWallIds.map(wallId => [wallId, Boolean(状态.网页墙纸选择[wallId].wallpaper)]));
+      const button = document.getElementById('web-wall-preference-submit');
+      const message = document.getElementById('web-wall-preference-message');
+      状态.墙面偏好提交中 = true;
+      if (button) { button.disabled = true; button.textContent = '正在提交…'; }
+      try {
+        const resp = await fetch('/api/client/wall-preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order_id: 状态.当前订单ID,
+            delivery_token: 读取活跃订单缓存().deliveryToken || '',
+            selected_wall_ids: selectedWallIds,
+            wallpaper_opt_in: wallpaperOptIn,
+            platform: 'web'
+          })
+        });
+        const payload = await resp.json();
+        if (!resp.ok) throw new Error(payload.error || '提交失败');
+        状态.网页墙面等待中 = Array.isArray(payload.supplement_job_ids) && payload.supplement_job_ids.length > 0;
+        if (message) message.textContent = 状态.网页墙面等待中
+          ? '已开始生成所选墙面的追加效果，完成后会自动加入交付图。'
+          : '已记录您的墙面选择。';
+        if (payload.primary_wall_rerender_job_id) {
+          localStorage.setItem(主墙补渲染缓存键(状态.当前订单ID), JSON.stringify({
+            jobId: payload.primary_wall_rerender_job_id,
+            wallId: payload.primary_wall_id || ''
+          }));
+          状态.主墙补渲染提示 = '';
+        }
+        状态.网页墙纸选择 = {};
+        await 加载网页墙面选择(状态.当前订单ID, Boolean(document.querySelector('.delivery-done-title')));
+        if (状态.网页墙面等待中) 开始主墙补渲染轮询(状态.当前订单ID);
+      } catch (error) {
+        if (message) message.textContent = error.message || '暂时没有提交成功，请稍后再试。';
+      } finally {
+        状态.墙面偏好提交中 = false;
+        if (button && document.body.contains(button)) button.textContent = '生成所选墙面的追加效果';
+        更新网页墙面提交按钮();
+      }
+    }
+
     function 显示交付结果(data) {
+      状态.当前订单ID = data.orderId || 状态.当前订单ID;
+      状态.当前订单失败 = false;
+      if (data.deliveryToken) 缓存活跃订单({ orderId: 状态.当前订单ID, deliveryToken: data.deliveryToken, status: 'delivered' });
+      const rerenderKey = 主墙补渲染缓存键(状态.当前订单ID || '');
+      const rerenderStatus = String(data.primary_wall_rerender_status || 'idle');
+      if (localStorage.getItem(rerenderKey) && ['succeeded', 'failed'].includes(rerenderStatus)) {
+        状态.主墙补渲染提示 = rerenderStatus;
+      }
+      记录应用埋点('result_page_view', { page_name: 'index', service_type: 状态.服务类型 || data.serviceType || data.service_type || '', entry_source: 'web_home', order_id: 状态.当前订单ID || data.orderId || '' });
       let imagesHtml = '';
       const images = data.images || data.Images || [];
-      if (images.length > 0) {
+      const imageUrls = Array.isArray(data.imageUrls) ? data.imageUrls : (Array.isArray(data.image_urls) ? data.image_urls : images.map(img => `/deliveries/${img}`));
+      const resultRecords = Array.isArray(data.resultRecords) ? data.resultRecords : (Array.isArray(data.result_records) ? data.result_records : []);
+      交付图视图数据 = imageUrls.map((url, index) => ({
+        url,
+        bbox: 规范作品框(resultRecords[index] && ((resultRecords[index].install && resultRecords[index].install.artwork_bbox_norm) || resultRecords[index].artwork_bbox_norm)),
+        hasFocus: false,
+        viewState: 'full',
+        focusTransform: 'translate(0,0) scale(1)'
+      }));
+      if (imageUrls.length > 0) {
         imagesHtml = `<div class="delivery-images">
-          ${images.map((img, i) => `
-            <div class="delivery-img-wrap" onclick="放大图片('/deliveries/${img}')">
-              <img src="/deliveries/${img}" alt="交付图片" ${i === 0 ? 'onload="标记已查收()"' : ''} oncontextmenu="标记已下载()">
-              <div class="delivery-img-hint">长按保存 · 点击放大</div>
-            </div>
-          `).join('')}
+          ${imageUrls.map((imageUrl, i) => {
+            return `
+            <div class="delivery-img-wrap">
+              <div id="delivery-image-${i}" class="delivery-img-stage" onclick="切换交付图视图(${i})">
+                <img src="${imageUrl}" alt="交付图片" onload="初始化交付图(${i}, this);${i === 0 ? '标记已查收();' : ''}" oncontextmenu="标记已下载()">
+                <div class="delivery-view-hint" hidden>正在定位作品…</div>
+              </div>
+              <div class="delivery-img-actions">
+                <button class="delivery-img-action" onclick="预览交付图(${i})">查看大图</button>
+                <span class="delivery-img-hint">长按图片保存</span>
+              </div>
+            </div>`;
+          }).join('')}
         </div>`;
       }
 
@@ -1819,7 +2423,7 @@
       }
 
       // 获取历史记录链接
-      const deliveryToken = localStorage.getItem('molink_active_order') ? JSON.parse(localStorage.getItem('molink_active_order')).deliveryToken : null;
+      const deliveryToken = data.deliveryToken || 读取活跃订单缓存().deliveryToken || null;
 
       const html = `
         <div class="delivery-done-title">
@@ -1828,11 +2432,15 @@
           <p>${data.serviceTypeLabel || data.service_type_label || ''}</p>
         </div>
         ${imagesHtml}
+        ${主墙补渲染横幅(data)}
         ${textHtml}
+        <div id="web-wall-preferences" class="wall-preference-panel"><div class="wall-preference-sub">正在读取顾问建议与墙面候选…</div></div>
         <button class="new-order-btn" onclick="提交新业务()">提交新的业务</button>
         ${deliveryToken ? `<button class="new-order-btn" style="margin-top:12px; background-image:linear-gradient(135deg, rgba(122,158,126,0.35) 0%, rgba(142,178,146,0.25) 50%, rgba(122,158,126,0.3) 100%); border-color:rgba(122,158,126,0.4);" onclick="window.location.href='/d/${deliveryToken}'">查看历史记录</button>` : ''}
       `;
       显示交付面板(html);
+      处理主墙补渲染状态(data);
+      加载网页墙面选择(状态.当前订单ID, true);
     }
 
     /* ==========================================
@@ -1890,6 +2498,7 @@
        ========================================== */
     async function 提交表单() {
       if (状态.提交中) return;
+      记录应用埋点('submit_clicked', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home' });
       状态.提交中 = true;
 
       const btn = document.getElementById('submit-btn');
@@ -1901,6 +2510,9 @@
       formData.append('receive_target', 状态.接收地址);
       formData.append('extra_service', 状态.附加服务 ? '1' : '0');
       formData.append('device_uuid', 设备UUID);
+      formData.append('entry_platform', 'web');
+      formData.append('entry_source', 'web_home');
+      formData.append('session_id', 获取埋点会话ID());
 
       if (状态.作品图文件) formData.append('artwork', 状态.作品图文件);
       if (状态.空间图文件) formData.append('space', 状态.空间图文件);
@@ -1915,6 +2527,7 @@
         if (data.success) {
           显示Toast('提交成功！处理完成后将通过邮箱通知您', '✓');
           状态.当前订单ID = data.orderId;
+          记录应用埋点('submit_success_client', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', order_id: data.orderId });
           
           // 缓存当前订单信息
           localStorage.setItem('molink_active_order', JSON.stringify({
@@ -1929,9 +2542,11 @@
           // 开始轮询
           开始轮询(data.orderId);
         } else {
+          记录应用埋点('submit_failed_client', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', error_msg: data.error || '提交失败' });
           显示Toast(data.error || '提交失败，请重试', '✗');
         }
       } catch (err) {
+        记录应用埋点('submit_failed_client', { page_name: 'index', service_type: 状态.服务类型, entry_source: 'web_home', error_msg: err && err.message ? err.message : 'network_error' });
         显示Toast('网络异常，请检查连接后重试', '✗');
         console.error(err);
       } finally {
@@ -1952,17 +2567,17 @@
           const resp = await fetch(`/api/client/order-status/${orderId}`);
           const data = await resp.json();
 
+          if (data.deliveryToken) 缓存活跃订单({ orderId, deliveryToken: data.deliveryToken });
           if (data.status === 'delivered') {
             clearInterval(状态.轮询定时器);
             状态.轮询定时器 = null;
-
-            // 更新缓存
-            localStorage.setItem('molink_active_order', JSON.stringify({
-              orderId: orderId,
-              status: 'delivered'
-            }));
-
+            缓存活跃订单({ orderId, status: 'delivered' });
             显示交付结果(data);
+          } else if (data.status === 'failed') {
+            缓存活跃订单({ orderId, status: 'failed' });
+            显示失败状态(data);
+          } else {
+            更新网页等待状态(data);
           }
         } catch (e) {
           console.error('轮询异常:', e);
@@ -1975,7 +2590,9 @@
        ========================================== */
     function 提交新业务() {
       // 清除缓存
+      if (状态.当前订单ID) localStorage.removeItem(主墙补渲染缓存键(状态.当前订单ID));
       localStorage.removeItem('molink_active_order');
+      停止主墙补渲染轮询();
       
       // 隐藏交付面板
       document.getElementById('delivery-panel').classList.remove('visible');
@@ -2001,6 +2618,15 @@
       状态.空间图文件 = null;
       状态.当前步骤 = 1;
       状态.当前订单ID = null;
+      状态.主墙补渲染提示 = '';
+      状态.网页墙纸候选 = [];
+      状态.网页墙纸选择 = {};
+      状态.网页墙面已加载 = false;
+      状态.网页墙面等待中 = false;
+      状态.当前订单失败 = false;
+      状态.墙面偏好提交中 = false;
+      状态.漏斗必填已完成 = false;
+      状态.邮箱已埋点 = false;
 
       document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('active'));
       清除上传('artwork');
@@ -2032,7 +2658,22 @@
             状态.当前订单ID = data.orderId;
             显示等待状态(data.serviceTypeLabel || '正在为您生成...');
             开始轮询(data.orderId);
+          } else if (data.status === 'failed') {
+            状态.当前订单ID = data.orderId;
+            缓存活跃订单({
+              orderId: data.orderId,
+              deliveryToken: data.deliveryToken,
+              status: 'failed'
+            });
+            显示失败状态(data);
+            开始轮询(data.orderId);
           } else if (data.status === 'delivered') {
+            状态.当前订单ID = data.orderId;
+            缓存活跃订单({
+              orderId: data.orderId,
+              deliveryToken: data.deliveryToken,
+              status: 'delivered'
+            });
             显示交付结果(data);
           }
         }

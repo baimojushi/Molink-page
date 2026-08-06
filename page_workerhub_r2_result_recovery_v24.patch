@@ -1,0 +1,559 @@
+--- a/services/workerHub.js
++++ b/services/workerHub.js
+@@ -13,8 +13,12 @@
+ 
+ const HEARTBEAT_TIMEOUT_MS = parseInt(process.env.WORKER_HEARTBEAT_TIMEOUT_MS || '600000', 10);
+ const KEEPALIVE_INTERVAL_MS = parseInt(process.env.WORKER_KEEPALIVE_INTERVAL_MS || '20000', 10);
++const KEEPALIVE_PONG_TIMEOUT_MS = parseInt(process.env.WORKER_KEEPALIVE_PONG_TIMEOUT_MS || '120000', 10);
+ const REQUEUE_DELAY_MS = parseInt(process.env.WORKER_REQUEUE_DELAY_MS || '30000', 10);
++const R2_RESULT_GRACE_MS = parseInt(process.env.WORKER_R2_RESULT_GRACE_MS || '180000', 10);
++const R2_RESULT_RECHECK_MS = parseInt(process.env.WORKER_R2_RESULT_RECHECK_MS || '30000', 10);
+ const REGISTER_DISPATCH_DELAY_MS = parseInt(process.env.WORKER_REGISTER_DISPATCH_DELAY_MS || '1000', 10);
++const RESULT_DEDUPE_TTL_MS = parseInt(process.env.WORKER_RESULT_DEDUPE_TTL_MS || '86400000', 10);
+ const DELIVERED_ORDER_STATUSES = new Set(['delivered', 'viewed', 'downloaded']);
+ const TERMINAL_HANGING_STATUSES = new Set([
+   'succeeded',
+@@ -80,19 +84,28 @@
+     this._sweepTimer = null;
+     this._keepaliveTimer = null;
+     this.pendingRequeueTimers = new Map();
++    this.uploadedOutputGrace = new Map();
++    this.resultProcessing = new Map();
++    this.resultCleanupTimers = new Map();
++    this.r2Client = null;
+     this.wss = null;
+ 
+     this.wsEvents = [];
+   }
+ 
+   // 注入依赖，避免循环 require
+-  configure({ db, resultProcessor, progressHandler, heartbeatHandler, jobEnqueuedHandler, buildJobFromOrder } = {}) {
++  configure({ db, resultProcessor, progressHandler, heartbeatHandler, jobEnqueuedHandler, buildJobFromOrder, r2Client } = {}) {
+     if (db) this.db = db;
+     if (resultProcessor) this.resultProcessor = resultProcessor;
+     if (progressHandler) this.progressHandler = progressHandler;
+     if (heartbeatHandler) this.heartbeatHandler = heartbeatHandler;
+     if (jobEnqueuedHandler) this.jobEnqueuedHandler = jobEnqueuedHandler;
+     if (buildJobFromOrder) this.buildJobFromOrder = buildJobFromOrder;
++    if (r2Client) this.r2Client = r2Client;
++  }
++
++  _getR2Client() {
++    return this.r2Client || require('./r2');
+   }
+ 
+   attach(server) {
+@@ -138,6 +151,13 @@
+ 
+       this._recordWsEvent('accepted', { peer });
+ 
++      ws._molink_peer = peer;
++      ws._molink_last_protocol_pong_at = Date.now();
++      ws.on('pong', () => {
++        ws._molink_last_protocol_pong_at = Date.now();
++        this._touchWorkerBySocket(ws, {});
++      });
++
+       let registered = false;
+ 
+       const registrationTimer = setTimeout(() => {
+@@ -235,13 +255,26 @@
+         }
+ 
+         const existing = this.workers.get(instanceId);
++        const requestedJobId = String(msg.current_job_id || '').trim() || null;
++        const resumeBusy = Boolean(
++          requestedJobId &&
++          (msg.resume_inflight_job === true || String(msg.status || '') === 'busy')
++        );
++        const replacingSameInflight = Boolean(
++          existing &&
++          existing.ws !== ws &&
++          resumeBusy &&
++          existing.current_job_id === requestedJobId &&
++          String(msg.connection_role || 'primary') === 'primary'
++        );
+         if (
+           existing &&
+           existing.ws !== ws &&
+           existing.current_job_id &&
+           existing.status === 'busy' &&
+           existing.ws &&
+-          existing.ws.readyState === WebSocket.OPEN
++          existing.ws.readyState === WebSocket.OPEN &&
++          !replacingSameInflight
+         ) {
+           // Worker.send_result 的重连重发会新建一个短连接并再次 register。
+           // 这个短连接只用于补发 result/progress，不能覆盖仍在执行作业的主 worker 连接，
+@@ -262,6 +295,17 @@
+           break;
+         }
+ 
++        if (replacingSameInflight) {
++          existing.ws._molink_superseded = true;
++          this._recordWsEvent('primary_reconnected_inflight', {
++            instance_id: instanceId,
++            current_job_id: requestedJobId,
++            old_peer: existing.ws._molink_peer || null,
++            new_peer: ws._molink_peer || null
++          });
++          try { existing.ws.close(1000, 'superseded by reconnect'); } catch (error) {}
++        }
++
+         this.workers.set(instanceId, {
+           ws,
+           gpu_model: msg.gpu_model || 'unknown',
+@@ -273,17 +317,20 @@
+             precision: msg.precision || 'unknown',
+             benchmark_score: Number(msg.benchmark_score) || null
+           },
+-          status: 'idle',
+-          current_job_id: null,
++          status: resumeBusy ? 'busy' : 'idle',
++          current_job_id: resumeBusy ? requestedJobId : null,
+           last_hb: Date.now(),
+-          current_stage_snapshot: null
++          current_stage_snapshot: existing?.current_stage_snapshot || null
+         });
+ 
+-        console.log(`[hub] worker registered: ${instanceId} (${msg.gpu_model})`);
++        if (resumeBusy && requestedJobId) {
++          this._cancelPendingRequeue(requestedJobId, 'worker_reconnected_inflight');
++        }
++        console.log(`[hub] worker registered: ${instanceId} (${msg.gpu_model}) status=${resumeBusy ? 'busy' : 'idle'} current_job_id=${requestedJobId || ''}`);
+         this._syncWorkerRow(instanceId, {
+           gpu_model: msg.gpu_model,
+-          status: 'connected_idle',
+-          current_job_id: null,
++          status: resumeBusy ? 'connected_busy' : 'connected_idle',
++          current_job_id: resumeBusy ? requestedJobId : null,
+           registered: true
+         });
+ 
+@@ -364,13 +411,13 @@
+         }
+         const jobId = payload.job_id || msg.job_id;
+         if (jobId) this._cancelPendingRequeue(jobId, 'result_received');
++        if (jobId) this.uploadedOutputGrace.delete(jobId);
+ 
+         // 补发结果处理：worker 重连后可能补发之前因 progress 发送失败
+         // 而被错误标记为失败的任务的真正结果。需要确保即使订单当前
+         // 处于 hanging_failed 状态，补发的成功结果仍能覆盖它。
+         const isRetroactiveResult = (
+-          worker &&
+-          worker._molink_auxiliary_worker &&
++          Boolean(ws._molink_auxiliary_worker) &&
+           (payload.status === 'succeeded' || payload.status === 'succeeded_partial')
+         );
+         if (isRetroactiveResult && this.db && jobId) {
+@@ -395,12 +442,9 @@
+           }
+         }
+ 
+-        if (this.resultProcessor) {
+-          Promise.resolve()
+-            .then(() => this.resultProcessor(payload))
+-            .then(() => { if (jobId) this._cancelPendingRequeue(jobId, 'result_processed'); })
+-            .catch(e => console.error('[hub] result processor:', e.message));
+-        }
++        this._processResultAndAck(ws, msg, payload).catch(e => {
++          console.error('[hub] result processor:', e.message);
++        });
+         break;
+       }
+ 
+@@ -423,6 +467,85 @@
+         this._syncWorkerRow(instanceId, { status: 'disconnected', current_job_id: null });
+         break;
+       }
++    }
++  }
++
++  _sendResultAck(ws, details) {
++    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
++    try {
++      ws.send(JSON.stringify({ type: 'result_ack', server_ts: Date.now(), ...details }));
++      return true;
++    } catch (error) {
++      this._recordWsEvent('result_ack_send_failed', {
++        job_id: details?.job_id || null,
++        result_id: details?.result_id || null,
++        message: error.message
++      });
++      return false;
++    }
++  }
++
++  _scheduleResultProcessingCleanup(resultId) {
++    if (!resultId || this.resultCleanupTimers.has(resultId)) return;
++    const cleanupTimer = setTimeout(() => {
++      this.resultProcessing.delete(resultId);
++      this.resultCleanupTimers.delete(resultId);
++    }, RESULT_DEDUPE_TTL_MS);
++    cleanupTimer.unref?.();
++    this.resultCleanupTimers.set(resultId, cleanupTimer);
++  }
++
++  _forgetFailedResult(resultId) {
++    this.resultProcessing.delete(resultId);
++    const timer = this.resultCleanupTimers.get(resultId);
++    if (timer) clearTimeout(timer);
++    this.resultCleanupTimers.delete(resultId);
++  }
++
++  _processResultPayloadOnce(payload, resultId) {
++    if (!this.resultProcessor) {
++      return Promise.reject(new Error('result_processor_not_configured'));
++    }
++    let processing = this.resultProcessing.get(resultId);
++    if (!processing) {
++      processing = Promise.resolve().then(() => this.resultProcessor(payload));
++      this.resultProcessing.set(resultId, processing);
++    }
++    return processing;
++  }
++
++  async _processResultAndAck(ws, msg, payload) {
++    const jobId = String(payload?.job_id || msg?.job_id || '');
++    const resultId = String(
++      msg?.result_id || payload?.transport_result_id || `${jobId || 'job'}:legacy`
++    );
++
++    try {
++      await this._processResultPayloadOnce(payload, resultId);
++      this._scheduleResultProcessingCleanup(resultId);
++      if (jobId) this._cancelPendingRequeue(jobId, 'result_processed');
++      this._sendResultAck(ws, {
++        accepted: true,
++        retryable: false,
++        job_id: jobId,
++        result_id: resultId,
++        status: payload?.status || msg?.status || null
++      });
++      this._recordWsEvent('result_ack', {
++        job_id: jobId,
++        result_id: resultId,
++        status: payload?.status || msg?.status || null
++      });
++    } catch (error) {
++      this._forgetFailedResult(resultId);
++      this._sendResultAck(ws, {
++        accepted: false,
++        retryable: true,
++        job_id: jobId,
++        result_id: resultId,
++        error: error.message
++      });
++      throw error;
+     }
+   }
+ 
+@@ -499,10 +622,29 @@
+ 
+   _sendKeepalivePings() {
+     const payload = JSON.stringify({ type: 'ping', server_ts: Date.now() });
++    const now = Date.now();
+     for (const [id, worker] of this.workers) {
+       const ws = worker.ws;
+       if (!ws || ws.readyState !== WebSocket.OPEN) continue;
++      const lastProtocolPongAt = Number(ws._molink_last_protocol_pong_at || worker.last_hb || now);
++      if (now - lastProtocolPongAt > KEEPALIVE_PONG_TIMEOUT_MS) {
++        this._recordWsEvent('keepalive_pong_timeout', {
++          instance_id: id,
++          job_id: worker.current_job_id || null,
++          elapsed_ms: now - lastProtocolPongAt,
++          timeout_ms: KEEPALIVE_PONG_TIMEOUT_MS
++        });
++        if (worker.current_job_id) {
++          this._scheduleRequeueByJobId(worker.current_job_id, 'keepalive_pong_timeout', { instance_id: id });
++        }
++        try { ws.terminate(); } catch (error) {}
++        continue;
++      }
+       try {
++        // RFC WebSocket ping is answered by the Python protocol layer even
++        // while the application receiver is busy.  Keep the JSON ping for
++        // older workers and diagnostics, but do not depend on it for liveness.
++        ws.ping();
+         ws.send(payload);
+       } catch (error) {
+         this._recordWsEvent('keepalive_send_failed', {
+@@ -606,7 +748,7 @@
+   async _hasUploadedOutputsForOrder(order, jobId) {
+     if (!order || !jobId) return false;
+     try {
+-      const { hasObjectsWithPrefix } = require('./r2');
++      const { hasObjectsWithPrefix } = this._getR2Client();
+       if (typeof hasObjectsWithPrefix !== 'function') return false;
+       const prefix = `orders/${order.id}/${jobId}/`;
+       return await hasObjectsWithPrefix(prefix);
+@@ -616,6 +758,47 @@
+     }
+   }
+ 
++  async _recoverTerminalResultFromR2(order, jobId) {
++    if (!order || !jobId || !this.resultProcessor) return false;
++    const key = `orders/${order.id}/${jobId}/control/result_payload.json`;
++    try {
++      const { downloadObjectBufferByKey } = this._getR2Client();
++      if (typeof downloadObjectBufferByKey !== 'function') return false;
++      const body = await downloadObjectBufferByKey(key);
++      const envelope = JSON.parse(body.toString('utf8'));
++      const payload = envelope && typeof envelope === 'object' ? envelope.payload : null;
++      if (!payload || typeof payload !== 'object') {
++        throw new Error('R2 terminal result envelope has no payload');
++      }
++      const envelopeJobId = String(envelope.job_id || payload.job_id || '');
++      const envelopeOrderId = String(envelope.order_id || payload.order_id || '');
++      if (envelopeJobId !== String(jobId) || envelopeOrderId !== String(order.id)) {
++        throw new Error(`R2 terminal result identity mismatch job=${envelopeJobId} order=${envelopeOrderId}`);
++      }
++      const resultId = String(envelope.result_id || payload.transport_result_id || `${jobId}:r2-recovery`);
++      await this._processResultPayloadOnce(payload, resultId);
++      this._scheduleResultProcessingCleanup(resultId);
++      this.uploadedOutputGrace.delete(jobId);
++      this._cancelPendingRequeue(jobId, 'r2_terminal_result_recovered');
++      this._recordWsEvent('r2_terminal_result_recovered', {
++        job_id: jobId,
++        order_id: order.id,
++        result_id: envelope.result_id || payload.transport_result_id || null,
++        status: payload.status || null,
++        key
++      });
++      return true;
++    } catch (error) {
++      const code = String(error?.name || error?.code || error?.Code || '');
++      const statusCode = Number(error?.$metadata?.httpStatusCode || error?.statusCode || 0);
++      if (code === 'NoSuchKey' || code === 'NotFound' || statusCode === 404) {
++        return false;
++      }
++      console.warn(`[hub] R2 terminal result recovery failed for ${jobId}: ${error.message}`);
++      return false;
++    }
++  }
++
+   async _requeueByJobId(jobId, reason = 'unknown') {
+     if (!this.db) return;
+     if (typeof this.buildJobFromOrder !== 'function') {
+@@ -630,16 +813,45 @@
+ 
+       const order = this.db.prepare('SELECT * FROM orders WHERE hanging_job_id = ?').get(jobId);
+       if (order) {
+-        if (await this._hasUploadedOutputsForOrder(order, jobId)) {
++        if (await this._recoverTerminalResultFromR2(order, jobId)) {
++          console.warn(`[hub] 在途作业 ${jobId} 已从 R2 控制结果恢复并完成处理`);
++          return;
++        }
++
++        const hasUploadedOutputs = await this._hasUploadedOutputsForOrder(order, jobId);
++        if (hasUploadedOutputs) {
++          const firstSeenAt = this.uploadedOutputGrace.get(jobId) || Date.now();
++          this.uploadedOutputGrace.set(jobId, firstSeenAt);
++          const elapsed = Date.now() - firstSeenAt;
+           this.db.prepare(`UPDATE orders SET
+               ai_current_step = '效果图已上传，正在等待 GPU 回传最终结果…',
+               ai_progress_pct = CASE WHEN COALESCE(ai_progress_pct, 0) < 95 THEN 95 ELSE ai_progress_pct END
+             WHERE id = ?
+           `).run(order.id);
+-          console.warn(`[hub] 在途作业 ${jobId} 已发现 R2 输出，跳过回队，等待 worker 重连重发 result`);
+-          return;
+-        }
+-
++          if (elapsed < R2_RESULT_GRACE_MS) {
++            console.warn(`[hub] 在途作业 ${jobId} 已发现 R2 输出但控制结果未到，等待恢复 elapsed=${elapsed}ms grace=${R2_RESULT_GRACE_MS}ms`);
++            this._recordWsEvent('r2_output_waiting_for_terminal_result', {
++              job_id: jobId,
++              order_id: order.id,
++              elapsed_ms: elapsed,
++              grace_ms: R2_RESULT_GRACE_MS
++            });
++            if (!this.pendingRequeueTimers.has(jobId)) {
++              const retryTimer = setTimeout(() => {
++                this.pendingRequeueTimers.delete(jobId);
++                this._requeueByJobId(jobId, 'r2_terminal_result_recheck').catch(error => {
++                  console.error('[hub] R2 terminal result recheck failed:', error.message);
++                });
++              }, R2_RESULT_RECHECK_MS);
++              retryTimer.unref?.();
++              this.pendingRequeueTimers.set(jobId, retryTimer);
++            }
++            return;
++          }
++          console.warn(`[hub] 在途作业 ${jobId} R2 输出存在但终态结果超过宽限期，允许安全回队`);
++        }
++
++        this.uploadedOutputGrace.delete(jobId);
+         this.db.prepare("UPDATE orders SET status='hanging_queued' WHERE id=?").run(order.id);
+         this.enqueueJob(this.buildJobFromOrder(order));
+         console.log(`[hub] 在途作业 ${jobId} 已延迟回队 reason=${reason}`);
+@@ -681,4 +893,6 @@
+   }
+ }
+ 
+-module.exports = new WorkerHub(); // 单例
++const workerHub = new WorkerHub();
++module.exports = workerHub; // 单例
++module.exports.WorkerHub = WorkerHub; // 测试与独立诊断使用
+--- a/package.json
++++ b/package.json
+@@ -14,10 +14,11 @@
+     "miniapp:switch-account": "node scripts/switchMiniappAccount.js",
+     "content-security:smoke": "node scripts/contentSecuritySmoke.js",
+     "primary-rerender:smoke": "node scripts/primaryWallRerenderStatusSmoke.js",
+-    "eta:test": "node --test tests/eta/*.test.js"
++    "eta:test": "node --test tests/eta/*.test.js",
++    "workerhub:test": "node --test tests/workerHub/*.test.js"
+   },
+   "engines": {
+-    "node": ">=18.0.0"
++    "node": ">=20.0.0"
+   },
+   "dependencies": {
+     "tencentcloud-sdk-nodejs-ses": "^4.0.1",
+--- a/tests/workerHub/reliableTransport.test.js
++++ b/tests/workerHub/reliableTransport.test.js
+@@ -0,0 +1,144 @@
++const test = require('node:test');
++const assert = require('node:assert/strict');
++const WebSocket = require('ws');
++const { WorkerHub } = require('../../services/workerHub');
++
++function fakeSocket() {
++  return {
++    readyState: WebSocket.OPEN,
++    sent: [],
++    pingCount: 0,
++    terminateCount: 0,
++    closeCount: 0,
++    send(raw) { this.sent.push(JSON.parse(String(raw))); },
++    ping() { this.pingCount += 1; },
++    terminate() { this.terminateCount += 1; this.readyState = WebSocket.CLOSED; },
++    close() { this.closeCount += 1; this.readyState = WebSocket.CLOSED; }
++  };
++}
++
++test('duplicate terminal results share one processor call and each receive ACK', async () => {
++  const hub = new WorkerHub();
++  let calls = 0;
++  hub.configure({
++    resultProcessor: async payload => {
++      calls += 1;
++      await new Promise(resolve => setTimeout(resolve, 15));
++      assert.equal(payload.job_id, 'job-ack');
++    }
++  });
++  const ws1 = fakeSocket();
++  const ws2 = fakeSocket();
++  const payload = { job_id: 'job-ack', order_id: 'order-ack', status: 'succeeded' };
++  const msg = { type: 'result', result_id: 'job-ack:stable', job_id: 'job-ack', payload };
++
++  await Promise.all([
++    hub._processResultAndAck(ws1, msg, payload),
++    hub._processResultAndAck(ws2, msg, payload)
++  ]);
++
++  assert.equal(calls, 1);
++  assert.equal(ws1.sent.at(-1).type, 'result_ack');
++  assert.equal(ws1.sent.at(-1).accepted, true);
++  assert.equal(ws2.sent.at(-1).accepted, true);
++  for (const timer of hub.resultCleanupTimers.values()) clearTimeout(timer);
++});
++
++test('in-flight primary reconnect replaces stale socket without becoming idle', () => {
++  const hub = new WorkerHub();
++  const oldWs = fakeSocket();
++  const newWs = fakeSocket();
++  hub.workers.set('pro-1', {
++    ws: oldWs,
++    gpu_model: 'TITAN Xp',
++    status: 'busy',
++    current_job_id: 'job-inflight',
++    last_hb: Date.now(),
++    current_stage_snapshot: { stage: 'styling' }
++  });
++  const pending = setTimeout(() => {}, 60_000);
++  pending.unref?.();
++  hub.pendingRequeueTimers.set('job-inflight', pending);
++
++  hub._handle(newWs, {
++    type: 'register',
++    instance_id: 'pro-1',
++    gpu_model: 'TITAN Xp',
++    status: 'busy',
++    current_job_id: 'job-inflight',
++    resume_inflight_job: true,
++    connection_role: 'primary'
++  });
++
++  const current = hub.workers.get('pro-1');
++  assert.equal(current.ws, newWs);
++  assert.equal(current.status, 'busy');
++  assert.equal(current.current_job_id, 'job-inflight');
++  assert.equal(oldWs.closeCount, 1);
++  assert.equal(hub.pendingRequeueTimers.has('job-inflight'), false);
++});
++
++test('R2 terminal recovery and websocket resend are deduplicated by result_id', async () => {
++  const hub = new WorkerHub();
++  let calls = 0;
++  let release;
++  const wait = new Promise(resolve => { release = resolve; });
++  const payload = { job_id: 'job-r2', order_id: 'order-r2', status: 'succeeded' };
++  const envelope = {
++    schema_version: 1,
++    result_id: 'job-r2:stable',
++    job_id: 'job-r2',
++    order_id: 'order-r2',
++    status: 'succeeded',
++    payload
++  };
++  hub.configure({
++    resultProcessor: async () => {
++      calls += 1;
++      await wait;
++    },
++    r2Client: {
++      downloadObjectBufferByKey: async key => {
++        assert.equal(key, 'orders/order-r2/job-r2/control/result_payload.json');
++        return Buffer.from(JSON.stringify(envelope));
++      }
++    }
++  });
++  const ws = fakeSocket();
++
++  const recovered = hub._recoverTerminalResultFromR2({ id: 'order-r2' }, 'job-r2');
++  const resent = hub._processResultAndAck(ws, {
++    type: 'result',
++    result_id: 'job-r2:stable',
++    job_id: 'job-r2',
++    payload
++  }, payload);
++  await new Promise(resolve => setImmediate(resolve));
++  assert.equal(calls, 1);
++  release();
++
++  assert.equal(await recovered, true);
++  await resent;
++  assert.equal(calls, 1);
++  assert.equal(ws.sent.at(-1).accepted, true);
++  for (const timer of hub.resultCleanupTimers.values()) clearTimeout(timer);
++});
++
++test('healthy server keepalive sends RFC ping plus legacy JSON ping', () => {
++  const hub = new WorkerHub();
++  const ws = fakeSocket();
++  ws._molink_last_protocol_pong_at = Date.now();
++  hub.workers.set('pro-keepalive', {
++    ws,
++    gpu_model: 'TITAN Xp',
++    status: 'busy',
++    current_job_id: 'job-keepalive',
++    last_hb: Date.now()
++  });
++
++  hub._sendKeepalivePings();
++
++  assert.equal(ws.pingCount, 1);
++  assert.equal(ws.sent.at(-1).type, 'ping');
++  assert.equal(ws.terminateCount, 0);
++});

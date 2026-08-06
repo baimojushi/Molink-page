@@ -1,5 +1,5 @@
 const app = getApp()
-const { request } = require('../../utils/helper')
+const { request, trackClientEvent } = require('../../utils/helper')
 
 const INTRO_DURATION = 2600
 const HANG_DURATION = 2200
@@ -30,11 +30,14 @@ Page({
       {
         id: 'recommend_work',
         title: '为空间推荐作品',
-        desc: '根据您的居住空间，为您精选合适的艺术作品',
-        iconPath: '/assets/icons/xiaofangzi.svg'
+        desc: '算法升级中，敬请期待',
+        iconPath: '/assets/icons/xiaofangzi.svg',
+        disabled: true
       }
     ],
     selectedService: null,
+    privacyAgreed: false,
+    privacyShake: false,
     activeOrder: null,
     historyCount: 0,
     animationSlotA: '',
@@ -42,17 +45,33 @@ Page({
     activeAnimationSlot: 'A',
     animationLoop: false,
     cardIntroStep: 0,
-    headerIntroDone: false
+    headerIntroDone: false,
+    currentExhibitionName: '',
+    currentExhibitionStatus: '',
+    exhibitionOrderDisabled: false
   },
 
   onLoad() {
+    this.restorePrivacyAgreement()
     this.startEntranceIfNeeded()
   },
 
   onShow() {
+    this.restorePrivacyAgreement()
+    const currentExhibition = app.getCurrentExhibition()
+    if (!currentExhibition.id) {
+      wx.reLaunch({ url: '/pages/select-exhibition/index' })
+      return
+    }
+    this.setData({
+      currentExhibitionName: currentExhibition.name || '当前展览',
+      currentExhibitionStatus: currentExhibition.status || '',
+      exhibitionOrderDisabled: currentExhibition.status === 'archived'
+    })
     this.checkActiveOrder()
     this.loadHistoryCount()
     this.startEntranceIfNeeded()
+    trackClientEvent('home_view', { page_name: 'index', entry_source: 'miniapp_home' })
   },
 
   onUnload() {
@@ -228,7 +247,7 @@ Page({
       const res = await request(`${app.globalData.serverUrl}/api/client/order-status/${lastOrderId}`, 'GET', null)
       if (['delivered', 'viewed', 'downloaded'].includes(res.status)) {
         wx.redirectTo({ url: `/pages/result/result?orderId=${lastOrderId}` })
-      } else if (['pending', 'processing', 'ai_generating', 'ai_ready'].includes(res.status)) {
+      } else if (['pending', 'processing', 'ai_generating', 'ai_ready', 'content_reviewing'].includes(res.status)) {
         this.setData({ activeOrder: { id: lastOrderId, status: res.status, delivered: false } })
       } else {
         wx.removeStorageSync('lastOrderId')
@@ -254,25 +273,152 @@ Page({
   goToActiveOrder() {
     const { activeOrder } = this.data
     if (!activeOrder) return
+    trackClientEvent('active_order_clicked', { page_name: 'index', order_id: activeOrder.id, status: activeOrder.status || '' })
     wx.navigateTo({ url: `/pages/waiting/waiting?orderId=${activeOrder.id}` })
   },
 
+  switchExhibition() {
+    trackClientEvent('exhibition_switch_clicked', { page_name: 'index', entry_source: 'miniapp_home' })
+    this.tryGeoLocateOrSelect()
+  },
+
+  tryGeoLocateOrSelect() {
+    if (!app.globalData.ENABLE_GEO_ENTRY) {
+      wx.navigateTo({ url: '/pages/select-exhibition/index?mode=switch' })
+      return
+    }
+
+    const canUseFuzzy = wx.canIUse && wx.canIUse('getFuzzyLocation') && typeof wx.getFuzzyLocation === 'function'
+    if (!canUseFuzzy) {
+      wx.navigateTo({ url: '/pages/select-exhibition/index?mode=switch' })
+      return
+    }
+
+    wx.showLoading({ title: '正在定位…', mask: true })
+    wx.getFuzzyLocation({
+      type: 'gcj02',
+      success: location => {
+        wx.request({
+          url: `${app.globalData.serverUrl}/api/client/exhibitions/locate`,
+          method: 'POST',
+          header: { 'Content-Type': 'application/json' },
+          data: { lat: location.latitude, lng: location.longitude },
+          success: res => {
+            wx.hideLoading()
+            if (res.statusCode === 200 && res.data && res.data.exhibition) {
+              app.setCurrentExhibition(res.data.exhibition)
+              const dist = res.data.distance_m ? `（${Math.round(res.data.distance_m)}m）` : ''
+              wx.showToast({ title: `已定位到${res.data.exhibition.name}${dist}`, icon: 'success', duration: 2000 })
+              this.setData({
+                currentExhibitionName: res.data.exhibition.name || '当前展览',
+                currentExhibitionStatus: res.data.exhibition.status || '',
+                exhibitionOrderDisabled: res.data.exhibition.status === 'archived'
+              })
+              trackClientEvent('home_geo_locate_success', {
+                page_name: 'index',
+                exhibition_id: res.data.exhibition.id,
+                distance_m: res.data.distance_m || null
+              })
+            } else {
+              this.fallbackToSelect('附近未匹配到展览')
+            }
+          },
+          fail: () => {
+            wx.hideLoading()
+            this.fallbackToSelect('定位请求失败')
+          }
+        })
+      },
+      fail: () => {
+        wx.hideLoading()
+        this.fallbackToSelect('定位权限不可用')
+      }
+    })
+  },
+
+  fallbackToSelect(hint) {
+    wx.showToast({ title: `${hint}，请手动选择`, icon: 'none', duration: 2000 })
+    wx.navigateTo({ url: '/pages/select-exhibition/index?mode=switch' })
+  },
+
   openHistory() {
+    trackClientEvent('history_entry_clicked', { page_name: 'index', entry_source: 'miniapp_home' })
     wx.navigateTo({ url: '/pages/history/history' })
   },
 
+
+  restorePrivacyAgreement() {
+    const privacyAgreed = app.restorePrivacyAgreement()
+    if (privacyAgreed !== this.data.privacyAgreed) {
+      this.setData({ privacyAgreed, privacyShake: false })
+    }
+  },
+
+  remindPrivacyAgreement(reason = 'privacy_not_agreed') {
+    this.setData({ privacyShake: false })
+    setTimeout(() => {
+      this.setData({ privacyShake: true })
+      wx.vibrateShort({ type: 'light' })
+      trackClientEvent('privacy_agreement_required', { page_name: 'index', entry_source: 'miniapp_home', reason })
+    }, 20)
+    setTimeout(() => {
+      this.setData({ privacyShake: false })
+    }, 660)
+  },
+
+  togglePrivacyAgreement() {
+    app.acceptPrivacyAgreement()
+    this.setData({
+      privacyAgreed: true,
+      privacyShake: false
+    })
+    trackClientEvent('privacy_agreement_checked', {
+      page_name: 'index',
+      entry_source: 'miniapp_home',
+      identity_type: app.globalData.openid ? 'openid' : 'device'
+    })
+  },
+
   selectService(e) {
-    const selectedService = e.currentTarget.dataset.id
-    this.setData({ selectedService })
-    this.syncAnimationWithSelection(selectedService)
+    const serviceId = e.currentTarget.dataset.id
+    const service = this.data.services.find(s => s.id === serviceId)
+    if (service && service.disabled) {
+      wx.showToast({ title: '算法升级中，敬请期待', icon: 'none', duration: 2000 })
+      return
+    }
+    if (this.data.exhibitionOrderDisabled) {
+      wx.showToast({ title: '该展览已结束，暂不支持在线下单', icon: 'none' })
+      return
+    }
+    if (!this.data.privacyAgreed) {
+      this.remindPrivacyAgreement('service_tapped_before_privacy')
+      return
+    }
+
+    this.setData({ selectedService: serviceId })
+    this.syncAnimationWithSelection(serviceId)
+    trackClientEvent('service_selected', { page_name: 'index', service_type: serviceId, entry_source: 'miniapp_home' })
   },
 
   goNext() {
+    if (this.data.exhibitionOrderDisabled) {
+      wx.showToast({ title: '该展览已结束，暂不支持在线下单', icon: 'none' })
+      return
+    }
+    if (!this.data.privacyAgreed) {
+      this.remindPrivacyAgreement('next_tapped_before_privacy')
+      wx.showToast({ title: '请先阅读并同意隐私协议', icon: 'none' })
+      trackClientEvent('service_next_blocked', { page_name: 'index', entry_source: 'miniapp_home', reason: 'privacy_not_agreed' })
+      return
+    }
+
     if (!this.data.selectedService) {
+      trackClientEvent('service_next_blocked', { page_name: 'index', entry_source: 'miniapp_home', reason: 'service_not_selected' })
       wx.showToast({ title: '请先选择服务', icon: 'none' })
       return
     }
 
+    trackClientEvent('service_next_clicked', { page_name: 'index', service_type: this.data.selectedService, entry_source: 'miniapp_home' })
     wx.navigateTo({
       url: `/pages/upload/upload?service=${this.data.selectedService}`,
       fail: err => {

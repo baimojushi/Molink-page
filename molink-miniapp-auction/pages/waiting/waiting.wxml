@@ -1,6 +1,6 @@
-<view class="page-container waiting-page">
+<view class="page-container waiting-page {{collectionAdvisorName || collectionAdvisorWechat ? 'has-collection-advisor' : ''}} {{collectionAdvisorExpanded ? 'advisor-expanded' : 'advisor-collapsed'}}">
   <view class="content-center">
-    <view class="loader-wrap">
+    <view wx:if="{{!auditRejected && !orderFailed}}" class="loader-wrap">
       <view class="loader">
         <view
           class="dot"
@@ -11,27 +11,181 @@
       </view>
     </view>
 
-    <text class="waiting-title">效果图制作中</text>
-    <text class="waiting-desc">我们正在为您精心制作\n整个流程约需 3～5 分钟\n完成后将第一时间通知您</text>
+    <text class="waiting-title">{{auditRejected ? auditIssueTitle : (orderFailed ? failureTitle : currentStep)}}</text>
+
+    <view class="audit-rejected-card glass-card" wx:if="{{auditRejected}}">
+      <view class="audit-rejected-icon">!</view>
+      <text class="audit-rejected-copy">{{auditIssueCopy}}</text>
+      <button class="audit-replace-btn" bindtap="replacePhoto">更换照片</button>
+    </view>
+
+    <view class="failure-card glass-card {{failureProgram ? 'program-failure' : 'service-failure'}}" wx:if="{{orderFailed}}">
+      <view class="failure-icon">!</view>
+      <text class="failure-reason">{{failureReason}}</text>
+      <text class="failure-suggestion" wx:if="{{failureSuggestion && !failureProgram}}">{{failureSuggestion}}</text>
+      <view class="failure-suggestions" wx:if="{{failureSuggestions.length && !failureProgram}}">
+        <text class="failure-suggestion-item" wx:for="{{failureSuggestions}}" wx:key="*this">• {{item}}</text>
+      </view>
+      <text class="failure-followup" wx:if="{{failureProgram}}">问题已经记录，我们将在今日内进行人工处理。完成后会通过消息通知您，您也可以在历史记录中查看结果。</text>
+      <view class="failure-actions">
+        <button class="failure-history-btn" bindtap="openHistory">查看历史记录</button>
+        <button class="failure-retry-btn" wx:if="{{!failureProgram}}" bindtap="replacePhoto">重新提交照片</button>
+      </view>
+    </view>
+
+    <view class="progress-card glass-card" wx:if="{{!auditRejected && !orderFailed}}">
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{progressPct + '%'}}"></view>
+      </view>
+
+      <view class="eta-panel {{etaStale ? 'is-stale' : ''}}" wx:if="{{etaVisible}}">
+        <text class="eta-primary">{{etaPrimaryText}}</text>
+        <text class="eta-range" wx:if="{{etaRangeText}}">{{etaRangeText}}</text>
+        <text class="eta-state" wx:if="{{etaStateText}}">{{etaStateText}}</text>
+      </view>
+
+      <view class="advisor-panel" wx:if="{{consultantText || consultantStreaming || consultantError}}">
+        <view class="advisor-divider"></view>
+
+        <view class="advisor-title-row">
+          <text class="advisor-dot"></text>
+          <text class="advisor-title">艺术顾问解读</text>
+        </view>
+
+        <text class="advisor-copy" wx:if="{{consultantText}}">
+          {{consultantText}}
+          <text class="typing-cursor" wx:if="{{consultantStreaming || consultantTyping}}">｜</text>
+        </text>
+
+        <text class="advisor-copy advisor-placeholder" wx:elif="{{consultantStreaming}}">
+          我正结合空间比例、墙面留白与作品尺度，为您梳理更贴近现场的判断…
+          <text class="typing-cursor">｜</text>
+        </text>
+
+        <text class="advisor-copy advisor-error" wx:elif="{{consultantError}}">
+          顾问解读暂时未能接通，您的空间提案仍在继续。
+        </text>
+      </view>
+    </view>
 
     <view class="info-card glass-card" wx:if="{{submitTime}}">
       <text class="info-label">提交时间</text>
       <text class="info-value">{{submitTime}}</text>
     </view>
 
-    <view class="notify-card glass-card" wx:if="{{!subscribed}}" bindtap="subscribeNotification">
-      <text class="notify-icon">🔔</text>
-      <view class="notify-content">
-        <text class="notify-title">画作完成后第一时间通知您</text>
-        <text class="notify-desc">开启后可关闭小程序，完成即收到微信提醒</text>
+    <view class="thinking-card glass-card" wx:if="{{thinkingReady}}">
+      <view class="thinking-title-row">
+        <text class="thinking-dot"></text>
+        <text class="thinking-title">墙面候选思考</text>
       </view>
-      <text class="notify-btn">开启</text>
-    </view>
-    <view class="notify-card subscribed" wx:else>
-      <text class="notify-icon">✓</text>
-      <text class="notify-done">已开启通知</text>
+      <text class="thinking-guide">{{thinkingGuideCopy}}</text>
+
+      <view class="wall-candidates">
+        <view
+          class="wall-candidate {{item.is_selected ? 'selected' : ''}} {{item.is_primary ? 'primary' : ''}} {{item.current_effect ? 'current-effect' : ''}} status-{{item.supplement_status}} {{item.is_disabled ? 'disabled' : ''}}"
+          wx:for="{{wallCandidates}}"
+          wx:key="wall_id"
+          data-wall-id="{{item.wall_id}}"
+          bindtap="toggleWallChoice"
+        >
+          <view class="schematic-wall">
+            <view class="schematic-floor"></view>
+            <view class="schematic-artwork" style="{{item.artworkStyle}}"></view>
+          </view>
+          <view class="wall-copy">
+            <view class="wall-title-row">
+              <text class="wall-title">{{item.schematic.wallLabel}}</text>
+              <text class="wall-badge current-effect-badge" wx:if="{{item.status_label === '当前效果'}}">当前效果</text>
+              <text class="wall-badge pending-badge" wx:elif="{{item.status_label === '生成中'}}">生成中</text>
+              <text class="wall-badge success-badge" wx:elif="{{item.status_label === '已追加'}}">已追加</text>
+              <text class="wall-badge failed-badge" wx:elif="{{item.status_label === '未完成'}}">未完成</text>
+              <text class="wall-badge" wx:elif="{{item.is_primary}}">首选</text>
+              <text class="wall-badge selected-badge" wx:elif="{{item.is_selected}}">已选</text>
+            </view>
+            <text class="wall-reason">{{item.reason}}</text>
+            <text class="wall-score" wx:if="{{item.score_label}}">综合分 {{item.score_label}}</text>
+            <view
+              class="wallpaper-suggestion {{item.wallpaper_opt_in_preview ? 'checked' : ''}}"
+              wx:if="{{item.suggest_dark_wallpaper && !item.current_effect && (item.is_selected || item.is_primary)}}"
+              data-wall-id="{{item.wall_id}}"
+              catchtap="toggleWallpaperSuggestion"
+            >
+              <view class="wallpaper-check">{{item.wallpaper_opt_in_preview ? '✓' : ''}}</view>
+              <view class="wallpaper-tone" style="{{item.wallpaperToneStyle}}"></view>
+              <view class="wallpaper-copy-wrap">
+                <text class="wallpaper-title">为这面墙换上深色墙纸</text>
+                <text class="wallpaper-copy">推荐，与作品更相衬；可取消</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="not-rec-list" wx:if="{{notRecommendedWalls.length}}">
+        <text class="not-rec-title">暂不推荐的墙面</text>
+        <text class="not-rec-item" wx:for="{{notRecommendedWalls}}" wx:key="wall_id">{{item.wall_zh}}：{{item.primary_reason}}</text>
+      </view>
+
+      <button class="preference-btn" disabled="{{!selectedWallIds.length || preferenceSubmitting}}" bindtap="submitWallPreference">
+        {{preferenceSubmitting ? '正在提交…' : '生成所选墙面的追加效果'}}
+      </button>
+      <text class="preference-message" wx:if="{{preferenceMessage}}">{{preferenceMessage}}</text>
     </view>
 
     <text class="back-home-btn" bindtap="goHome">返回首页提交新委托</text>
+  </view>
+
+  <view
+    wx:if="{{collectionAdvisorName || collectionAdvisorWechat}}"
+    class="collection-advisor-dock {{collectionAdvisorExpanded ? 'is-expanded' : 'is-collapsed'}}"
+  >
+    <view
+      wx:if="{{collectionAdvisorExpanded}}"
+      class="collection-advisor-bar collection-advisor-expanded"
+      bindtap="toggleCollectionAdvisor"
+      hover-class="collection-advisor-bar-pressed"
+      aria-label="收起收藏顾问"
+    >
+      <view class="collection-advisor-avatar" aria-hidden="true">
+        <text>{{collectionAdvisorInitial}}</text>
+      </view>
+
+      <view class="collection-advisor-content">
+        <text class="collection-advisor-title">收藏顾问 · {{collectionAdvisorName || '专属顾问'}}</text>
+        <text wx:if="{{collectionAdvisorWechat}}" class="collection-advisor-subtitle">微信 {{collectionAdvisorWechat}}</text>
+        <text wx:else class="collection-advisor-subtitle">联系方式确认中</text>
+      </view>
+
+      <view
+        wx:if="{{collectionAdvisorWechat}}"
+        class="collection-advisor-action {{collectionAdvisorCopied ? 'is-copied' : ''}}"
+        catchtap="copyCollectionAdvisorWechat"
+        hover-class="collection-advisor-action-pressed"
+        aria-role="button"
+        aria-label="复制收藏顾问微信号"
+      >
+        <text class="collection-advisor-action-label">{{collectionAdvisorCopied ? '已复制' : '复制微信'}}</text>
+      </view>
+
+      <view class="collection-advisor-toggle" aria-hidden="true">
+        <view class="collection-advisor-chevron chevron-down"></view>
+      </view>
+    </view>
+
+    <button
+      wx:else
+      class="collection-advisor-pill"
+      bindtap="toggleCollectionAdvisor"
+      hover-class="collection-advisor-pill-pressed"
+      aria-label="展开收藏顾问"
+    >
+      <view class="collection-advisor-avatar collection-advisor-avatar-compact" aria-hidden="true">
+        <text>{{collectionAdvisorInitial}}</text>
+      </view>
+      <text class="collection-advisor-pill-title">收藏顾问 · {{collectionAdvisorName || '专属顾问'}}</text>
+      <view class="collection-advisor-toggle collection-advisor-toggle-compact" aria-hidden="true">
+        <view class="collection-advisor-chevron chevron-up"></view>
+      </view>
+    </button>
   </view>
 </view>

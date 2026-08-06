@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const db = require('../database');
+const { resolveDeliveryImageUrls, enrichPublicDeliveryResultRecords } = require('../services/deliveryAssets');
+const { sanitizeDeliveryResultRecords } = require('../services/deliveryResultPublic');
 
 // ==========================================
 // 交付页面数据接口
@@ -35,14 +37,31 @@ router.get('/:token/data', (req, res) => {
     });
   }
 
+  const resultRecords = enrichPublicDeliveryResultRecords(order);
+
+  let hanging = null;
+  if (order.ai_engine === 'hanging') {
+    const parse = (j, f) => { try { return j ? JSON.parse(j) : f; } catch (e) { return f; } };
+    hanging = {
+      candidates: sanitizeDeliveryResultRecords(parse(order.hanging_candidate_records_json, [])),
+      not_recommended: parse(order.hanging_not_recommended_json, []),
+      exit_code: order.hanging_exit_code || null,
+      order_id: order.id
+    };
+  }
+
   res.json({
     status: 'delivered',
     orderId: order.id,
     service_type_label: order.service_type_label,
     images: JSON.parse(order.delivery_images || '[]'),
+    image_urls: resolveDeliveryImageUrls(order),
+    result_records: resultRecords,
     text: order.delivery_text || '',
     delivered_at: order.delivered_at,
-    device_uuid: order.device_uuid
+    device_uuid: order.device_uuid,
+    ai_engine: order.ai_engine || 'mmw',
+    hanging
   });
 });
 
@@ -64,13 +83,19 @@ router.get('/:token/device-history', (req, res) => {
   }
 
   const orders = db.prepare(`
-    SELECT id, service_type_label, status, delivery_token, delivery_images, delivery_text, delivered_at, created_at
+    SELECT id, service_type_label, status, delivery_token, delivery_images, delivery_result_records_json, delivery_text, delivered_at, created_at
     FROM orders
     WHERE device_uuid = ? AND status IN ('delivered','viewed','downloaded')
     ORDER BY delivered_at DESC
   `).all(order.device_uuid);
 
-  res.json({ orders, authorized: true });
+  const normalizedOrders = orders.map(item => ({
+    ...item,
+    image_urls: resolveDeliveryImageUrls(item),
+    result_records: enrichPublicDeliveryResultRecords(item)
+  }));
+
+  res.json({ orders: normalizedOrders, authorized: true });
 });
 
 // ==========================================

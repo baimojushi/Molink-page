@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/select-exhibition/index",
     "pages/scan-entry/index",
     "pages/upload/upload",
     "pages/history/history",
@@ -19,5 +20,13 @@
     "navigationBarTextStyle": "black"
   },
   "style": "v2",
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "requiredPrivateInfos": [
+    "getFuzzyLocation"
+  ],
+  "permission": {
+    "scope.userFuzzyLocation": {
+      "desc": "用于识别您所在的展览；定位不可用时仍可手动选择"
+    }
+  }
 }

@@ -29,8 +29,12 @@
     "include": []
   },
   "appid": "wx21181beff9188883",
-  "editorSetting": {},
-  "libVersion": "3.15.0",
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  },
+  "libVersion": "3.16.1",
   "projectArchitecture": "normal",
-  "simulatorPluginLibVersion": {}
+  "simulatorPluginLibVersion": {},
+  "isGameTourist": false
 }

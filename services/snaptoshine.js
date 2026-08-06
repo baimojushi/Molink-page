@@ -20,8 +20,54 @@ const PASSWORD = process.env.SNAPTOSHINE_PASSWORD || '200562hj';
 let cachedToken = null;
 let tokenExpiresAt = 0;
 
-// 图片上传缓存：外部URL → Snaptoshine 内部 file_url（进程内有效）
+// 图片上传缓存：外部URL → Snaptoshine 资产信息（进程内有效）
+// 加 TTL 和容量上限，避免长期运行时 Map 持续增长。
 const imageUploadCache = new Map();
+const IMAGE_UPLOAD_CACHE_TTL_MS = Math.max(
+  5 * 60 * 1000,
+  Number(process.env.SNAPTOSHINE_IMAGE_CACHE_TTL_MS) || 6 * 60 * 60 * 1000
+);
+const IMAGE_UPLOAD_CACHE_MAX_ENTRIES = Math.max(
+  10,
+  Number(process.env.SNAPTOSHINE_IMAGE_CACHE_MAX_ENTRIES) || 100
+);
+
+function pruneImageUploadCache(now = Date.now()) {
+  for (const [key, entry] of imageUploadCache) {
+    if (!entry || entry.expiresAt <= now) imageUploadCache.delete(key);
+  }
+
+  if (imageUploadCache.size <= IMAGE_UPLOAD_CACHE_MAX_ENTRIES) return;
+
+  const entries = Array.from(imageUploadCache.entries())
+    .sort((a, b) => (a[1].lastUsedAt || 0) - (b[1].lastUsedAt || 0));
+  const removeCount = imageUploadCache.size - IMAGE_UPLOAD_CACHE_MAX_ENTRIES;
+  for (let i = 0; i < removeCount; i++) {
+    imageUploadCache.delete(entries[i][0]);
+  }
+}
+
+function getCachedImageUpload(externalUrl) {
+  const entry = imageUploadCache.get(externalUrl);
+  if (!entry) return null;
+  const now = Date.now();
+  if (entry.expiresAt <= now) {
+    imageUploadCache.delete(externalUrl);
+    return null;
+  }
+  entry.lastUsedAt = now;
+  return entry.value;
+}
+
+function setCachedImageUpload(externalUrl, value) {
+  const now = Date.now();
+  imageUploadCache.set(externalUrl, {
+    value,
+    expiresAt: now + IMAGE_UPLOAD_CACHE_TTL_MS,
+    lastUsedAt: now
+  });
+  pruneImageUploadCache(now);
+}
 
 // ──────────────────────────────────────────────
 // 底层 HTTPS 请求封装（JSON body）
@@ -105,9 +151,10 @@ function downloadImageBuffer(url) {
 // 同一张图只上传一次（进程内缓存）
 // ──────────────────────────────────────────────
 async function uploadImageToSnaptoshine(externalUrl) {
-  if (imageUploadCache.has(externalUrl)) {
+  const cachedUpload = getCachedImageUpload(externalUrl);
+  if (cachedUpload) {
     console.log(`📸 图片缓存命中: ${externalUrl.substring(0, 60)}`);
-    return imageUploadCache.get(externalUrl);
+    return cachedUpload;
   }
 
   // 深度递归搜索：在响应树中找到包含 id+url 的节点
@@ -260,7 +307,7 @@ async function uploadImageToSnaptoshine(externalUrl) {
       const execId = firstExec?.id;
       const immediateAsset = extractAsset(firstExec);
       if (immediateAsset) {
-        imageUploadCache.set(externalUrl, immediateAsset);
+        setCachedImageUpload(externalUrl, immediateAsset);
         console.log(`✅ 图片上传完成(即时) asset_id=${immediateAsset.asset_id}`);
         return immediateAsset;
       }
@@ -278,7 +325,7 @@ async function uploadImageToSnaptoshine(externalUrl) {
         if (exec.status === 'completed' || exec.status === 'succeeded') {
           const asset = extractAsset(exec);
           if (asset) {
-            imageUploadCache.set(externalUrl, asset);
+            setCachedImageUpload(externalUrl, asset);
             console.log(`✅ 图片上传完成 asset_id=${asset.asset_id} file_url=${asset.file_url}`);
             return asset;
           }
@@ -366,7 +413,7 @@ async function createNewWorkspace() {
 // ──────────────────────────────────────────────
 // 提交 AI 生图任务
 // userMessage: 图文交替数组，如 [{text:'...'},{file_url:'...'},...]
-// 返回 execution_id
+// 返回 execution_id 数组
 // ──────────────────────────────────────────────
 async function submitImageRequest({ userMessage, executionCount }) {
   const count = executionCount || EXECUTION_COUNT;

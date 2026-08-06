@@ -1,6 +1,5 @@
+const { getWxMiniappCredentials } = require('./wxMiniappConfig');
 const TEMPLATE_ID = process.env.WX_NOTIFY_TEMPLATE_ID || 'WBedF813hIJYRHpG0Gki9vU40Z3EoaKDmrXVC8lD4sY';
-const WX_APPID = process.env.WX_APPID || 'wx248d207b3006d7f0';
-const WX_SECRET = process.env.WX_SECRET || '27281704adb1e19e2b3e686692a574a1';
 const SERVER_BASE_URL = process.env.SERVER_BASE_URL || 'https://www.molink.art';
 
 let cachedAccessToken = '';
@@ -31,8 +30,13 @@ async function 获取微信AccessToken() {
     return cachedAccessToken;
   }
 
+  const wxConfig = getWxMiniappCredentials();
+  if (!wxConfig.appid || !wxConfig.secret) {
+    throw new Error('缺少微信小程序 AppID 或 AppSecret，无法发送订阅通知');
+  }
+
   const response = await fetch(
-    `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${WX_APPID}&secret=${WX_SECRET}`
+    `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${encodeURIComponent(wxConfig.appid)}&secret=${encodeURIComponent(wxConfig.secret)}`
   );
   const data = await response.json();
 

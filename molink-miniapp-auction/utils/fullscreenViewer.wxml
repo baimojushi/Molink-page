@@ -1,0 +1,37 @@
+<view wx:if="{{viewerVisible}}" class="fullscreen-viewer">
+  <view class="fullscreen-viewer-topbar">
+    <text class="fullscreen-viewer-tip">双指缩放 · 拖动查看 · 双击切换</text>
+    <view class="fullscreen-viewer-close" catchtap="closeFullscreenViewer">×</view>
+  </view>
+
+  <movable-area class="fullscreen-viewer-area" scale-area>
+    <movable-view
+      class="fullscreen-viewer-canvas"
+      direction="all"
+      inertia="{{true}}"
+      out-of-bounds="{{false}}"
+      scale="{{true}}"
+      scale-min="1"
+      scale-max="4"
+      scale-value="{{viewerScale}}"
+      x="{{viewerX}}"
+      y="{{viewerY}}"
+      animation="{{true}}"
+      bindscale="onViewerScale"
+    >
+      <image
+        class="fullscreen-viewer-image"
+        src="{{viewerUrl}}"
+        mode="aspectFit"
+        catchtap="onViewerImageTap"
+      />
+    </movable-view>
+  </movable-area>
+
+  <view class="fullscreen-viewer-controls">
+    <view class="fullscreen-viewer-button" catchtap="zoomFullscreenViewerOut">−</view>
+    <text class="fullscreen-viewer-scale">{{viewerScaleText}}</text>
+    <view class="fullscreen-viewer-button" catchtap="zoomFullscreenViewerIn">＋</view>
+    <view class="fullscreen-viewer-reset" catchtap="resetFullscreenViewer">还原</view>
+  </view>
+</view>

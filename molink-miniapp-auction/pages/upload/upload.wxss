@@ -165,12 +165,19 @@
 }
 
 .artwork-result-info {
+  position: relative;
   flex: 1;
   min-width: 0;
+  min-height: 120rpx;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 6rpx;
+  box-sizing: border-box;
+}
+
+.artwork-result-info.has-price {
+  padding-bottom: 0;
 }
 
 .artwork-result-name {
@@ -184,6 +191,20 @@
   color: var(--color-text-hint);
 }
 
+.artwork-result-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8rpx;
+}
+
+.artwork-result-price {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  line-height: 1.3;
+  color: rgba(94, 117, 96, 0.88);
+}
+
 .artwork-loading,
 .artwork-empty {
   padding: 48rpx 0;
@@ -193,6 +214,7 @@
 }
 
 .preset-artwork-card {
+  position: relative;
   margin-top: 18rpx;
   display: flex;
   gap: 18rpx;
@@ -228,17 +250,10 @@
   color: var(--color-text-hint);
 }
 
-.preset-artwork-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12rpx;
-}
-
-.preset-preview-btn,
-.preset-reselect-btn {
-  font-size: 24rpx;
-  color: var(--color-accent);
+.preset-artwork-price {
+  font-size: 20rpx;
+  line-height: 1.3;
+  color: rgba(94, 117, 96, 0.88);
 }
 
 .upload-box {
@@ -288,9 +303,10 @@
   font-size: 24rpx;
 }
 
-.static-remove {
-  position: static;
-  background: rgba(145, 115, 85, 0.12);
+.preset-remove-btn {
+  top: 16rpx;
+  right: 16rpx;
+  background: rgba(145, 115, 85, 0.18);
   color: var(--color-primary-dark);
 }
 
@@ -365,12 +381,68 @@
   background: linear-gradient(to top, rgba(245, 239, 233, 0.98) 60%, transparent);
 }
 
+
+.image-state-row {
+  padding: 12rpx 4rpx 0;
+}
+
+.image-state-text {
+  font-size: 22rpx;
+  color: var(--color-text-hint);
+}
+
+.btn-submit-progress {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.btn-submit-progress::after {
+  border: none;
+}
+
+.btn-submit-progress.is-submitting {
+  background: rgba(145, 115, 85, 0.18);
+}
+
+.btn-submit-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #917355 0%, #a78a6d 100%);
+  border-radius: inherit;
+}
+
+.btn-submit-progress-content {
+  position: relative;
+  z-index: 1;
+  min-height: 96rpx;
+  padding: 0 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18rpx;
+}
+
+.btn-submit-progress-label {
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.btn-submit-progress-percent {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 24rpx;
+}
+
 .submit-tip {
   display: block;
   text-align: center;
   font-size: 22rpx;
   color: var(--color-text-hint);
   margin-top: 12rpx;
+  min-height: 32rpx;
 }
 
 .artwork-preview-mask {
@@ -433,21 +505,29 @@
   .artwork-result-item { gap: 12px; padding: 10px 0; }
   .artwork-result-image { width: 72px; height: 72px; border-radius: 10px; }
   .artwork-result-name { font-size: 14px; }
+  .artwork-result-info { min-height: 72px; }
+  .artwork-result-info.has-price { padding-bottom: 0; }
   .artwork-result-meta, .artwork-loading, .artwork-empty { font-size: 11px; }
+  .artwork-result-meta-row { gap: 6px; }
+  .artwork-result-price { font-size: 10px; }
   .preset-artwork-card { margin-top: 12px; gap: 12px; padding: 12px; }
   .preset-artwork-img { width: 88px; height: 88px; border-radius: 10px; }
   .preset-artwork-name { font-size: 14px; }
   .preset-artwork-author, .preset-artwork-meta, .preset-preview-btn, .preset-reselect-btn { font-size: 11px; }
+  .preset-artwork-price { font-size: 10px; }
   .upload-box, .image-preview { height: 170px; }
   .upload-icon { font-size: 36px; }
   .upload-text { font-size: 13px; margin-top: 6px; }
   .remove-btn { top: 10px; right: 10px; width: 28px; height: 28px; font-size: 13px; }
   .upload-privacy-tip { font-size: 10px; margin-top: 6px; }
   .extra-optimize-row { gap: 8px; margin: 12px 4px 16px; }
-  .extra-optimize-label, .section-inline-label, .submit-tip { font-size: 12px; }
+  .extra-optimize-label, .section-inline-label, .submit-tip, .image-state-text { font-size: 12px; }
   .email-section { margin-bottom: 104px; }
   .email-input { height: 54px; line-height: 54px; padding: 0 18px; font-size: 14px; border-radius: 14px; }
   .bottom-bar { padding: 14px 20px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .btn-submit-progress-content { min-height: 54px; padding: 0 16px; gap: 10px; }
+  .btn-submit-progress-label { font-size: 16px; }
+  .btn-submit-progress-percent { font-size: 12px; }
   .artwork-preview-shell { gap: 12px; }
   .artwork-preview-close { min-width: 96px; padding: 10px 18px; font-size: 13px; }
 }

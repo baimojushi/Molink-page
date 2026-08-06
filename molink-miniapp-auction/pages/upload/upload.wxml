@@ -28,7 +28,7 @@
         <input
           class="artwork-search-input"
           type="text"
-          placeholder="输入作品名称 / 编号 / 作者"
+          placeholder="输入作品名称 / 代码 / 作者"
           placeholder-class="input-placeholder"
           value="{{artworkSearchKeyword}}"
           bindinput="onArtworkSearchInput"
@@ -46,28 +46,29 @@
           bindtap="chooseArtwork"
           hover-class="touch-card-hover"
         >
-          <image class="artwork-result-image" src="{{item.images[0]}}" mode="aspectFill" lazy-load show-menu-by-longpress="{{false}}"></image>
-          <view class="artwork-result-info">
+          <image class="artwork-result-image" src="{{item.list_image_url || item.images[0]}}" mode="aspectFill" lazy-load show-menu-by-longpress="{{false}}"></image>
+          <view class="artwork-result-info {{item.display_price || item.price ? 'has-price' : ''}}">
             <text class="artwork-result-name">{{item.name || '（无题）'}}</text>
             <text class="artwork-result-meta">{{item.author || ''}}</text>
-            <text class="artwork-result-meta">{{item.medium || ''}} {{item.size || ''}}</text>
+            <view class="artwork-result-meta-row">
+              <text class="artwork-result-meta">{{item.display_size || ''}}</text>
+              <text wx:if="{{item.display_price || item.price}}" class="artwork-result-price">{{item.display_price || item.price}}</text>
+            </view>
           </view>
         </view>
       </scroll-view>
     </view>
 
     <view wx:if="{{presetArtwork}}" class="preset-artwork-card glass-card touch-card" hover-class="touch-card-hover">
-      <image class="preset-artwork-img" src="{{presetArtwork.images[0]}}" mode="aspectFill" bindtap="openArtworkPreview" data-src="{{presetArtwork.images[0]}}" show-menu-by-longpress="{{false}}" />
+      <image class="preset-artwork-img" src="{{presetArtwork.list_image_url || presetArtwork.images[0]}}" mode="aspectFill" lazy-load bindtap="openArtworkPreview" data-src="{{presetArtwork.images[0]}}" show-menu-by-longpress="{{false}}" />
       <view class="preset-artwork-info">
         <text class="preset-artwork-name">{{presetArtwork.name || '（无题）'}}</text>
         <text class="preset-artwork-author">{{presetArtwork.author}}</text>
-        <text class="preset-artwork-meta">{{presetArtwork.medium}} {{presetArtwork.size}}</text>
+        <text class="preset-artwork-meta">{{presetArtwork.display_size}}</text>
+        <text wx:if="{{presetArtwork.display_frame_size}}" class="preset-artwork-meta">装裱尺寸 {{presetArtwork.display_frame_size}}</text>
+        <text wx:if="{{presetArtwork.display_price || presetArtwork.price}}" class="preset-artwork-price">{{presetArtwork.display_price || presetArtwork.price}}</text>
       </view>
-      <view class="preset-artwork-actions">
-        <view class="preset-preview-btn" bindtap="openArtworkPreview" data-src="{{presetArtwork.images[0]}}">查看大图</view>
-        <view class="preset-reselect-btn" bindtap="openArtworkPanel">重新选择</view>
-        <view class="remove-btn static-remove" bindtap="clearArtwork">✕</view>
-      </view>
+      <view class="remove-btn preset-remove-btn" bindtap="clearArtwork">✕</view>
     </view>
   </view>
 
@@ -75,10 +76,17 @@
     <view class="upload-label">{{item.label}}</view>
     <view class="upload-hint">{{item.hint}}</view>
 
-    <view class="image-preview glass-card" wx:if="{{images[item.key]}}">
-      <image class="preview-img" src="{{images[item.key]}}" mode="aspectFill" bindtap="previewImage" data-src="{{images[item.key]}}" show-menu-by-longpress="{{false}}" />
-      <view class="remove-btn" bindtap="removeImage" data-key="{{item.key}}">✕</view>
-    </view>
+    <block wx:if="{{images[item.key]}}">
+      <view class="image-preview glass-card">
+        <image class="preview-img" src="{{images[item.key]}}" mode="aspectFill" bindtap="previewImage" data-key="{{item.key}}" data-src="{{(imageAssets[item.key] && imageAssets[item.key].originPath) || images[item.key]}}" show-menu-by-longpress="{{false}}" />
+        <view class="remove-btn" bindtap="removeImage" data-key="{{item.key}}">✕</view>
+      </view>
+
+      <view class="image-state-row" wx:if="{{imageProcessing[item.key] || (imageAssets[item.key] && imageAssets[item.key].optimized)}}">
+        <text wx:if="{{imageProcessing[item.key]}}" class="image-state-text">正在优化上传图片...</text>
+        <text wx:elif="{{imageAssets[item.key] && imageAssets[item.key].optimized}}" class="image-state-text">已自动优化上传，预计节省 {{imageAssets[item.key].savedText}}</text>
+      </view>
+    </block>
 
     <view class="upload-box glass-card touch-card" wx:else bindtap="chooseImage" data-key="{{item.key}}" hover-class="touch-card-hover">
       <text class="upload-icon">+</text>
@@ -103,11 +111,14 @@
   </view>
 
   <view class="bottom-bar">
-    <button class="btn-primary {{submitting ? 'disabled' : ''}}" bindtap="submitOrder" disabled="{{submitting}}">
-      <text wx:if="{{!submitting}}">提交</text>
-      <text wx:else>提交中...</text>
+    <button class="btn-primary btn-submit-progress {{submitting ? 'is-submitting' : ''}}" bindtap="submitOrder">
+      <view wx:if="{{submitting}}" class="btn-submit-progress-fill" style="width: {{submitProgress}}%;"></view>
+      <view class="btn-submit-progress-content">
+        <text class="btn-submit-progress-label">{{submitting ? submitStageText : '提交'}}</text>
+        <text wx:if="{{submitting}}" class="btn-submit-progress-percent">{{submitProgress}}%</text>
+      </view>
     </button>
-    <text class="submit-tip">提交时询问是否接收效果图完成通知</text>
+    <text wx:if="{{!submitting}}" class="submit-tip">提交时询问是否接收效果图完成通知</text>
   </view>
 
   <view wx:if="{{showArtworkPreview}}" class="artwork-preview-mask" bindtap="closeArtworkPreview" catchtouchmove="noop">

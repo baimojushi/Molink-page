@@ -899,6 +899,78 @@
     .reveal { opacity: 0; transform: translateY(20px); transition: opacity 800ms var(--ease), transform 800ms var(--ease); }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
+    /* ── Media loading skeleton ── */
+    /*
+    等待动画：呼吸式橙色光晕脉冲 + 横向微光扫过
+    风格对位：慢速缓动（与冥想主题一致）、橙色调（与--accent一致）、极暗基底
+    */
+    @keyframes media-shimmer {
+      0%   { background-position: -220% center; }
+      100% { background-position: 220% center; }
+    }
+    @keyframes media-pulse {
+      0%, 100% { opacity: 0.55; }
+      50%       { opacity: 1; }
+    }
+
+    .media-loading {
+      position: relative;
+    }
+
+    /* 骨架底层：深色面板，带橙色角落晕染 */
+    .media-loading::before {
+      content: '';
+      position: absolute; inset: 0; z-index: 3;
+      border-radius: inherit;
+      background:
+        radial-gradient(ellipse at 80% 110%, rgba(255,106,0,0.10), transparent 52%),
+        radial-gradient(ellipse at 20% -10%, rgba(255,106,0,0.06), transparent 44%),
+        #0d0d0d;
+      pointer-events: none;
+      transition: opacity 600ms var(--ease);
+    }
+
+    /* 微光扫描层：细线橙白渐变横扫 */
+    .media-loading::after {
+      content: '';
+      position: absolute; inset: 0; z-index: 4;
+      border-radius: inherit;
+      background: linear-gradient(
+        100deg,
+        transparent 20%,
+        rgba(255,106,0,0.055) 48%,
+        rgba(255,255,255,0.04) 50%,
+        rgba(255,106,0,0.055) 52%,
+        transparent 80%
+      );
+      background-size: 220% 100%;
+      animation: media-shimmer 2400ms cubic-bezier(.4,0,.6,1) infinite;
+      pointer-events: none;
+      transition: opacity 400ms var(--ease);
+    }
+
+    /* 加载完成后淡出骨架层 */
+    .media-loading.media-loaded::before,
+    .media-loading.media-loaded::after {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* SVG object 容器单独处理：object标签不触发 load 事件，用 pulse 替代 shimmer */
+    .svg-loading::after {
+      animation: media-pulse 2000ms ease-in-out infinite;
+      background: linear-gradient(
+        135deg,
+        rgba(255,106,0,0.06) 0%,
+        rgba(255,255,255,0.02) 50%,
+        rgba(255,106,0,0.06) 100%
+      );
+      background-size: 100% 100%;
+    }
+    .svg-loading.media-loaded::before,
+    .svg-loading.media-loaded::after {
+      opacity: 0;
+    }
 
     /* ── Responsive ── */
     /*
@@ -1100,7 +1172,7 @@
           <div class="image-card medium magnetic lightbox-trigger"
                data-kicker="V1 Vision"
                data-caption="极简原型开发期间的工作台，反复调试呼吸腰带的模拟数据到灯带RGB数字数据的滤波与映射。">
-            <img src="./assets/8a100a440f5687bbc0fe8278cb902229.jpg" alt="Main visualization output" />
+            <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/8a100a440f5687bbc0fe8278cb902229.jpg" alt="Main visualization output" />
             <div class="image-overlay">
               <div class="image-kicker">V1 Vision</div>
               <p class="image-caption">极简原型开发期间的工作台，反复调试呼吸腰带的模拟数据到灯带RGB数字数据的滤波与映射。</p>
@@ -1211,7 +1283,7 @@
           <div class="image-card gallery-card gallery-card-large reveal magnetic lightbox-trigger"
                data-kicker="户外场景"
                data-caption="产品放回自然环境，强调庇护、隔离与沉静的空间语义。">
-            <img src="./assets/场景图.png" alt="Outdoor scene rendering" />
+            <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/场景图.png" alt="Outdoor scene rendering" />
             <div class="image-overlay">
               <div class="image-kicker">户外场景</div>
               <h3 class="image-title">产品回归自然环境。</h3>
@@ -1222,7 +1294,7 @@
           <div class="image-card gallery-card gallery-card-medium reveal magnetic lightbox-trigger"
                data-kicker="光照实验"
                data-caption="光线作为心理引导介质，测试顶部光源与日光共存时的情绪氛围。">
-            <img src="./assets/照明设计.png" alt="Lighting design test" />
+            <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/照明设计.png" alt="Lighting design test" />
             <div class="image-overlay">
               <div class="image-kicker">光照实验</div>
               <p class="image-caption">顶部灯光与自然日光交融，验证柔和包裹感与便携结构的适配关系。</p>
@@ -1260,7 +1332,7 @@
           <div class="image-card gallery-card gallery-card-technical magnetic lightbox-trigger"
                data-kicker="结构原型"
                data-caption="三视图用于压缩结构信息，补足本页中关于产品尺度、撑杆关系与展开方式的说明。">
-            <img src="./assets/三视图.png" alt="Three-view drawing" />
+            <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/三视图.png" alt="Three-view drawing" />
             <div class="image-overlay">
               <div class="image-kicker">结构原型</div>
               <p class="image-caption">用三视图承接页面中段，补充产品尺度与搭建逻辑。</p>
@@ -1270,7 +1342,7 @@
           <div class="image-card gallery-stage-reference magnetic lightbox-trigger"
                data-kicker="灵感来源"
                data-caption="将东方建筑白墙黑瓦的包裹感转译为装置中的安静、围合与留白。">
-            <img src="./assets/灵感来源.png" alt="Inspiration reference" />
+            <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/灵感来源.png" alt="Inspiration reference" />
             <div class="image-overlay">
               <div class="image-kicker">灵感来源</div>
               <p class="image-caption">以白墙黑瓦的包裹感呼应室内装置的空间氛围。</p>
@@ -1356,7 +1428,7 @@
         <div class="image-card ar-3-2 reveal magnetic lightbox-trigger"
              data-kicker="灵感参照"
              data-caption="东方建筑白墙黑瓦的包裹感，转译为当代装置语言。">
-          <img src="./assets/灵感来源.png" alt="Inspiration — Eastern architecture" />
+          <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/灵感来源.png" alt="Inspiration — Eastern architecture" />
           <div class="image-overlay">
             <div class="image-kicker">灵感参照</div>
             <p class="image-caption">东方建筑白墙黑瓦的包裹感，转译为当代装置语言。</p>
@@ -1480,7 +1552,7 @@
           <div class="image-card ar-16-9 reveal magnetic lightbox-trigger"
                data-kicker="产品链路"
                data-caption="毫米波雷达、可穿戴设备、呼吸心率监测、环境声、灯光与冥想状态报告，串联在同一条产品链路中。">
-            <img src="./assets/产品流程图.png" alt="Product flow diagram" />
+            <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/产品流程图.png" alt="Product flow diagram" />
             <div class="image-overlay">
               <div class="image-kicker">产品链路</div>
               <h3 class="image-title">模块化的产品逻辑。</h3>
@@ -1492,7 +1564,7 @@
           <div class="image-card ar-4-3 reveal magnetic lightbox-trigger"
                data-kicker="装配爆炸图"
                data-caption="篷布、碳纤维帐杆、风绳、地钉、音响与交互界面逐层展开。">
-            <img src="./assets/爆炸图带说明.png" alt="Exploded view" />
+            <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/爆炸图带说明.png" alt="Exploded view" />
             <div class="image-overlay">
               <div class="image-kicker">装配爆炸图</div>
               <p class="image-caption">篷布、碳纤维帐杆、风绳、地钉、音响与交互界面逐层展开。</p>
@@ -1501,7 +1573,7 @@
           <div class="image-card ar-4-3 reveal magnetic lightbox-trigger"
                data-kicker="结构工程"
                data-caption="可搭建的杆件系统，装置有明确的物理结构支撑。">
-            <img src="./assets/结构图.png" alt="Structural diagram" />
+            <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/结构图.png" alt="Structural diagram" />
             <div class="image-overlay">
               <div class="image-kicker">结构工程</div>
               <p class="image-caption">可搭建的杆件系统，装置有明确的物理结构支撑。</p>
@@ -1515,8 +1587,8 @@
         <!-- SVG卡片1：系统总览 -->
         <article class="svg-card reveal magnetic">
           <div class="svg-frame">
-            <object data="./assets/svg_01_system_architecture.svg" type="image/svg+xml" aria-label="System architecture">
-              <img src="./assets/svg_01_system_architecture.svg" alt="System architecture diagram" />
+            <object data="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/svg_01_system_architecture.svg" type="image/svg+xml" aria-label="System architecture">
+              <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/svg_01_system_architecture.svg" alt="System architecture diagram" />
             </object>
           </div>
           <div style="padding: 20px;">
@@ -1529,8 +1601,8 @@
         <!-- SVG卡片2：信号算法 -->
         <article class="svg-card reveal magnetic">
           <div class="svg-frame">
-            <object data="./assets/svg_02_signal_algorithm.svg" type="image/svg+xml" aria-label="Signal algorithm">
-              <img src="./assets/svg_02_signal_algorithm.svg" alt="Signal algorithm diagram" />
+            <object data="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/svg_02_signal_algorithm.svg" type="image/svg+xml" aria-label="Signal algorithm">
+              <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/svg_02_signal_algorithm.svg" alt="Signal algorithm diagram" />
             </object>
           </div>
           <div style="padding: 20px;">
@@ -1543,8 +1615,8 @@
         <!-- SVG卡片3：硬件拓扑 -->
         <article class="svg-card reveal magnetic">
           <div class="svg-frame">
-            <object data="./assets/svg_03_hardware_topology.svg" type="image/svg+xml" aria-label="Hardware topology">
-              <img src="./assets/svg_03_hardware_topology.svg" alt="Hardware topology diagram" />
+            <object data="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/svg_03_hardware_topology.svg" type="image/svg+xml" aria-label="Hardware topology">
+              <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/svg_03_hardware_topology.svg" alt="Hardware topology diagram" />
             </object>
           </div>
           <div style="padding: 20px;">
@@ -1621,13 +1693,15 @@
       <div class="gallery-dp" style="margin-top: 22px;">
         <div class="gallery-dp-full">
           <div class="image-card ar-16-9 reveal magnetic lightbox-trigger"
-               data-kicker="推演路径"
-               data-caption="绘画实践、田野观察、原型制作、用户研究、呼吸灯实验与整合设计串成一条推理链。">
-            <img src="./assets/设计推演路径2.png" alt="Design iteration path" />
+               data-kicker="呼吸检测"
+               data-caption="毫米波雷达安装在体验者侧上方，信号经过单片机滤波和解算后通过蓝牙串口输出至Touchdesigner">
+            <video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;pointer-events:none;">
+              <source src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/milirader-test.mp4" type="video/mp4">
+            </video>
             <div class="image-overlay">
-              <div class="image-kicker">推演路径</div>
-              <h3 class="image-title">从田野观察到系统整合。</h3>
-              <p class="image-caption">绘画实践、田野观察、原型制作、用户研究、呼吸灯实验与整合设计串成一条推理链。</p>
+              <div class="image-kicker">呼吸检测</div>
+              <h3 class="image-title">从腰带迭代为非接触检测。</h3>
+              <p class="image-caption">毫米波雷达安装在体验者侧上方，信号经过单片机滤波和解算后通过蓝牙串口输出至Touchdesigner</p>
             </div>
           </div>
         </div>
@@ -1643,13 +1717,28 @@
               <p class="image-caption">单 LED 呼吸灯测试——从最小交互单元开始验证体验假设。</p>
             </div>
           </div>
-          <div class="image-card ar-16-9 reveal magnetic lightbox-trigger"
-               data-kicker="信号调试"
-               data-caption="硬件原型、实时波形与 HRV 时域分析同框的开发现场。">
-            <img src="./assets/HRV手环滤波解析算法调试，左为实时相位数据，右为HRV时域分析.jpg" alt="HRV wristband signal debugging" />
-            <div class="image-overlay">
-              <div class="image-kicker">信号调试</div>
-              <p class="image-caption">硬件原型、实时波形与 HRV 时域分析同框的开发现场。</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+            <div class="image-card reveal magnetic lightbox-trigger"
+                 style="aspect-ratio:1/1;"
+                 data-kicker="信号调试 · 实时相位"
+                 data-caption="硬件原型、实时波形与 HRV 时域分析同框的开发现场。">
+              <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/HRV手环滤波解析算法调试，左为实时相位数据，右为HRV时域分析.jpg"
+                   alt="HRV wristband signal debugging — phase view"
+                   style="object-position: top center;" />
+              <div class="image-overlay">
+                <div class="image-kicker">信号调试 · 实时相位</div>
+              </div>
+            </div>
+            <div class="image-card reveal magnetic lightbox-trigger"
+                 style="aspect-ratio:1/1;"
+                 data-kicker="信号调试 · HRV 时域"
+                 data-caption="硬件原型、实时波形与 HRV 时域分析同框的开发现场。">
+              <img src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/HRV手环滤波解析算法调试，左为实时相位数据，右为HRV时域分析.jpg"
+                   alt="HRV wristband signal debugging — HRV view"
+                   style="object-position: bottom center;" />
+              <div class="image-overlay">
+                <div class="image-kicker">信号调试 · HRV 手环</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1721,22 +1810,13 @@
           <div class="image-card ar-4-3 reveal magnetic lightbox-trigger"
                data-kicker="效能验证"
                data-caption="使用者在冥想垫上体验，旁边电脑显示实时生理曲线。手环用于检测装置对焦虑缓解和副交感神经活跃度的影响。">
-            <img src="./assets/HRV检测有效性测试.jpeg" alt="HRV effectiveness test" />
+            <video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;pointer-events:none;">
+              <source src="https://pub-0775e3993fdd43b8a695d881b02d8150.r2.dev/heart-rate-plotter.mp4" type="video/mp4">
+            </video>
             <div class="image-overlay">
               <div class="image-kicker">效能验证</div>
               <h3 class="image-title">HRV 是证据层。</h3>
               <p class="image-caption">使用者在冥想垫上体验，旁边电脑显示实时生理曲线。手环用于检测装置对焦虑缓解和副交感神经活跃度的影响。</p>
-            </div>
-          </div>
-        </div>
-        <div class="gallery-dp-full">
-          <div class="image-card ar-16-9 reveal magnetic lightbox-trigger"
-               data-kicker="输出层"
-               data-caption="验证层回答"是否有效"，投影层回答"如何被感知"——两者通过呼吸率数据共享同一条输入轨道。">
-            <img src="./assets/main-visualization.png" alt="Main visualization" />
-            <div class="image-overlay">
-              <div class="image-kicker">输出层</div>
-              <p class="image-caption">验证层与表现层共享同一条呼吸数据输入，互不干扰，各自回答不同问题。</p>
             </div>
           </div>
         </div>
@@ -2052,7 +2132,7 @@
             </div>
             <a href="/cdn-cgi/l/email-protection#32000401040700020207057243431c515d5f" class="contact-line magnetic">
               <span>Email</span>
-              <span><span class="__cf_email__" data-cfemail="51636762676463616164661120207f323e3c">[email&#160;protected]</span></span>
+              <span><span class="__cf_email__" data-cfemail="51636762676463616164661120207f323e3c">2636520057@qq.com</span></span>
             </a>
             <a href="tel:13651630034" class="contact-line magnetic">
               <span>Telephone</span>
@@ -2473,6 +2553,62 @@
       /* ESC键关闭灯箱 */
       if (e.key === 'Escape') closeLightbox();
     });
+
+
+    /*
+    ═════════════════════════════════════════════════════════════════════════════
+    【媒体加载骨架动画系统】
+    功能说明：
+    - 为所有图片和视频容器添加 .media-loading 类，显示呼吸式橙色骨架
+    - 图片：监听 load 事件，加载完成后添加 .media-loaded 使骨架淡出
+    - 视频：监听 canplay 事件，同上
+    - SVG <object>：使用 pulse 脉冲替代 shimmer，监听 load 事件
+    - 已缓存的媒体（complete/readyState≥3）直接跳过骨架
+    ═════════════════════════════════════════════════════════════════════════════
+    */
+    (function initMediaLoading() {
+      /* 图片容器 */
+      document.querySelectorAll('.image-card').forEach(card => {
+        const img = card.querySelector('img');
+        if (!img) return;
+        if (img.complete && img.naturalWidth > 0) return;
+        card.classList.add('media-loading');
+        const markLoaded = () => {
+          card.classList.add('media-loaded');
+          setTimeout(() => card.classList.remove('media-loading', 'media-loaded'), 700);
+        };
+        img.addEventListener('load',  markLoaded, { once: true });
+        img.addEventListener('error', markLoaded, { once: true });
+      });
+
+      /* 视频容器 */
+      document.querySelectorAll('.image-card, .gallery-room-card').forEach(card => {
+        const video = card.querySelector('video');
+        if (!video) return;
+        if (video.readyState >= 3) return;
+        card.classList.add('media-loading');
+        const markLoaded = () => {
+          card.classList.add('media-loaded');
+          setTimeout(() => card.classList.remove('media-loading', 'media-loaded'), 700);
+        };
+        video.addEventListener('canplay', markLoaded, { once: true });
+        video.addEventListener('error',   markLoaded, { once: true });
+      });
+
+      /* SVG object 容器 */
+      document.querySelectorAll('.svg-card').forEach(card => {
+        const obj = card.querySelector('object');
+        if (!obj) return;
+        card.classList.add('media-loading', 'svg-loading');
+        const markLoaded = () => {
+          card.classList.add('media-loaded');
+          setTimeout(() => card.classList.remove('media-loading', 'svg-loading', 'media-loaded'), 700);
+        };
+        obj.addEventListener('load',  markLoaded, { once: true });
+        obj.addEventListener('error', markLoaded, { once: true });
+        setTimeout(markLoaded, 3000); /* 超时保底 */
+      });
+    })();
   </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"45c2bf8136a245cd97f1c2e9a96c0730","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>

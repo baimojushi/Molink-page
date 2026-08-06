@@ -37,16 +37,75 @@
     <view wx:if="{{showLoginCard}}" class="login-reminder glass-card">
       <view class="login-reminder-badge">同步更多历史订单</view>
       <text class="login-reminder-title">登录后可跨设备查看全部历史订单</text>
-      <text class="login-reminder-desc">同一微信号登录后，可查看该微信号及其登录设备上的全部历史订单；不登录则仅查看当前设备订单。</text>
+      <text class="login-reminder-desc">同一帐号登录后，可查看该帐号及其登录设备上的全部历史订单；不登录则仅查看当前设备订单。</text>
       <view class="login-benefits">
         <view class="login-benefit-pill">跨设备同步</view>
         <view class="login-benefit-pill">历史下载可追溯</view>
       </view>
-      <button class="btn-primary login-btn" bindtap="doWxLogin" disabled="{{loginLoading}}">{{loginLoading ? '登录中...' : '微信登录并绑定'}}</button>
+      <button class="btn-primary login-btn" bindtap="doWxLogin" disabled="{{loginLoading}}">{{loginLoading ? '登录中...' : '登录并绑定'}}</button>
       <text class="login-secondary" bindtap="skipLoginCard">仅查看当前设备订单</text>
     </view>
 
     <view wx:if="{{loading}}" class="status-tip">加载中...</view>
     <view wx:else-if="{{!hasMore}}" class="status-tip">已经到底了</view>
+  </view>
+
+  <include src="../../utils/fullscreenViewer.wxml" />
+
+  <view
+    wx:if="{{viewerVisible && (viewerCollectionAdvisorName || viewerCollectionAdvisorWechat)}}"
+    class="history-viewer-advisor-dock {{viewerCollectionAdvisorExpanded ? 'is-expanded' : 'is-collapsed'}}"
+  >
+    <view
+      wx:if="{{viewerCollectionAdvisorExpanded}}"
+      class="history-viewer-advisor-card"
+      bindtap="toggleViewerCollectionAdvisor"
+      hover-class="history-viewer-advisor-card-pressed"
+      aria-role="button"
+      aria-label="收起收藏顾问"
+    >
+      <view class="history-viewer-advisor-avatar" aria-hidden="true">
+        <text>{{viewerCollectionAdvisorInitial}}</text>
+      </view>
+
+      <view class="history-viewer-advisor-copy">
+        <text class="history-viewer-advisor-name">
+          收藏顾问 · {{viewerCollectionAdvisorName || '展览顾问'}}
+        </text>
+        <text wx:if="{{viewerCollectionAdvisorWechat}}" class="history-viewer-advisor-wechat">
+          微信 {{viewerCollectionAdvisorWechat}}
+        </text>
+      </view>
+
+      <view
+        wx:if="{{viewerCollectionAdvisorWechat}}"
+        class="history-viewer-advisor-action {{viewerCollectionAdvisorCopied ? 'is-copied' : ''}}"
+        catchtap="copyViewerCollectionAdvisorWechat"
+        hover-class="history-viewer-advisor-action-pressed"
+        aria-role="button"
+        aria-label="复制收藏顾问微信号"
+      >
+        <text>{{viewerCollectionAdvisorCopied ? '已复制' : '复制'}}</text>
+      </view>
+
+      <view class="history-viewer-advisor-toggle" aria-hidden="true">
+        <view class="history-viewer-advisor-chevron chevron-down"></view>
+      </view>
+    </view>
+
+    <view
+      wx:else
+      class="history-viewer-advisor-pill"
+      bindtap="toggleViewerCollectionAdvisor"
+      hover-class="history-viewer-advisor-pill-pressed"
+      aria-role="button"
+      aria-label="展开收藏顾问"
+    >
+      <view class="history-viewer-advisor-avatar history-viewer-advisor-avatar-compact" aria-hidden="true">
+        <text>{{viewerCollectionAdvisorInitial}}</text>
+      </view>
+      <text class="history-viewer-advisor-pill-text">顾问</text>
+      <view class="history-viewer-advisor-chevron chevron-right" aria-hidden="true"></view>
+    </view>
   </view>
 </view>

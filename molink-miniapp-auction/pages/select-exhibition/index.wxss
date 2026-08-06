@@ -1,0 +1,27 @@
+.page-container {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 54rpx 28rpx 80rpx;
+  background: linear-gradient(160deg, #f5efe9 0%, #ece1d6 100%);
+  color: #3b332d;
+}
+.hero { padding: 32rpx 8rpx 46rpx; display: flex; flex-direction: column; }
+.eyebrow { font-size: 20rpx; letter-spacing: 4rpx; color: #7a9e7e; }
+.title { margin-top: 18rpx; font-size: 52rpx; font-weight: 650; letter-spacing: 2rpx; }
+.subtitle { margin-top: 18rpx; max-width: 590rpx; font-size: 25rpx; line-height: 1.7; color: #786d65; }
+.exhibition-list { display: flex; flex-direction: column; gap: 26rpx; }
+.exhibition-card { overflow: hidden; border-radius: 30rpx; background: rgba(255,255,255,.72); box-shadow: 0 22rpx 56rpx rgba(72,52,37,.10); border: 1rpx solid rgba(122,158,126,.18); transition: transform .18s ease; }
+.exhibition-card-hover { transform: scale(.992); }
+.cover { width: 100%; height: 290rpx; display: block; }
+.card-body { padding: 30rpx; display: flex; flex-direction: column; }
+.status-row { display: flex; align-items: center; gap: 10rpx; }
+.live-dot { width: 12rpx; height: 12rpx; border-radius: 50%; background: #7a9e7e; box-shadow: 0 0 0 7rpx rgba(122,158,126,.12); }
+.status-text { font-size: 22rpx; color: #66896a; }
+.name { margin-top: 20rpx; font-size: 35rpx; line-height: 1.38; font-weight: 600; }
+.meta { margin-top: 12rpx; font-size: 24rpx; line-height: 1.45; color: #7d726a; }
+.choose-row { margin-top: 30rpx; padding-top: 22rpx; border-top: 1rpx solid rgba(85,66,50,.10); display: flex; justify-content: space-between; color: #5f8064; font-size: 26rpx; }
+.demo-locate { margin: 20rpx 0 0; padding: 0; width: 100%; height: 64rpx; line-height: 64rpx; border-radius: 16rpx; color: #66896a; background: rgba(122,158,126,.10); font-size: 23rpx; }
+.demo-locate::after { border: 0; }
+.state-card { padding: 70rpx 28rpx; border-radius: 28rpx; background: rgba(255,255,255,.64); text-align: center; color: #766b63; }
+.state-card.error { color: #9d5f55; }
+.footnote { display: block; margin-top: 42rpx; text-align: center; font-size: 21rpx; color: #a0958c; }

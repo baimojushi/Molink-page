@@ -26,6 +26,9 @@
   border-color: #917355;
   background: rgba(145, 115, 85, 0.08);
 }
+.artwork-card.has-price {
+  padding-bottom: 52rpx;
+}
 
 .artwork-img {
   width: 160rpx;
@@ -39,7 +42,19 @@
 .artwork-name { font-size: 30rpx; font-weight: 600; color: #3d2b1f; }
 .artwork-author { font-size: 26rpx; color: #917355; }
 .artwork-meta { font-size: 24rpx; color: #a08060; }
-.artwork-price { font-size: 24rpx; color: #7a9e7e; margin-top: 4rpx; }
+.artwork-price {
+  position: absolute;
+  right: 20rpx;
+  bottom: 17rpx;
+  max-width: calc(100% - 220rpx);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 21rpx;
+  line-height: 1.25;
+  letter-spacing: 0.5rpx;
+  color: rgba(94, 117, 96, 0.9);
+}
 
 .check-mark {
   position: absolute;
@@ -63,3 +78,5 @@
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   background: linear-gradient(to top, rgba(245,239,233,0.98) 60%, transparent);
 }
+
+.artwork-code { font-size: 24rpx; color: #7b6756; }
